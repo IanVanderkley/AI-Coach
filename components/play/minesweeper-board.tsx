@@ -21,6 +21,13 @@ import type { DifficultySettings } from "@/lib/game-settings";
 import type { GameplayMove } from "@/lib/coach/types";
 import type { GameCell } from "./board-fixture";
 import { GameStats } from "./game-stats";
+import { PracticeRecoveryDialog } from "./practice-recovery-dialog";
+import {
+  clearPracticeRecovery,
+  readPracticeRecovery,
+  savePracticeRecovery,
+  type PracticeRecoverySnapshot,
+} from "@/lib/practice/in-progress";
 import {
   PracticeResultDialog,
   type PracticeResultSummary,
@@ -193,6 +200,11 @@ export function MinesweeperBoard({
   const [explodedCell, setExplodedCell] = useState<Position | null>(null);
   const [clockStarted, setClockStarted] = useState(false);
   const [resultSummary, setResultSummary] = useState<PracticeResultSummary | null>(null);
+  const [pendingRecovery, setPendingRecovery] = useState<PracticeRecoverySnapshot | null>(
+    null,
+  );
+  const [recoveryReady, setRecoveryReady] = useState(false);
+  const [replaceOpen, setReplaceOpen] = useState(false);
   const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   // Recording for the coaching API. Moves are kept in a ref so replaying a
@@ -206,6 +218,11 @@ export function MinesweeperBoard({
   const pausedTotalRef = useRef(0);
   const lastChordRef = useRef<{ key: string; at: number } | null>(null);
   const reportedRef = useRef(false);
+  const recoveryActiveRef = useRef(false);
+  const replaceWasPausedRef = useRef(false);
+  // Event listeners read the latest render's board instead of closing over an old one.
+  const recoveryViewRef = useRef({ board, status, firstClick, inputMode, paused });
+  recoveryViewRef.current = { board, status, firstClick, inputMode, paused };
 
   // The checksum describes only what the player could see after each move.
   const stampLastMove = useCallback((updatedBoard: GameCell[][]) => {
@@ -230,6 +247,90 @@ export function MinesweeperBoard({
       now - startedAtRef.current - pausedTotalRef.current - currentPause,
     );
   }, []);
+
+  // Do not write while a saved-game decision is pending. A completed game
+  // clears its snapshot and remains in the normal completed-game repository.
+  const persistCurrent = useCallback(() => {
+    if (!recoveryActiveRef.current) return;
+    let storage: Storage | null = null;
+    try {
+      storage = window.localStorage;
+    } catch {
+      return;
+    }
+    const current = recoveryViewRef.current;
+    if (
+      current.status === "won" ||
+      current.status === "lost" ||
+      movesRef.current.length === 0
+    ) {
+      clearPracticeRecovery(storage, settings);
+      return;
+    }
+    const snapshot: PracticeRecoverySnapshot = {
+      version: 1,
+      difficulty: settings.label.toLowerCase() as PracticeRecoverySnapshot["difficulty"],
+      board: current.board.map((line) => line.map((cell) => ({ ...cell }))),
+      status: current.status,
+      firstClick: current.firstClick,
+      inputMode: current.inputMode,
+      paused: current.paused,
+      elapsedMs: Math.floor(activeElapsedMs()),
+      mines: [...minesRef.current],
+      moves: movesRef.current.map((move) => ({ ...move })),
+      updatedAt: Date.now(),
+    };
+    savePracticeRecovery(storage, settings, snapshot);
+  }, [activeElapsedMs, settings]);
+
+  // Read the stored game before enabling autosave, or the empty initial board
+  // could overwrite the saved match during hydration.
+  useEffect(() => {
+    let saved: PracticeRecoverySnapshot | null = null;
+    try {
+      saved = readPracticeRecovery(window.localStorage, settings);
+    } catch {
+      /* Storage blocked */
+    }
+    setPendingRecovery(saved);
+    recoveryActiveRef.current = !saved;
+    setRecoveryReady(true);
+  }, [settings]);
+
+  // Save after board actions, flag/mode changes, and manual pause/resume.
+  useEffect(() => {
+    persistCurrent();
+  }, [board, status, firstClick, inputMode, paused, persistCurrent]);
+
+  // Flush the latest timer on navigation, refresh and tab backgrounding.
+  // Backgrounding auto-pauses and masks the board until the player resumes.
+  useEffect(() => {
+    const flush = () => persistCurrent();
+    const onVisibility = () => {
+      if (document.visibilityState !== "hidden") return;
+      const current = recoveryViewRef.current;
+      if (
+        recoveryActiveRef.current &&
+        startedAtRef.current !== null &&
+        pausedAtRef.current === null &&
+        current.status !== "won" &&
+        current.status !== "lost"
+      ) {
+        pausedAtRef.current = Date.now();
+        setElapsedSeconds(Math.floor(activeElapsedMs() / 1000));
+        recoveryViewRef.current = { ...current, paused: true };
+        setPaused(true);
+      }
+      flush();
+    };
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      flush();
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [activeElapsedMs, persistCurrent]);
 
   useEffect(() => {
     if (!clockStarted || gameOver || paused) return;
@@ -345,6 +446,14 @@ export function MinesweeperBoard({
   ]);
 
   const newGame = useCallback(() => {
+    try {
+      clearPracticeRecovery(window.localStorage, settings);
+    } catch {
+      /* Storage blocked */
+    }
+    recoveryActiveRef.current = true;
+    setPendingRecovery(null);
+    setReplaceOpen(false);
     onGameStart?.();
     setBoard(emptyBoard(rows, columns));
     setStatus("ready");
@@ -362,7 +471,72 @@ export function MinesweeperBoard({
     pausedTotalRef.current = 0;
     lastChordRef.current = null;
     reportedRef.current = false;
-  }, [rows, columns, onGameStart]);
+  }, [rows, columns, onGameStart, settings]);
+
+  const resumeSavedGame = useCallback(() => {
+    if (!pendingRecovery) return;
+    const saved = pendingRecovery;
+    // Restore exactly the same mine layout, visible cells and stamped move list.
+    // Time spent on other pages is excluded; Resume Game starts the clock now.
+    const now = Date.now();
+    movesRef.current = saved.moves.map((move) => ({ ...move }));
+    minesRef.current = [...saved.mines];
+    startedAtRef.current = now - saved.elapsedMs;
+    pausedAtRef.current = null;
+    pausedTotalRef.current = 0;
+    lastChordRef.current = null;
+    reportedRef.current = false;
+    recoveryViewRef.current = {
+      board: saved.board,
+      status: saved.status,
+      firstClick: saved.firstClick,
+      inputMode: saved.inputMode,
+      paused: false,
+    };
+    setBoard(saved.board.map((line) => line.map((cell) => ({ ...cell }))));
+    setStatus(saved.status);
+    setFirstClick(saved.firstClick);
+    setInputMode(saved.inputMode);
+    setElapsedSeconds(Math.floor(saved.elapsedMs / 1000));
+    setClockStarted(true);
+    setPaused(false);
+    setExplodedCell(null);
+    setFocusedCell({ row: 0, col: 0 });
+    setResultSummary(null);
+    setPendingRecovery(null);
+    recoveryActiveRef.current = true;
+    onGameStart?.();
+  }, [pendingRecovery, onGameStart]);
+
+  const discardSavedGame = useCallback(() => {
+    newGame();
+  }, [newGame]);
+
+  const requestNewGame = useCallback(() => {
+    if (!recoveryReady || pendingRecovery) return;
+    if (!gameOver && movesRef.current.length > 0) {
+      replaceWasPausedRef.current = paused;
+      if (!paused && startedAtRef.current !== null) {
+        pausedAtRef.current = Date.now();
+        setElapsedSeconds(Math.floor(activeElapsedMs() / 1000));
+        recoveryViewRef.current = { ...recoveryViewRef.current, paused: true };
+        setPaused(true);
+      }
+      setReplaceOpen(true);
+      return;
+    }
+    newGame();
+  }, [recoveryReady, pendingRecovery, gameOver, paused, activeElapsedMs, newGame]);
+
+  const keepExistingGame = useCallback(() => {
+    setReplaceOpen(false);
+    if (!replaceWasPausedRef.current && pausedAtRef.current !== null) {
+      pausedTotalRef.current += Date.now() - pausedAtRef.current;
+      pausedAtRef.current = null;
+      recoveryViewRef.current = { ...recoveryViewRef.current, paused: false };
+      setPaused(false);
+    }
+  }, []);
 
   const toggleFlag = useCallback(
     (row: number, col: number) => {
@@ -555,7 +729,7 @@ export function MinesweeperBoard({
         minesRemaining={mines - flaggedCount}
         totalMines={mines}
         elapsedTime={formatTime(elapsedSeconds)}
-        onNewGame={newGame}
+        onNewGame={requestNewGame}
       />
 
       <div className="game-controls" role="group" aria-label="Board controls">
@@ -564,7 +738,7 @@ export function MinesweeperBoard({
           className={inputMode === "reveal" ? "mode-button active" : "mode-button"}
           aria-pressed={inputMode === "reveal"}
           onClick={() => setInputMode("reveal")}
-          disabled={gameOver || paused}
+          disabled={gameOver || paused || !recoveryReady || pendingRecovery !== null}
         >
           <MousePointer2 size={15} aria-hidden="true" /> Reveal
         </button>
@@ -573,7 +747,7 @@ export function MinesweeperBoard({
           className={inputMode === "flag" ? "mode-button active" : "mode-button"}
           aria-pressed={inputMode === "flag"}
           onClick={() => setInputMode("flag")}
-          disabled={gameOver || paused}
+          disabled={gameOver || paused || !recoveryReady || pendingRecovery !== null}
         >
           <FlagTriangleRight size={15} aria-hidden="true" /> Flag
         </button>
@@ -619,6 +793,13 @@ export function MinesweeperBoard({
       )}
 
       <div className="board-area">
+        {paused && !gameOver && (
+          <div className="practice-board-paused" role="status">
+            <Pause size={27} aria-hidden="true" />
+            <strong>Game paused</strong>
+            <span>Select Resume above to continue your board.</span>
+          </div>
+        )}
         <p className="sr-only" id="board-keyboard-instructions">
           Use the arrow keys to move between cells. Press Enter or Space to reveal or flag
           a cell according to the selected action mode. On a revealed number, Enter or
@@ -698,7 +879,9 @@ export function MinesweeperBoard({
                     else revealCell(row, col);
                   }}
                   onContextMenu={(event) => handleContextMenu(event, row, col)}
-                  disabled={gameOver || paused}
+                  disabled={
+                    gameOver || paused || !recoveryReady || pendingRecovery !== null
+                  }
                 >
                   {cell.flagged ? (
                     <Flag className="cell-flag" fill="currentColor" strokeWidth={1.5} />
@@ -713,6 +896,16 @@ export function MinesweeperBoard({
           )}
         </div>
       </div>
+
+      <PracticeRecoveryDialog
+        saved={pendingRecovery}
+        replaceOpen={replaceOpen}
+        difficulty={settings.label}
+        onResume={resumeSavedGame}
+        onDiscardSaved={discardSavedGame}
+        onReplace={newGame}
+        onKeepPlaying={keepExistingGame}
+      />
 
       <PracticeResultDialog
         result={resultSummary}
