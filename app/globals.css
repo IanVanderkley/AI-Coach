@@ -16,3 +16,7 @@
 @import "../styles/responsive.css";
 /* Visual-only polish for Practice mode. Intentionally scoped so Ranked stays unchanged. */
 @import "../styles/practice-board-polish.css";
+@import "../styles/practice-results.css";
+@import "../styles/practice-result-motion.css";
+@import "../styles/practice-ux-polish.css";
+@import "../styles/button-theme.css";

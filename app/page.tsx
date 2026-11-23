@@ -1,7 +1,7 @@
 "use client";
 
 import { Flag, Grid2X2 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { GameCoachReport } from "@/components/coach/game-coach-report";
 import { CoachPreview } from "@/components/play/coach-preview";
@@ -15,6 +15,10 @@ import { DEFAULT_DIFFICULTY, DIFFICULTY_SETTINGS } from "@/lib/game-settings";
 import type { Difficulty } from "@/lib/game-settings";
 import { createPracticeRepository } from "@/lib/practice/repository";
 import type { PracticeSession } from "@/lib/practice/history";
+import {
+  readPracticeDifficulty,
+  savePracticeDifficulty,
+} from "@/lib/practice/difficulty-preference";
 
 export default function Home() {
   const [difficulty, setDifficulty] = useState<Difficulty>(DEFAULT_DIFFICULTY);
@@ -24,6 +28,17 @@ export default function Home() {
   >("idle");
   const practiceRepository = useMemo(() => createPracticeRepository(), []);
   const settings = DIFFICULTY_SETTINGS[difficulty];
+
+  // Restore the chosen difficulty after navigating to Coaching and back.
+  // Read after mount to keep the server-rendered and client-rendered HTML identical.
+  useEffect(() => {
+    try {
+      const saved = readPracticeDifficulty(window.localStorage);
+      if (saved) setDifficulty(saved);
+    } catch {
+      // Private browsing / disabled storage never prevent a Practice game.
+    }
+  }, []);
 
   // Keep the report responsive while saving the same complete recording through
   // the repository; local storage is written before any Supabase request.
@@ -93,7 +108,13 @@ export default function Home() {
             className="difficulty-select"
             value={difficulty}
             onChange={(event) => {
-              setDifficulty(event.target.value as Difficulty);
+              const next = event.target.value as Difficulty;
+              setDifficulty(next);
+              try {
+                savePracticeDifficulty(window.localStorage, next);
+              } catch {
+                /* Storage blocked */
+              }
               setLastGame(null);
             }}
           >

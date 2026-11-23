@@ -8,17 +8,23 @@ import {
   MousePointer2,
   Pause,
   Play,
+  Trophy,
 } from "lucide-react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import Link from "next/link";
 import { visibleBoardHash } from "@/lib/coach/visible-board-hash";
+import { recordPracticeBest } from "@/lib/practice/personal-best";
+import { savePracticeReviewHandoff } from "@/lib/practice/review-handoff";
 import type { PracticeSession } from "@/lib/practice/history";
 import type { DifficultySettings } from "@/lib/game-settings";
 import type { GameplayMove } from "@/lib/coach/types";
 import type { GameCell } from "./board-fixture";
 import { GameStats } from "./game-stats";
+import {
+  PracticeResultDialog,
+  type PracticeResultSummary,
+} from "./practice-result-dialog";
 
 type GameStatus = "ready" | "playing" | "won" | "lost";
 type InputMode = "reveal" | "flag";
@@ -186,6 +192,7 @@ export function MinesweeperBoard({
   const [paused, setPaused] = useState(false);
   const [explodedCell, setExplodedCell] = useState<Position | null>(null);
   const [clockStarted, setClockStarted] = useState(false);
+  const [resultSummary, setResultSummary] = useState<PracticeResultSummary | null>(null);
   const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   // Recording for the coaching API. Moves are kept in a ref so replaying a
@@ -292,9 +299,50 @@ export function MinesweeperBoard({
       mines: [...minesRef.current],
       moves: movesRef.current.map((move) => ({ ...move })),
     };
+    // A Practice personal best is browser-local, never a server-verified Ranked record.
+    let personalBest: PracticeResultSummary["personalBest"] = null;
+    if (status === "won") {
+      try {
+        personalBest = recordPracticeBest(
+          window.localStorage,
+          { rows, columns, mines },
+          finalSeconds,
+        );
+      } catch {
+        personalBest = {
+          kind: "unavailable",
+          bestSeconds: null,
+          previousSeconds: null,
+        };
+      }
+    }
+    let reviewId: string | null = null;
+    try {
+      reviewId = savePracticeReviewHandoff(window.sessionStorage, session);
+    } catch {
+      /* Storage unavailable */
+    }
+    setResultSummary({
+      outcome: session.outcome,
+      difficulty: settings.label,
+      durationSeconds: finalSeconds,
+      moveCount: session.moves.length,
+      flagsOnBoard: board.flat().filter((cell) => cell.flagged).length,
+      personalBest,
+      reviewId,
+    });
     // Parent saves through the repository; analysis receives the same recording.
     onGameComplete?.(session);
-  }, [activeElapsedMs, status, onGameComplete, settings.label, rows, columns, mines]);
+  }, [
+    activeElapsedMs,
+    status,
+    onGameComplete,
+    settings.label,
+    rows,
+    columns,
+    mines,
+    board,
+  ]);
 
   const newGame = useCallback(() => {
     onGameStart?.();
@@ -306,6 +354,7 @@ export function MinesweeperBoard({
     setPaused(false);
     setExplodedCell(null);
     setClockStarted(false);
+    setResultSummary(null);
     movesRef.current = [];
     minesRef.current = [];
     startedAtRef.current = null;
@@ -544,21 +593,29 @@ export function MinesweeperBoard({
         </button>
       </div>
 
-      {status === "won" && (
-        <p className="game-message" role="status">
-          You win! All safe cells are revealed.
-        </p>
-      )}
-      {status === "lost" && (
-        <p className="game-message" role="status">
-          Boom! You hit a mine. Start a new game to try again.
-        </p>
-      )}
-
       {gameOver && (
-        <p className="game-review-link">
-          <Link href="/coaching?source=practice">Review verified game and moves</Link>
-        </p>
+        <div
+          className={`practice-board-outcome ${status === "won" ? "is-win" : "is-loss"}`}
+          role="status"
+        >
+          {status === "won" ? (
+            <Trophy size={25} aria-hidden="true" />
+          ) : (
+            <Bomb size={25} aria-hidden="true" />
+          )}
+          <div>
+            <strong>
+              {status === "won"
+                ? `Congratulations on your ${settings.label} win!`
+                : "Better luck on your next try!"}
+            </strong>
+            <span>
+              {status === "won"
+                ? `You cleared the board in ${formatTime(elapsedSeconds)}. Great work!`
+                : "That mine ended your run. Every game is a chance to improve."}
+            </span>
+          </div>
+        </div>
       )}
 
       <div className="board-area">
@@ -656,6 +713,12 @@ export function MinesweeperBoard({
           )}
         </div>
       </div>
+
+      <PracticeResultDialog
+        result={resultSummary}
+        onPlayAgain={newGame}
+        onDismiss={() => setResultSummary(null)}
+      />
 
       <div className="board-footer">
         <span className="board-dimensions">
