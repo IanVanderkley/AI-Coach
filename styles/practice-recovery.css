@@ -1,0 +1,150 @@
+/* Browser-local unfinished-game recovery. Visuals match AI-Coach's action palette. */
+.practice-recovery-dialog {
+  width: min(440px, calc(100vw - 28px));
+  max-height: calc(100dvh - 28px);
+  overflow: auto;
+  padding: 0;
+  border: 1px solid #494045;
+  border-radius: 15px;
+  background: #191719;
+  color: var(--text);
+  box-shadow: 0 28px 90px rgb(0 0 0 / 72%);
+}
+.practice-recovery-dialog::backdrop {
+  background: rgb(0 0 0 / 76%);
+  backdrop-filter: blur(5px);
+}
+.practice-recovery-inner {
+  padding: clamp(22px, 5vw, 32px);
+  text-align: center;
+}
+.practice-recovery-icon {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 16px;
+  border: 1px solid #7d3a44;
+  border-radius: 50%;
+  background: #382126;
+  color: #ff919a;
+}
+.practice-recovery-icon.is-warning {
+  color: #f4c39e;
+  border-color: #78604c;
+  background: #352921;
+}
+.practice-recovery-eyebrow {
+  margin: 0 0 8px;
+  color: #f4a8ae;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+.practice-recovery-inner h2 {
+  margin: 0 0 10px;
+  font-family: var(--heading-font);
+  font-size: clamp(28px, 6vw, 36px);
+  font-weight: 700;
+}
+.practice-recovery-inner
+  > p:not(.practice-recovery-eyebrow):not(.practice-recovery-note) {
+  margin: 0 0 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.practice-recovery-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 22px 0;
+}
+.practice-recovery-stats > span {
+  display: grid;
+  gap: 5px;
+  padding: 14px 5px;
+  border: 1px solid #393034;
+  border-radius: 8px;
+  background: #231c20;
+}
+.practice-recovery-stats strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.practice-recovery-stats small {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+.practice-recovery-primary,
+.practice-recovery-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 10px;
+  padding: 11px 14px;
+  border-radius: 7px;
+  color: white;
+  font-weight: 700;
+}
+.practice-recovery-primary {
+  background: var(--button-primary-bg, #b62634);
+}
+.practice-recovery-primary:hover {
+  background: var(--button-primary-hover, #c42b39);
+}
+.practice-recovery-secondary {
+  border: 1px solid #494145;
+  background: #292528;
+  color: #e7dfe2;
+}
+.practice-recovery-secondary:hover {
+  background: #383033;
+}
+.practice-recovery-primary:focus-visible,
+.practice-recovery-secondary:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+.practice-recovery-note {
+  margin: 18px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+/* Prevent paused boards from remaining readable when the player is away. */
+.board-area:has(.practice-board-paused) {
+  position: relative;
+}
+.practice-board-paused {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  border-radius: 8px;
+  background: #121212;
+  color: #f4f4f4;
+  text-align: center;
+}
+.practice-board-paused strong {
+  font-size: 22px;
+  font-family: var(--heading-font);
+}
+.practice-board-paused span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Keep the native recovery dialog centered, including in browsers with CSS resets.
+   showModal() still manages the backdrop, focus, and keyboard behavior. */
+.practice-recovery-dialog[open] {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+}
