@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { validateRankedStartRequest } from "@/lib/ranked/http-security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,11 +13,8 @@ const headers = {
 // Creates a Ranked match or resumes the player's active match.
 export async function POST(request: Request) {
   // Only accept requests from the same website origin.
-  const origin = request.headers.get("origin");
-
-  if (origin && origin !== new URL(request.url).origin) {
-    return Response.json({ error: "Invalid request origin." }, { status: 403, headers });
-  }
+  const invalidRequest = validateRankedStartRequest(request);
+  if (invalidRequest) return invalidRequest;
 
   try {
     // Step 1: Verify the currently signed-in player.

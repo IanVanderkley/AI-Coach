@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readRankedMoveJson } from "@/lib/ranked/http-security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,14 +13,9 @@ const headers = {
 // Handles both the first reveal and subsequent reveals.
 export async function POST(request: Request) {
   // Block requests from other website origins.
-  const origin = request.headers.get("origin");
-
-  if (origin && origin !== new URL(request.url).origin) {
-    return Response.json({ error: "Invalid request origin." }, { status: 403, headers });
-  }
-
-  // Read and validate the player's requested move.
-  const body: unknown = await request.json().catch(() => null);
+  const parsed = await readRankedMoveJson(request);
+  if (!parsed.ok) return parsed.response;
+  const body: unknown = parsed.value;
 
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return Response.json({ error: "Invalid request body." }, { status: 400, headers });
