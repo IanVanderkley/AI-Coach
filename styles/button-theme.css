@@ -1,0 +1,48 @@
+/*
+ * AI-Coach primary button palette.
+ * The bright --red token is reserved for brand accents/icons. Interactive red
+ * primary actions all share the deeper existing Practice/Reveal button color.
+ * Keep this file imported LAST so older per-component backgrounds do not win.
+ */
+:root {
+  --button-primary-bg: #b62634;
+  --button-primary-hover: #c42b39;
+}
+
+/* Primary interactive actions only; keep secondary/quiet buttons unchanged. */
+.play-layout .game-stats .new-game,
+.mode-button.selected,
+.mode-button.active:not(.ranked),
+.mode-button.pause-button[aria-pressed="true"],
+.settings-button-primary,
+.coach-btn:not(.secondary),
+.practice-result-primary,
+.evidence-ai-button,
+.follow-up-submit,
+.profile-play-link,
+.practice-review-link {
+  background-color: var(--button-primary-bg);
+  color: #fff;
+}
+
+.play-layout .game-stats .new-game:hover,
+.mode-button.selected:hover,
+.mode-button.active:not(.ranked):hover,
+.mode-button.pause-button[aria-pressed="true"]:hover,
+.settings-button-primary:hover:not(:disabled),
+.coach-btn:not(.secondary):hover:not(:disabled),
+.practice-result-primary:hover,
+.evidence-ai-button:hover:not(:disabled),
+.follow-up-submit:hover:not(:disabled),
+.profile-play-link:hover,
+.practice-review-link:hover {
+  background-color: var(--button-primary-hover);
+  color: #fff;
+}
+
+/* Maintain a visible keyboard focus indicator on these actions. */
+.play-layout .game-stats .new-game:focus-visible,
+.practice-result-primary:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}

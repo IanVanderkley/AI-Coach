@@ -1,6 +1,21 @@
 "use client";
 
-import { History, Loader2, Play, Sparkles, TriangleAlert } from "lucide-react";
+import Link from "next/link";
+
+import {
+  CheckCircle2,
+  CircleHelp,
+  Flame,
+  Gamepad2,
+  History,
+  Loader2,
+  Play,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TriangleAlert,
+  Trophy,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CoachReportView } from "@/components/coach/coach-report-view";
@@ -8,6 +23,7 @@ import { EvidenceCoachPanel } from "@/components/coach/evidence-coach-panel";
 import { VerifiedReplayPanel } from "@/components/coach/verified-replay-panel";
 import { analyzeGameplay, toRuleReport } from "@/lib/coach/analyze";
 import { loadLastGame } from "@/lib/coach/last-game";
+import { loadPracticeReviewHandoff } from "@/lib/practice/review-handoff";
 import type { StoredLastGame } from "@/lib/coach/last-game";
 import { shapeReportForPreferences } from "@/lib/coach/preferences";
 import { loadCoachPreferences } from "@/lib/settings/coach-preferences";
@@ -188,6 +204,37 @@ export function CoachConsole() {
   useEffect(() => {
     let active = true;
     const params = new URLSearchParams(window.location.search);
+    const reviewId = params.get("reviewId");
+    if (params.get("source") === "practice" && reviewId) {
+      let storage: Storage | null = null;
+      try {
+        storage = window.sessionStorage;
+      } catch {
+        /* Blocked by browser */
+      }
+      const selected = loadPracticeReviewHandoff(storage, reviewId);
+      if (!selected) {
+        const message =
+          "This completed game's replay is unavailable in this tab. Return to Play or choose a saved game in Profile.";
+        setLastGame(null);
+        setSelectedReplay(null);
+        setPracticeMessage(message);
+        setError(message);
+      } else {
+        setLastGame({
+          practice: selected,
+          session: selected,
+          summary: `${selected.difficulty} · ${selected.rows} × ${selected.columns} · ${selected.outcome === "win" ? "Win" : "Loss"} · ${selected.moves.length} actions`,
+        });
+        setPracticeMessage("");
+        setError(null);
+        setSelectedReplay(selected);
+        autoAnalysisStarted.current = true;
+      }
+      return () => {
+        active = false;
+      };
+    }
     void loadSelectedPracticeGame(practiceRepository, params.get("gameId"))
       .then((saved) => {
         if (!active) return;
@@ -229,24 +276,115 @@ export function CoachConsole() {
   return (
     <div className="coach-layout">
       <section className="coach-controls" aria-label="Run a coaching analysis">
-        <span className="subtle-label">Gameplay analyser</span>
-        <h2>Review a finished Practice game.</h2>
+        <span className="subtle-label">YOUR COACHING DASHBOARD</span>
+        <h2>{lastGame ? "Let's learn from this game" : "Turn games into progress"}</h2>
         <p className="coach-controls-copy">
-          Review your recorded moves, inspect the visible-board evidence, and ask one
-          follow-up question. AI prioritization is optional; prototype sample reports are
-          clearly separated below.
+          Play, see what happened, and learn one thing for next time. The replay shows the
+          same board you played, one move at a time.
         </p>
+        <div className="coach-journey" aria-label="Three steps to improve">
+          <div className="coach-journey-step">
+            <span className="coach-journey-step-icon">
+              <Gamepad2 size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <strong>1. Play</strong>
+              <span>Finish any Practice game.</span>
+            </div>
+          </div>
+          <div className="coach-journey-step">
+            <span className="coach-journey-step-icon">
+              <ShieldCheck size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <strong>2. Review</strong>
+              <span>See exactly where each move led.</span>
+            </div>
+          </div>
+          <div className="coach-journey-step">
+            <span className="coach-journey-step-icon">
+              <Target size={18} aria-hidden="true" />
+            </span>
+            <div>
+              <strong>3. Improve</strong>
+              <span>Use a proven tip in the next game.</span>
+            </div>
+          </div>
+        </div>
 
-        <span className="coach-provider" data-ready={status?.configured ? "yes" : "no"}>
-          <Sparkles size={13} aria-hidden="true" />
-          {providerLine}
-        </span>
+        {lastGame ? (
+          <div
+            className={`coach-selected-game ${lastGame.practice.outcome === "win" ? "is-win" : "is-loss"}`}
+          >
+            <div className="coach-selected-game-header">
+              {lastGame.practice.outcome === "win" ? (
+                <Trophy size={19} aria-hidden="true" />
+              ) : (
+                <Flame size={19} aria-hidden="true" />
+              )}
+              <strong>
+                {lastGame.practice.difficulty} Practice ·{" "}
+                {lastGame.practice.outcome === "win" ? "Victory" : "Loss"}
+              </strong>
+            </div>
+            <div
+              className="coach-selected-game-stats"
+              aria-label="Selected game statistics"
+            >
+              <div>
+                <span>Time</span>
+                <strong>
+                  {Math.floor(lastGame.practice.durationSeconds / 60)
+                    .toString()
+                    .padStart(2, "0")}
+                  :{(lastGame.practice.durationSeconds % 60).toString().padStart(2, "0")}
+                </strong>
+              </div>
+              <div>
+                <span>Moves</span>
+                <strong>{lastGame.practice.moves.length}</strong>
+              </div>
+              <div>
+                <span>Board</span>
+                <strong>
+                  {lastGame.practice.rows} × {lastGame.practice.columns}
+                </strong>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="coach-empty-guide">
+            <p>
+              {practiceMessage ||
+                "Complete a Practice game to see your own replay and coaching."}
+            </p>
+            <Link className="coach-btn" href="/">
+              Play a Practice game
+            </Link>
+          </div>
+        )}
 
-        <p className="coach-controls-copy">
-          {lastGame ? `Selected Practice game: ${lastGame.summary}` : practiceMessage}
-        </p>
+        {lastGame && (
+          <div className="coach-actions">
+            <button
+              type="button"
+              className="coach-btn"
+              onClick={() => {
+                setSelectedReplay(lastGame.practice);
+                setReplayFocus(null);
+                setResult(null);
+                setError(null);
+              }}
+              disabled={loadingKey !== null}
+            >
+              <Play size={15} aria-hidden="true" />
+              View my move-by-move replay
+            </button>
+          </div>
+        )}
 
-        <div className="coach-actions">
+        <details className="coach-demo-tests">
+          <summary>More tools and sample reports</summary>
           {classicLastGame && (
             <button
               type="button"
@@ -259,80 +397,67 @@ export function CoachConsole() {
               disabled={loadingKey !== null}
             >
               <History size={15} aria-hidden="true" />
-              Analyze last game (classic report)
+              Run classic report (experimental)
             </button>
           )}
-          {lastGame && (
-            <button
-              type="button"
-              className="coach-btn"
-              onClick={() => {
-                setSelectedReplay(lastGame.practice);
-                setReplayFocus(null);
-                setResult(null);
-                setError(null);
-              }}
-              disabled={loadingKey !== null}
-            >
-              {loadingKey === "practice" ? (
-                <Loader2 className="coach-spin" size={16} aria-hidden="true" />
-              ) : (
-                <Play size={15} aria-hidden="true" />
-              )}
-              Review Verified Game
-            </button>
-          )}
-        </div>
-
-        <details className="coach-demo-tests">
-          <summary>Experimental sample reports (not verified)</summary>
-          <p>
-            These examples use the earlier scoring engine for comparison, not your
-            recorded game. Results may be approximate or unsupported.
-          </p>
-          <div className="coach-actions">
-            {SAMPLES.map(({ key, label, session }) => (
-              <button
-                key={key}
-                type="button"
-                className="coach-btn"
-                onClick={() => {
-                  setSelectedReplay(null);
-                  setReplayFocus(null);
-                  void analyze(key, session);
-                }}
-                disabled={loadingKey !== null}
-              >
-                {loadingKey === key ? (
-                  <Loader2 className="coach-spin" size={16} aria-hidden="true" />
-                ) : (
-                  <Play size={15} aria-hidden="true" />
-                )}
-                {label} (demo)
-              </button>
-            ))}
-          </div>
+          <details className="coach-demo-tests">
+            <summary>Experimental sample reports (not verified)</summary>
+            <p>
+              These examples use the earlier scoring engine for comparison, not your
+              recorded game. Results may be approximate or unsupported.
+            </p>
+            <div className="coach-actions">
+              {SAMPLES.map(({ key, label, session }) => (
+                <button
+                  key={key}
+                  type="button"
+                  className="coach-btn"
+                  onClick={() => {
+                    setSelectedReplay(null);
+                    setReplayFocus(null);
+                    void analyze(key, session);
+                  }}
+                  disabled={loadingKey !== null}
+                >
+                  {loadingKey === key ? (
+                    <Loader2 className="coach-spin" size={16} aria-hidden="true" />
+                  ) : (
+                    <Play size={15} aria-hidden="true" />
+                  )}
+                  {label} (demo)
+                </button>
+              ))}
+            </div>
+          </details>
         </details>
 
-        <ul className="coach-help">
-          <li>
-            Finish any Practice game to replay verified board decisions, including Expert.
-          </li>
-          <li>
-            Up to five recent Practice games are stored temporarily in this browser tab.
-          </li>
-          {preferences ? (
+        <details className="coach-extra-info">
+          <summary>How accurate is this review?</summary>
+          <span className="coach-provider" data-ready={status?.configured ? "yes" : "no"}>
+            <Sparkles size={13} aria-hidden="true" />
+            {providerLine}
+          </span>
+          <ul className="coach-help">
             <li>
-              Classic Coach settings: {preferences.coachingStyle} tone,{" "}
-              {preferences.explanationDetail} detail.
+              Finish any Practice game to replay verified board decisions, including
+              Expert.
             </li>
-          ) : null}
-          <li>
-            The verified teaching report runs locally. Optional AI focus selection sends
-            verified findings to the provider, never the hidden mine layout. The older
-            experimental report is separate and unverified.
-          </li>
-        </ul>
+            <li>
+              Up to five recent Practice games are stored temporarily in this browser tab.
+            </li>
+            {preferences ? (
+              <li>
+                Classic Coach settings: {preferences.coachingStyle} tone,{" "}
+                {preferences.explanationDetail} detail.
+              </li>
+            ) : null}
+            <li>
+              The verified teaching report runs locally. Optional AI focus selection sends
+              verified findings to the provider, never the hidden mine layout. The older
+              experimental report is separate and unverified.
+            </li>
+          </ul>
+        </details>
 
         {error ? (
           <p className="coach-error" role="alert">
@@ -345,6 +470,30 @@ export function CoachConsole() {
       <section aria-label="Coaching report" aria-live="polite">
         {selectedReplay ? (
           <>
+            <div className="coach-report-intro">
+              <ShieldCheck size={26} aria-hidden="true" />
+              <div className="coach-report-intro-copy">
+                <strong>Your game, explained visually</strong>
+                <p>
+                  Use the board replay to compare moves. A move is only labelled when the
+                  visible board proves it.
+                </p>
+              </div>
+              <div className="coach-report-legend" aria-label="Move classification key">
+                <span className="good">
+                  <CheckCircle2 size={15} aria-hidden="true" />
+                  Proven good
+                </span>
+                <span className="bad">
+                  <TriangleAlert size={15} aria-hidden="true" />
+                  Verified mistake
+                </span>
+                <span className="unknown">
+                  <CircleHelp size={15} aria-hidden="true" />
+                  Uncertain
+                </span>
+              </div>
+            </div>
             <EvidenceCoachPanel game={selectedReplay} onReviewMove={chooseReplayMove} />
             <VerifiedReplayPanel
               game={selectedReplay}

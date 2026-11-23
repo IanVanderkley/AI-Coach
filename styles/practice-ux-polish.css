@@ -1,0 +1,290 @@
+/* Practice navigation and end-of-game polish, without altering Ranked rules. */
+.new-game {
+  background: var(--red);
+  color: #fff;
+  font-weight: 700;
+}
+.new-game:hover {
+  background: #f45760;
+}
+.new-game:focus-visible {
+  outline-color: #fff;
+}
+
+.practice-board-outcome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  max-width: 720px;
+  margin: 12px auto 6px;
+  padding: 16px 20px;
+  border: 1px solid #583139;
+  border-radius: 12px;
+  background: #28191d;
+  color: #ffb4ba;
+  text-align: center;
+}
+.practice-board-outcome.is-win {
+  border-color: #9f7c43;
+  color: #ffe0a1;
+  background: #302718;
+}
+.practice-board-outcome > svg {
+  flex-shrink: 0;
+}
+.practice-board-outcome strong {
+  display: block;
+  font-family: var(--heading-font);
+  font-size: clamp(21px, 3vw, 28px);
+  line-height: 1.15;
+  letter-spacing: -0.25px;
+}
+.practice-board-outcome span {
+  display: block;
+  margin-top: 5px;
+  color: #e4d4d6;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Give the fuse, burst and trophy around 1.75x their former screen time. */
+.practice-loss-logo {
+  animation-duration: 1575ms;
+}
+.practice-loss-fuse {
+  animation-duration: 1138ms;
+}
+.practice-loss-spark {
+  animation-duration: 1313ms;
+}
+.practice-loss-flash {
+  animation-duration: 1575ms;
+}
+.practice-loss-smoke {
+  animation-duration: 2188ms;
+}
+.practice-win-ring {
+  animation-duration: 1575ms;
+}
+.practice-win-trophy {
+  animation-duration: 1400ms;
+}
+.practice-win-glint {
+  animation-duration: 2100ms;
+}
+.practice-victory-burst span {
+  animation-duration: 1575ms;
+}
+.practice-record-burst-extra span {
+  animation-duration: 2450ms;
+}
+.practice-result-achievement {
+  animation-duration: 700ms;
+}
+
+/* Coaching: less text to scan, more clear guidance and game context. */
+.coach-journey {
+  display: grid;
+  gap: 9px;
+  margin: 18px 0;
+}
+.coach-journey-step {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #303030;
+  border-radius: 9px;
+  background: #202020;
+}
+.coach-journey-step-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: #ff9da4;
+  background: #3b2227;
+}
+.coach-journey-step strong {
+  display: block;
+  font-size: 13px;
+}
+.coach-journey-step span:not(.coach-journey-step-icon) {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.coach-selected-game {
+  margin: 18px 0 0;
+  padding: 14px;
+  border: 1px solid #57333a;
+  background: #26181c;
+  border-radius: 10px;
+}
+.coach-selected-game.is-win {
+  border-color: #846836;
+  background: #292419;
+}
+.coach-selected-game-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 13px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.coach-selected-game-header svg {
+  color: #ffb0b6;
+}
+.coach-selected-game.is-win .coach-selected-game-header svg {
+  color: #f5d280;
+}
+.coach-selected-game-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.coach-selected-game-stats > div {
+  display: grid;
+  gap: 5px;
+  padding: 9px 6px;
+  background: rgb(0 0 0 / 22%);
+  border-radius: 6px;
+  text-align: center;
+}
+.coach-selected-game-stats span {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+.coach-selected-game-stats strong {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.coach-empty-guide {
+  margin-top: 14px;
+}
+.coach-empty-guide p {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.coach-empty-guide .coach-btn {
+  display: flex;
+}
+.coach-extra-info {
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--text-secondary);
+}
+.coach-extra-info summary {
+  color: #f1f1f1;
+  font-weight: 600;
+  font-size: 12px;
+}
+.coach-extra-info[open] summary {
+  margin-bottom: 12px;
+}
+.coach-extra-info .coach-provider {
+  margin-bottom: 12px;
+}
+.coach-extra-info .coach-help {
+  padding-left: 16px;
+}
+.coach-report-intro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  border: 1px solid #49333a;
+  border-radius: 12px;
+  background: #20191b;
+}
+.coach-report-intro > svg {
+  color: #ff929b;
+  flex-shrink: 0;
+}
+.coach-report-intro-copy {
+  flex: 1 1 200px;
+}
+.coach-report-intro strong {
+  display: block;
+  font-size: 16px;
+}
+.coach-report-intro p {
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.coach-report-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+.coach-report-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.coach-report-legend .good {
+  color: #8fdf9f;
+}
+.coach-report-legend .bad {
+  color: #ffb27a;
+}
+.coach-report-legend .unknown {
+  color: #bfbfbf;
+}
+@media (max-width: 620px) {
+  .practice-board-outcome {
+    margin: 10px 12px;
+    padding: 14px;
+  }
+  .practice-board-outcome strong {
+    font-size: 20px;
+  }
+  .coach-report-intro {
+    padding: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .practice-loss-logo,
+  .practice-loss-fuse,
+  .practice-loss-spark,
+  .practice-loss-flash,
+  .practice-loss-smoke,
+  .practice-win-ring,
+  .practice-win-trophy,
+  .practice-win-glint,
+  .practice-victory-burst span,
+  .practice-record-burst-extra span,
+  .practice-result-achievement {
+    animation: none;
+  }
+}
+
+/* The board header uses a different button from the Win/Loss dialog.
+   Scope the override to Play so it has the same red action colour. */
+.play-layout .game-stats .new-game {
+  background-color: var(--red);
+  color: #fff;
+  font-weight: 700;
+  transition: background-color 150ms ease;
+}
+
+.play-layout .game-stats .new-game:hover {
+  background-color: #c42b39;
+}
+
+.play-layout .game-stats .new-game:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
