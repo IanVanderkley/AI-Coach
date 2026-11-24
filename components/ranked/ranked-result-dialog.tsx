@@ -7,6 +7,7 @@ import type { CSSProperties } from "react";
 
 import { MineLogo } from "@/components/play/mine-logo";
 import { RankedXpProgress } from "@/components/ranked/ranked-xp-progress"; // AI_COACH_RANKED_ACCOUNT_XP_V1
+import { RankedMatchXpReceipt } from "@/components/ranked/ranked-match-xp-receipt"; // AI_COACH_RANKED_OUTCOME_XP_V1
 import {
   formatRankedDuration,
   formatRankedShareText,
@@ -200,10 +201,15 @@ export function RankedResultDialog({
           <button type="button" className="ranked-result-view-board" onClick={onDismiss}>
             View finished board
           </button>
+          <RankedMatchXpReceipt
+            key={`reward-${result.matchId}`}
+            matchId={result.matchId}
+            expectedOutcome={result.outcome}
+          />
           <RankedXpProgress key={result.matchId} matchId={result.matchId} />
           <p className="ranked-result-note">
-            Account XP is a saved balance, not a per-match award. Competitive Ranked RP is
-            not tracked here yet.
+            The match reward comes from a database receipt; the account XP card shows your
+            saved lifetime total. Competitive RP is not tracked here yet.
           </p>
         </div>
       ) : null}

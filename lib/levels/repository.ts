@@ -50,3 +50,44 @@ export async function loadPlayerLevel(): Promise<PlayerLevelLookup> {
     totalXp: parseAccountTotalXp(data?.total_xp ?? 0),
   };
 }
+
+/** The public receipt is owner-readable, but never writable, under database RLS. */
+export type RankedMatchXpReceiptLookup =
+  | { state: "guest" }
+  | { state: "missing" }
+  | { state: "earned"; outcome: "won" | "lost"; amount: number };
+
+export async function loadRankedMatchXpReceipt(
+  matchId: string,
+): Promise<RankedMatchXpReceiptLookup> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(matchId)) {
+    throw new Error("Invalid Ranked match ID.");
+  }
+  const client = getSupabaseBrowserClient();
+  if (!client) return { state: "guest" };
+
+  const { data: auth, error: authError } = await client.auth.getUser();
+  if (authError?.name === "AuthSessionMissingError") return { state: "guest" };
+  if (authError || !auth.user) {
+    throw new Error("Unable to verify your account right now.");
+  }
+
+  const { data, error } = await client
+    .from("player_xp_match_receipts")
+    .select("outcome, amount")
+    .eq("match_id", matchId)
+    .eq("user_id", auth.user.id)
+    .maybeSingle();
+  if (error) throw new Error("The verified match XP receipt is unavailable.");
+  if (!data) return { state: "missing" };
+
+  // Never fabricate reward amounts; reject unknown row shapes instead.
+  if (
+    (data.outcome !== "won" && data.outcome !== "lost") ||
+    (data.outcome === "won" && data.amount !== 125) ||
+    (data.outcome === "lost" && data.amount !== 10)
+  ) {
+    throw new Error("The database returned an unexpected XP receipt.");
+  }
+  return { state: "earned", outcome: data.outcome, amount: data.amount };
+}

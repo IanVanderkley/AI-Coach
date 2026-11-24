@@ -344,3 +344,71 @@
     transition: none;
   }
 }
+
+/* Per-match XP receipt. A database row is required before displaying an earned reward. */
+.ranked-match-xp-receipt {
+  margin: 18px 0 14px;
+  padding: 15px;
+  border: 1px solid #55402c;
+  border-radius: 10px;
+  background: #28231c;
+  text-align: left;
+}
+.ranked-match-xp-heading,
+.ranked-match-xp-heading > span,
+.ranked-match-xp-verified,
+.ranked-match-xp-earned,
+.ranked-match-xp-note,
+.ranked-match-xp-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ranked-match-xp-heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  color: #f9ddb0;
+  font-size: 13px;
+  font-weight: 750;
+}
+.ranked-match-xp-verified {
+  color: #a7e2b0;
+  font-size: 11px;
+}
+.ranked-match-xp-receipt p {
+  color: #c8c0b5;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ranked-match-xp-earned {
+  margin-top: 13px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.ranked-match-xp-earned strong {
+  font-size: 27px;
+  color: #ffe2a3;
+  font-variant-numeric: tabular-nums;
+}
+.ranked-match-xp-earned span {
+  color: #d5ccbf;
+  font-size: 12px;
+}
+.ranked-match-xp-refresh {
+  margin-top: 11px;
+  padding: 5px 0;
+  color: #f3d6ae;
+  background: transparent;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ranked-match-xp-refresh:focus-visible {
+  outline: 2px solid #ffe2a3;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ranked-match-xp-receipt * {
+    transition: none !important;
+  }
+}
