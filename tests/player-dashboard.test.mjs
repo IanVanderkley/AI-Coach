@@ -59,7 +59,10 @@ test("the profile overview is above both mode cards and the two existing history
   assert.match(practice, /Player Dashboard/);
   assert.match(practice, /combineRecentStats\(practiceStats, rankedStats\)/);
   assert.match(practice, /mode="ranked"[\s\S]*?stats=\{rankedLifetime\}/);
-  assert.match(practice, /<PlayerModeCard mode="practice" stats=\{practiceStats\}/);
+  assert.match(
+    practice,
+    /stats=\{accountPracticeTracking\?\.overall \?\? practiceStats\}/,
+  );
   assert.match(practice, /<RankedHistory onRecentMatches=\{setRankedMatches\}/);
   assert.ok(
     practice.indexOf("player-dashboard-overview") < practice.indexOf("<PlayerModeCard"),

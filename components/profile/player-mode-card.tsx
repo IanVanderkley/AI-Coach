@@ -14,7 +14,7 @@ import {
 type PlayerModeCardProps = {
   mode: "ranked" | "practice";
   stats: RecentStats | null;
-  scope?: "recent" | "lifetime";
+  scope?: "recent" | "lifetime" | "tracked";
   fastestWinMs?: number | null;
 };
 
@@ -28,6 +28,7 @@ export function PlayerModeCard({
   const [expanded, setExpanded] = useState(true);
   const ranked = mode === "ranked";
   const verifiedLifetime = ranked && scope === "lifetime";
+  const trackedPractice = !ranked && scope === "tracked";
   const label = ranked ? "Ranked" : "Practice";
   const bodyId = `player-${mode}-summary-body`;
   const historyHref = ranked ? "#ranked-history-title" : "#practice-history-title";
@@ -35,7 +36,7 @@ export function PlayerModeCard({
   return (
     <section
       className={`player-mode-card player-mode-${mode}`}
-      aria-label={`${label} ${verifiedLifetime ? "verified lifetime" : "recent"} results`}
+      aria-label={`${label} ${verifiedLifetime ? "verified lifetime" : trackedPractice ? "tracked account" : "recent"} results`}
     >
       <div className="player-mode-header">
         <div className="player-mode-label">
@@ -44,7 +45,11 @@ export function PlayerModeCard({
           </span>
           <div>
             <span className="player-mode-eyebrow">
-              {verifiedLifetime ? "SERVER-VERIFIED LIFETIME" : "RECENT RECORDED RESULTS"}
+              {verifiedLifetime
+                ? "SERVER-VERIFIED LIFETIME"
+                : trackedPractice
+                  ? "ACCOUNT-RECORDED TRACKED"
+                  : "RECENT RECORDED RESULTS"}
             </span>
             <h3>{label}</h3>
           </div>
@@ -94,7 +99,9 @@ export function PlayerModeCard({
             ? "All recorded, server-verified Intermediate outcomes. Competitive RP is separate."
             : ranked
               ? "Latest ten server-recorded Intermediate matches; not lifetime Ranked RP."
-              : "Saved Practice records only; browser and account retention limits apply."}
+              : trackedPractice
+                ? "Retained Practice history at tracking activation plus subsequent account uploads; not server-verified or guaranteed complete before activation."
+                : "Saved Practice records only; browser and account retention limits apply."}
         </p>
         <Link className="player-mode-link" href={historyHref}>
           View recent {label.toLowerCase()} matches

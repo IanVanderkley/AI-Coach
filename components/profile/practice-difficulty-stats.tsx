@@ -17,8 +17,10 @@ function formatSeconds(seconds: number | null): string {
 /** Uses only the Practice history already loaded for the current browser/account. */
 export function PracticeDifficultyStats({
   breakdown,
+  scope = "recent",
 }: {
   breakdown: PracticeDifficultySummary[] | null;
+  scope?: "recent" | "tracked";
 }) {
   return (
     <section
@@ -30,7 +32,9 @@ export function PracticeDifficultyStats({
           <span className="player-dashboard-eyebrow">PRACTICE PERFORMANCE</span>
           <h2 id="practice-difficulty-title">By difficulty</h2>
         </div>
-        <span className="practice-difficulty-scope">Recent saved games</span>
+        <span className="practice-difficulty-scope">
+          {scope === "tracked" ? "Tracked account games" : "Recent saved games"}
+        </span>
       </div>
       <div className="practice-difficulty-grid">
         {(["Beginner", "Intermediate", "Expert"] as const).map((difficulty) => {
@@ -62,8 +66,9 @@ export function PracticeDifficultyStats({
         })}
       </div>
       <p className="player-dashboard-honesty">
-        These are self-recorded Practice games currently saved to this account or browser,
-        not verified lifetime results. Older games may have been trimmed.
+        {scope === "tracked"
+          ? "Account-recorded Practice results include retained history at tracking activation and future uploads. Older games may have been trimmed before tracking; results are not server-verified."
+          : "These are self-recorded Practice games currently saved to this account or browser, not verified lifetime results. Older games may have been trimmed."}
       </p>
     </section>
   );

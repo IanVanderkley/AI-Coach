@@ -148,7 +148,7 @@ test("dashboard preserves recent overall scope but uses Ranked lifetime in mode 
   contains(profile, /scope="lifetime"/, "Ranked scope is visibly labelled");
   contains(
     profile,
-    /<PracticeDifficultyStats breakdown=\{practiceDifficulties\}/,
+    /breakdown=\{accountPracticeTracking\?\.breakdown \?\? practiceDifficulties\}/,
     "Practice breakdown uses saved history",
   );
   contains(

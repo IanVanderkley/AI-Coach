@@ -19,6 +19,10 @@ import {
   type RankedLifetimeStats,
 } from "@/lib/profile/ranked-lifetime";
 import { summarizePracticeDifficulties } from "@/lib/profile/practice-difficulty";
+import {
+  loadPracticeAccountTracking,
+  type PracticeAccountTracking,
+} from "@/lib/profile/practice-account-tracking";
 import type { RankedHistoryEntry } from "@/lib/ranked/history";
 import {
   summarizeRecentOutcomes,
@@ -55,6 +59,9 @@ export function PracticeProfile() {
   const [rankedMatches, setRankedMatches] = useState<RankedHistoryEntry[] | null>(null);
   // AI_COACH_LIFETIME_RANKED_V1: the lifetime total comes only from an authenticated server endpoint.
   const [rankedLifetime, setRankedLifetime] = useState<RankedLifetimeStats | null>(null);
+  // AI_COACH_PRACTICE_TRACKED_V1: owner-scoped, self-recorded Practice totals.
+  const [practiceTracking, setPracticeTracking] =
+    useState<PracticeAccountTracking | null>(null);
   const repository = useMemo(() => createPracticeRepository(), []);
 
   useEffect(() => {
@@ -100,6 +107,25 @@ export function PracticeProfile() {
     };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    setPracticeTracking(null);
+    if (storageMode === "account" && games !== null && !loadError) {
+      void loadPracticeAccountTracking()
+        .then((lookup) => {
+          if (active)
+            setPracticeTracking(lookup.kind === "ready" ? lookup.tracking : null);
+        })
+        .catch(() => {
+          // No fabricated totals if the database migration is not installed.
+          if (active) setPracticeTracking(null);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [storageMode, games, loadError]);
+
   const summary = useMemo(() => {
     const current = games ?? [];
     return {
@@ -126,6 +152,13 @@ export function PracticeProfile() {
       return null;
     }
   }, [games, loadError]);
+
+  const accountPracticeTracking = storageMode === "account" ? practiceTracking : null;
+  const trackedOverallStats =
+    accountPracticeTracking && rankedLifetime
+      ? combineRecentStats(accountPracticeTracking.overall, rankedLifetime)
+      : null;
+  const displayOverallStats = trackedOverallStats ?? overallStats;
 
   return (
     <main className="page-shell profile-page player-dashboard-page">
@@ -161,33 +194,34 @@ export function PracticeProfile() {
             <h2 id="player-overall-title">Overall snapshot</h2>
           </div>
           <span className="player-dashboard-status">
-            <ShieldCheck size={14} aria-hidden="true" /> Recent records only
+            <ShieldCheck size={14} aria-hidden="true" />{" "}
+            {trackedOverallStats ? "Tracked account results" : "Recent records only"}
           </span>
         </div>
         <div className="player-dashboard-metrics">
           <div className="player-dashboard-metric">
             <span>Games played</span>
-            <strong>{showRecentCount(overallStats?.games ?? null)}</strong>
+            <strong>{showRecentCount(displayOverallStats?.games ?? null)}</strong>
           </div>
           <div className="player-dashboard-metric">
             <span>Wins</span>
-            <strong>{showRecentCount(overallStats?.wins ?? null)}</strong>
+            <strong>{showRecentCount(displayOverallStats?.wins ?? null)}</strong>
           </div>
           <div className="player-dashboard-metric">
             <span>Losses</span>
-            <strong>{showRecentCount(overallStats?.losses ?? null)}</strong>
+            <strong>{showRecentCount(displayOverallStats?.losses ?? null)}</strong>
           </div>
           <div className="player-dashboard-metric">
             <span>Win rate</span>
             <strong className="metric-accent">
-              {showRecentWinRate(overallStats?.winRate)}
+              {showRecentWinRate(displayOverallStats?.winRate)}
             </strong>
           </div>
         </div>
         <p className="player-dashboard-honesty">
-          Recent saved records, not lifetime statistics. Overall numbers appear after both
-          mode histories load successfully. Ranked covers up to 10 completed Intermediate
-          matches; Practice history follows its account or browser retention limit.
+          {trackedOverallStats
+            ? "Ranked totals include all verified Intermediate outcomes. Practice totals include retained recordings backfilled at tracking activation and complete future account uploads. Games already trimmed before activation cannot be recovered. Practice is client-recorded, not server-verified."
+            : "Recent saved records, not lifetime statistics. Overall numbers appear after both mode histories load successfully. Ranked covers up to 10 completed Intermediate matches; Practice history follows its account or browser retention limit."}
         </p>
       </section>
 
@@ -201,10 +235,17 @@ export function PracticeProfile() {
           scope="lifetime"
           fastestWinMs={rankedLifetime?.fastestWinMs ?? null}
         />
-        <PlayerModeCard mode="practice" stats={practiceStats} />
+        <PlayerModeCard
+          mode="practice"
+          stats={accountPracticeTracking?.overall ?? practiceStats}
+          scope={accountPracticeTracking ? "tracked" : "recent"}
+        />
       </div>
 
-      <PracticeDifficultyStats breakdown={practiceDifficulties} />
+      <PracticeDifficultyStats
+        breakdown={accountPracticeTracking?.breakdown ?? practiceDifficulties}
+        scope={accountPracticeTracking ? "tracked" : "recent"}
+      />
 
       <div className="player-dashboard-history-heading">
         <h2>Recent matches</h2>
