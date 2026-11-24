@@ -1,0 +1,105 @@
+/* Real, private match rating receipt — no speculative RP awards. */
+.ranked-rating-receipt {
+  margin: 18px 0;
+  padding: 17px;
+  text-align: left;
+  border: 1px solid #62523a;
+  border-radius: 12px;
+  background: #26211c;
+}
+.ranked-rating-heading,
+.ranked-rating-heading > span,
+.ranked-rating-trust,
+.ranked-rating-footer,
+.ranked-rating-footer > div,
+.ranked-rating-footer button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.ranked-rating-heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  color: #f8d7a2;
+  font-weight: 750;
+}
+.ranked-rating-trust {
+  color: #b8e2bf;
+  font-size: 11px;
+}
+.ranked-rating-receipt p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.ranked-rating-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 16px 0;
+}
+.ranked-rating-summary > div {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #5b443a;
+  border-radius: 8px;
+  background: #302823;
+}
+.ranked-rating-summary span {
+  color: #dac9ba;
+  font-size: 11px;
+}
+.ranked-rating-summary strong {
+  font-size: clamp(17px, 3.5vw, 24px);
+  font-variant-numeric: tabular-nums;
+}
+.ranked-rating-summary .rating-gain {
+  color: #aee0b8;
+}
+.ranked-rating-summary .rating-loss {
+  color: #ffa7ac;
+}
+.ranked-rating-tier {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 8px 0;
+  color: #d8cabb;
+}
+.ranked-rating-footer {
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  color: #bdaf9f;
+  font-size: 11px;
+}
+.ranked-rating-footer > div {
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.ranked-rating-footer a,
+.ranked-rating-footer button {
+  color: #ffd6a0;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ranked-rating-footer a:focus-visible,
+.ranked-rating-footer button:focus-visible {
+  outline: 2px solid #ffd6a0;
+  outline-offset: 3px;
+}
+@media (max-width: 420px) {
+  .ranked-rating-summary {
+    gap: 5px;
+  }
+  .ranked-rating-summary > div {
+    padding: 11px 5px;
+  }
+}

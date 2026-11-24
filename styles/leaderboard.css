@@ -1,0 +1,235 @@
+/* Ranked leaderboard shared visual foundation; player visibility is opt-in. */
+.leaderboard-page {
+  max-width: 1120px;
+  padding-bottom: 72px;
+}
+.leaderboard-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 24px;
+  color: #f4a3ac;
+  font-size: 13px;
+  font-weight: 650;
+}
+.leaderboard-back-link:hover,
+.leaderboard-bottom-link a:hover {
+  color: #fff;
+}
+.leaderboard-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 24px;
+  padding: clamp(22px, 4vw, 35px);
+  border: 1px solid #633640;
+  border-radius: 15px;
+  background: linear-gradient(120deg, #341f24, #19191a 78%);
+}
+.leaderboard-hero h1 {
+  font-size: clamp(38px, 5.5vw, 58px);
+}
+.leaderboard-hero-icon {
+  flex: 0 0 auto;
+  color: #efb16b;
+}
+.leaderboard-subtitle {
+  max-width: 610px;
+  margin: 13px 0 15px;
+  color: #cec0c3;
+  line-height: 1.6;
+}
+.leaderboard-verification,
+.verified-board-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #b3dabc;
+  font-size: 12px;
+  font-weight: 700;
+}
+.verified-board {
+  padding: clamp(18px, 3.5vw, 30px);
+  border: 1px solid #383138;
+  border-radius: 14px;
+  background: #191719;
+}
+.verified-board-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  margin-bottom: 18px;
+}
+.verified-board-heading h2 {
+  margin: 7px 0;
+  font-family: var(--heading-font);
+  font-size: clamp(24px, 3vw, 32px);
+}
+.verified-board-heading p,
+.verified-board-footnote,
+.verified-board-count {
+  color: #bfb3b6;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.verified-board-heading p {
+  margin: 0;
+}
+.verified-board-refresh,
+.verified-board-message button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 15px;
+  border: 1px solid #59434a;
+  border-radius: 8px;
+  background: #30272a;
+  color: #fff;
+  font-weight: 650;
+}
+.verified-board-refresh:hover:not(:disabled),
+.verified-board-message button:hover {
+  background: #433138;
+}
+.verified-board-refresh:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.verified-board-count {
+  margin: 6px 0 12px;
+}
+.verified-board-overflow {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #3d3339;
+  border-radius: 10px;
+}
+.verified-board-table {
+  width: 100%;
+  min-width: 450px;
+  border-collapse: collapse;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.verified-board-table th {
+  padding: 14px 19px;
+  background: #262025;
+  color: #d1bdc3;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.verified-board-table td {
+  padding: 14px 19px;
+  border-top: 1px solid #382f35;
+  color: #e9e2e4;
+  font-size: 13px;
+}
+.verified-board-table tbody tr:hover {
+  background: #241e22;
+}
+.verified-board-rank {
+  display: inline-flex;
+  min-width: 49px;
+  justify-content: center;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: #2c282b;
+  color: #d9cdd0;
+  font-weight: 750;
+}
+.verified-board-rank-top-1 {
+  background: #453721;
+  color: #ffe0a1;
+}
+.verified-board-rank-top-2 {
+  background: #343439;
+  color: #e1e5ee;
+}
+.verified-board-rank-top-3 {
+  background: #443027;
+  color: #edbf9d;
+}
+.verified-board-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #fff !important;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.verified-board-time svg {
+  color: #f49da9;
+}
+.verified-board-table time {
+  color: #c0b3b8;
+}
+.verified-board-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 11px;
+  min-height: 125px;
+  justify-content: center;
+  padding: 24px;
+  border: 1px dashed #594249;
+  border-radius: 10px;
+  color: #ece2e5;
+}
+.verified-board-message strong {
+  font-size: 17px;
+}
+.verified-board-message p {
+  margin: 0;
+  color: #c3b7ba;
+  line-height: 1.6;
+}
+.verified-board-empty {
+  align-items: center;
+  text-align: center;
+}
+.verified-board-empty svg {
+  color: #ebc58d;
+}
+.verified-board-footnote {
+  margin: 17px 0 0;
+}
+.leaderboard-bottom-link {
+  margin-top: 22px;
+  color: #c6babd;
+}
+.leaderboard-bottom-link a {
+  color: #ffb5bd;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 720px) {
+  .leaderboard-hero-icon {
+    display: none;
+  }
+}
+@media (max-width: 1100px) {
+  /* Five navigation links must remain reachable on tablets and phones. */
+  .main-nav {
+    justify-content: flex-start;
+    gap: 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+  .main-nav .nav-item {
+    flex: 0 0 auto;
+  }
+}
+@media (max-width: 600px) {
+  .verified-board-table th,
+  .verified-board-table td {
+    padding: 13px 14px;
+  }
+}

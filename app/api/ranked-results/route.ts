@@ -2,7 +2,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/sever";
 import {
   parseRankedBoardQuery,
-  RANKED_COLUMNS,
   RANKED_LEADERBOARD_LIMIT,
   RANKED_MINES,
   RANKED_ROWS,
@@ -34,11 +33,8 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const admin = createAdminClient();
     const { data, error } = await admin
-      .from("ranked_verified_results")
+      .from("ranked_public_fastest")
       .select("duration_ms, finished_at")
-      .eq("board_rows", RANKED_ROWS)
-      .eq("board_columns", RANKED_COLUMNS)
-      .eq("mine_count", RANKED_MINES)
       .order("duration_ms", { ascending: true })
       .order("finished_at", { ascending: true })
       .limit(RANKED_LEADERBOARD_LIMIT);

@@ -8,6 +8,7 @@ import type { CSSProperties } from "react";
 import { MineLogo } from "@/components/play/mine-logo";
 import { RankedXpProgress } from "@/components/ranked/ranked-xp-progress"; // AI_COACH_RANKED_ACCOUNT_XP_V1
 import { RankedMatchXpReceipt } from "@/components/ranked/ranked-match-xp-receipt"; // AI_COACH_RANKED_OUTCOME_XP_V1
+import { RankedMatchRating } from "@/components/ranked/ranked-match-rating";
 import {
   formatRankedDuration,
   formatRankedShareText,
@@ -157,6 +158,11 @@ export function RankedResultDialog({
             {result.rows} × {result.columns} · {result.mineCount} mines ·
             Server-controlled
           </p>
+          <RankedMatchRating
+            key={`rating-${result.matchId}`}
+            matchId={result.matchId}
+            expectedOutcome={result.outcome}
+          />
           <div className="ranked-result-actions">
             <button
               type="button"
@@ -209,7 +215,8 @@ export function RankedResultDialog({
           <RankedXpProgress key={result.matchId} matchId={result.matchId} />
           <p className="ranked-result-note">
             The match reward comes from a database receipt; the account XP card shows your
-            saved lifetime total. Competitive RP is not tracked here yet.
+            saved lifetime total. Elo-style ratings are separate; competitive RP is not
+            enabled.
           </p>
         </div>
       ) : null}

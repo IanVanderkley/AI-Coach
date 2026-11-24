@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
-import { Gamepad2, MessageSquare, Settings2, UserRound } from "lucide-react";
+import { Gamepad2, MessageSquare, Settings2, Trophy, UserRound } from "lucide-react";
 
 import { MineLogo } from "./mine-logo";
 import { NavPlayerLevel } from "./nav-player-level"; // AI_COACH_NAV_LEVEL_BADGE_V1
@@ -13,6 +13,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const navigationItems = [
   { label: "Play", icon: Gamepad2, route: "/" },
+  { label: "Leaderboard", icon: Trophy, route: "/leaderboard" },
   { label: "Profile", icon: UserRound, route: "/profile" },
   { label: "Coaching", icon: MessageSquare, route: "/coaching" },
   { label: "Settings", icon: Settings2, route: "/settings" },

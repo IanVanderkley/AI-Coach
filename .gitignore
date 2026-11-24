@@ -16,3 +16,6 @@ Thumbs.db
 /docs/SETTINGS-PAGE-PLAN.md
 
 supabase/.temp/
+
+.vercel
+.env*
