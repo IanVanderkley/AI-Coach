@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/play/navbar";
 import { PracticeProfile } from "@/components/profile/practice-profile";
 import "@/styles/practice-profile.css";
+import "@/styles/profile-levels.css";
 
 export const metadata: Metadata = {
   title: "Practice Review | AI-Coach",
