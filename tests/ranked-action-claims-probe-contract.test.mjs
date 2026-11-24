@@ -20,6 +20,7 @@ for (const [action, rpc] of routes) {
     assert.ok(source.includes("if (authError || !verifiedUserId)"));
     assert.ok(source.includes(`admin.rpc("${rpc}"`));
     assert.ok(source.includes("p_user_id: verifiedUserId"));
-    assert.ok(source.includes(`[Ranked timing] ${action}`));
+    assert.ok(!source.includes("[Ranked timing]"));
+    assert.ok(!source.includes("performance.now()"));
   });
 }

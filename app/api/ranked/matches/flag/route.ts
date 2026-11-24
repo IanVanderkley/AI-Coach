@@ -12,7 +12,6 @@ const headers = {
 // POST /api/ranked/matches/flag
 // Places or removes a flag in an authenticated Ranked match.
 export async function POST(request: Request) {
-  const probeActionStartedMs = performance.now();
   // Only accept requests from our website.
   const parsed = await readRankedMoveJson(request);
   if (!parsed.ok) return parsed.response;
@@ -71,7 +70,6 @@ export async function POST(request: Request) {
       authError = error;
       verifiedUserId = data.user?.id;
     }
-    const probeActionAuthenticatedMs = performance.now();
 
     if (authError || !verifiedUserId) {
       return Response.json(
@@ -91,16 +89,6 @@ export async function POST(request: Request) {
       p_row: row,
       p_column: column,
     });
-    const probeActionRpcMs = performance.now();
-    if (process.env.NODE_ENV === "development") {
-      console.info(
-        "[Ranked timing] flag " +
-          `auth=${(probeActionAuthenticatedMs - probeActionStartedMs).toFixed(1)}ms ` +
-          `rpc=${(probeActionRpcMs - probeActionAuthenticatedMs).toFixed(1)}ms ` +
-          `total=${(probeActionRpcMs - probeActionStartedMs).toFixed(1)}ms`,
-      );
-    }
-
     if (flagError) {
       console.error("Ranked flag failed:", flagError);
 

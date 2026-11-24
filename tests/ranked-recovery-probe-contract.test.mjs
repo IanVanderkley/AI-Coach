@@ -13,7 +13,8 @@ test("recovery claims authentication requires explicit opt-in", () => {
   assert.ok(route.includes("if (authError || !verifiedUserId)"));
   assert.ok(route.includes('.eq("user_id", verifiedUserId)'));
   assert.ok(route.includes("p_user_id: verifiedUserId"));
-  assert.ok(route.includes("[Ranked timing] recovery"));
+  assert.ok(!route.includes("[Ranked timing]"));
+  assert.ok(!route.includes("performance.now()"));
 });
 test("initial mount recovery is guarded without blocking explicit reloads", () => {
   assert.ok(page.includes("AI_COACH_RANKED_SINGLE_INITIAL_LOAD_V1"));

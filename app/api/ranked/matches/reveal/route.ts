@@ -12,10 +12,8 @@ const headers = {
 // POST /api/ranked/matches/reveal
 // Handles both the first reveal and subsequent reveals.
 export async function POST(request: Request) {
-  const probeStartMs = performance.now();
   // Block requests from other website origins.
   const parsed = await readRankedMoveJson(request);
-  const probeParsedMs = performance.now();
   if (!parsed.ok) return parsed.response;
   const body: unknown = parsed.value;
 
@@ -75,7 +73,6 @@ export async function POST(request: Request) {
       authError = error;
       verifiedUserId = data.user?.id;
     }
-    const probeAuthenticatedMs = performance.now();
 
     if (authError || !verifiedUserId) {
       return Response.json(
@@ -142,7 +139,6 @@ export async function POST(request: Request) {
         ? "reveal_ranked_cell"
         : "reveal_first_ranked_cell";
     }
-    const probeLookupsDoneMs = performance.now();
 
     // Both database functions verify ownership again
     // and lock the match before updating it.
@@ -152,33 +148,6 @@ export async function POST(request: Request) {
       p_row: row,
       p_column: column,
     });
-    const probeRpcMs = performance.now();
-
-    // AI_COACH_RANKED_REVEAL_LATENCY_PROBE_V1: DEVELOPMENT diagnostics only; never print account or board data.
-    const probeDurations = {
-      parse: probeParsedMs - probeStartMs,
-      auth: probeAuthenticatedMs - probeParsedMs,
-      lookups: probeLookupsDoneMs - probeAuthenticatedMs,
-      rpc: probeRpcMs - probeLookupsDoneMs,
-      total: probeRpcMs - probeStartMs,
-    };
-    const responseHeaders =
-      process.env.NODE_ENV === "development"
-        ? {
-            ...headers,
-            "Server-Timing": Object.entries(probeDurations)
-              .map(([stage, milliseconds]) => `${stage};dur=${milliseconds.toFixed(1)}`)
-              .join(", "),
-          }
-        : headers;
-    if (process.env.NODE_ENV === "development") {
-      console.info(
-        "[Ranked timing] reveal " +
-          Object.entries(probeDurations)
-            .map(([stage, milliseconds]) => `${stage}=${milliseconds.toFixed(1)}ms`)
-            .join(" "),
-      );
-    }
 
     if (revealError) {
       console.error("Ranked reveal failed:", revealError);
@@ -203,7 +172,7 @@ export async function POST(request: Request) {
     }
 
     // Return the verified move result.
-    return Response.json(data, { status: 200, headers: responseHeaders });
+    return Response.json(data, { status: 200, headers });
   } catch (error) {
     console.error("Ranked reveal API error:", error);
 

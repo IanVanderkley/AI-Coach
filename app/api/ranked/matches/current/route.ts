@@ -11,7 +11,6 @@ const headers = {
 // GET /api/ranked/matches/current
 // Restores the signed-in player's active Ranked game.
 export async function GET(request: Request) {
-  const recoveryStartedMs = performance.now();
   try {
     // Step 1: Verify the currently signed-in player.
     const supabase = await createClient();
@@ -36,7 +35,6 @@ export async function GET(request: Request) {
       authError = error;
       verifiedUserId = data.user?.id;
     }
-    const recoveryAuthenticatedMs = performance.now();
 
     if (authError || !verifiedUserId) {
       return Response.json(
@@ -69,21 +67,6 @@ export async function GET(request: Request) {
         knownBoard.matchId === knownMatchId &&
         knownBoard.status === "active"
       ) {
-        const recoveryBoardMs = performance.now();
-        if (process.env.NODE_ENV === "development") {
-          console.info(
-            "[Ranked timing] recovery " +
-              "auth=" +
-              (recoveryAuthenticatedMs - recoveryStartedMs).toFixed(1) +
-              "ms " +
-              "match=0.0ms board=" +
-              (recoveryBoardMs - recoveryAuthenticatedMs).toFixed(1) +
-              "ms " +
-              "total=" +
-              (recoveryBoardMs - recoveryStartedMs).toFixed(1) +
-              "ms cached=true",
-          );
-        }
         return Response.json(knownBoard, { status: 200, headers });
       }
     }
@@ -94,7 +77,6 @@ export async function GET(request: Request) {
       .eq("user_id", verifiedUserId)
       .eq("status", "active")
       .maybeSingle();
-    const recoveryMatchedMs = performance.now();
 
     if (matchError) {
       console.error("Ranked match lookup failed:", matchError);
@@ -119,17 +101,6 @@ export async function GET(request: Request) {
       p_match_id: match.id,
       p_user_id: verifiedUserId,
     });
-    const recoveryBoardMs = performance.now();
-    if (process.env.NODE_ENV === "development") {
-      console.info(
-        "[Ranked timing] recovery " +
-          `auth=${(recoveryAuthenticatedMs - recoveryStartedMs).toFixed(1)}ms ` +
-          `match=${(recoveryMatchedMs - recoveryAuthenticatedMs).toFixed(1)}ms ` +
-          `board=${(recoveryBoardMs - recoveryMatchedMs).toFixed(1)}ms ` +
-          `total=${(recoveryBoardMs - recoveryStartedMs).toFixed(1)}ms`,
-      );
-    }
-
     if (boardError) {
       console.error("Ranked board recovery failed:", boardError);
 
