@@ -1,0 +1,191 @@
+/* Player progression is deliberately read-only and separate from Ranked RP. */
+.profile-level-card {
+  margin: 0 0 24px;
+  padding: clamp(18px, 3vw, 27px);
+  border: 1px solid #503039;
+  border-radius: 12px;
+  background: #201719;
+  color: var(--text);
+}
+.profile-level-header,
+.profile-level-heading,
+.profile-level-verified,
+.profile-level-stat-row,
+.profile-level-progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.profile-level-heading {
+  justify-content: start;
+}
+.profile-level-icon,
+.profile-level-number-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 10px;
+  color: #ffb3bb;
+  background: #44232c;
+}
+.profile-level-icon {
+  width: 48px;
+  height: 48px;
+}
+.profile-level-number-icon {
+  width: 48px;
+  height: 48px;
+}
+.profile-level-eyebrow {
+  color: #d4a2a8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.profile-level-heading h2 {
+  margin: 5px 0 0;
+  font-family: var(--heading-font);
+  font-size: clamp(24px, 3vw, 30px);
+  line-height: 1.1;
+}
+.profile-level-verified {
+  justify-content: start;
+  color: #e5c4c8;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.profile-level-verified svg {
+  color: #8cdfa3;
+}
+.profile-level-content {
+  margin-top: 26px;
+}
+.profile-level-stat-row {
+  align-items: end;
+}
+.profile-level-number {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.profile-level-number > div,
+.profile-level-total {
+  display: grid;
+  gap: 4px;
+}
+.profile-level-number span:not(.profile-level-number-icon),
+.profile-level-total span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.profile-level-number strong {
+  font-family: var(--heading-font);
+  font-size: 45px;
+  line-height: 1;
+}
+.profile-level-total {
+  text-align: right;
+}
+.profile-level-total strong {
+  font-size: 20px;
+}
+.profile-level-progress-heading {
+  margin: 22px 0 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.profile-level-progress-heading strong {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.profile-level-progress-track {
+  height: 11px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #3b282c;
+}
+.profile-level-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--button-primary-bg, #b62634);
+  transition: width 220ms ease;
+}
+.profile-level-caption,
+.profile-level-disclaimer {
+  margin: 12px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.profile-level-disclaimer {
+  padding-top: 15px;
+  border-top: 1px solid #4d3439;
+  margin-top: 24px;
+  color: #b4a0a4;
+  font-size: 11px;
+}
+.profile-level-status {
+  margin: 20px 0;
+  color: var(--text-secondary);
+}
+.profile-level-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 15px;
+  border: 1px solid #594048;
+  border-radius: 8px;
+  background: #271c20;
+}
+.profile-level-message > svg {
+  flex-shrink: 0;
+  color: #ffb6bc;
+}
+.profile-level-message strong {
+  display: block;
+  font-size: 14px;
+}
+.profile-level-message p {
+  margin: 7px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.profile-level-sign-in {
+  display: inline-flex;
+  margin-top: 12px;
+  padding: 9px 15px;
+  border-radius: 6px;
+  background: var(--button-primary-bg, #b62634);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+.profile-level-sign-in:hover {
+  background: var(--button-primary-hover, #c42b39);
+}
+@media (max-width: 620px) {
+  .profile-level-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .profile-level-stat-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .profile-level-total {
+    text-align: left;
+  }
+  .profile-level-progress-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-level-progress-track span {
+    transition: none;
+  }
+}

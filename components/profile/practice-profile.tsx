@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CalendarDays, Clock3, Gamepad2, History, Play, Target } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { ProfileLevelCard } from "@/components/profile/profile-level-card";
 import type { SavedPracticeSession } from "@/lib/practice/history";
 import { createPracticeRepository } from "@/lib/practice/repository";
 
@@ -80,6 +81,8 @@ export function PracticeProfile() {
           </Link>
         </div>
       </div>
+
+      <ProfileLevelCard />
 
       <section className="profile-summary" aria-label="Current session Practice results">
         <div className="profile-stat">
