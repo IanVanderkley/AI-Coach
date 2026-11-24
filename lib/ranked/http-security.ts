@@ -35,15 +35,36 @@ function declaredBodyLength(request: Request): number | null | Response {
   return Number(contentLength);
 }
 
-/** A Ranked start request takes no body; don't read/parse a supplied payload. */
-export function validateRankedStartRequest(request: Request): Response | null {
-  if (!isAllowedRankedOrigin(request)) return reject("Invalid request origin.", 403);
+/** A Ranked start request must contain zero body bytes. */
+export async function validateRankedStartRequest(
+  request: Request,
+): Promise<Response | null> {
+  if (!isAllowedRankedOrigin(request)) {
+    return reject("Invalid request origin.", 403);
+  }
   const declared = declaredBodyLength(request);
   if (declared instanceof Response) return declared;
-  if ((declared !== null && declared > 0) || request.body !== null) {
+  if (declared !== null && declared > 0) {
     return reject("Ranked match start does not accept a request body.", 400);
   }
-  return null;
+  // Next.js may expose a stream even for a zero-byte POST.
+  if (!request.body) return null;
+  const reader = request.body.getReader();
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) return null;
+      // Reject actual data, even if Content-Length incorrectly claims zero.
+      if (value.byteLength > 0) {
+        void reader.cancel().catch(() => undefined);
+        return reject("Ranked match start does not accept a request body.", 400);
+      }
+    }
+  } catch {
+    return reject("Could not read the request body.", 400);
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 /**

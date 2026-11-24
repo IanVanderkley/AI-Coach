@@ -134,18 +134,54 @@ test("accepts bodyless Ranked start and rejects supplied bodies", async () => {
     method: "POST",
     headers: { Origin: "https://example.test" },
   });
-  assert.equal(validateRankedStartRequest(valid), null);
+  assert.equal(await validateRankedStartRequest(valid), null);
 
   const extra = new Request("https://example.test/api/ranked/matches", {
     method: "POST",
     headers: { Origin: "https://example.test" },
     body: "unexpected",
   });
-  assert.equal(validateRankedStartRequest(extra)?.status, 400);
+  assert.equal((await validateRankedStartRequest(extra))?.status, 400);
 
   const cross = new Request("https://example.test/api/ranked/matches", {
     method: "POST",
     headers: { Origin: "https://evil.test" },
   });
-  assert.equal(validateRankedStartRequest(cross)?.status, 403);
+  assert.equal((await validateRankedStartRequest(cross))?.status, 403);
+});
+
+test("empty start streams are allowed but byte payloads are rejected", async () => {
+  const url = "https://example.test/api/ranked/matches";
+  const headers = {
+    Origin: "https://example.test",
+    "Content-Length": "0",
+  };
+
+  const empty = new Request(url, {
+    method: "POST",
+    headers,
+    body: new ReadableStream({
+      start(controller) {
+        controller.close();
+      },
+    }),
+    duplex: "half",
+  });
+
+  assert.equal(await validateRankedStartRequest(empty), null);
+
+  const nonempty = new Request(url, {
+    method: "POST",
+    headers,
+    body: new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array([123]));
+        controller.close();
+      },
+    }),
+    duplex: "half",
+  });
+
+  const response = await validateRankedStartRequest(nonempty);
+  assert.equal(response?.status, 400);
 });
