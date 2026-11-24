@@ -45,7 +45,7 @@ export async function GET() {
         .select("match_id,user_id")
         .eq("user_id", user.id)
         .in("match_id", matchIds),
-      admin
+      client
         .from("player_xp_match_receipts")
         .select("match_id,user_id,outcome,amount")
         .eq("user_id", user.id)
