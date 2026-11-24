@@ -1,0 +1,132 @@
+/* Elo-style rating, public usernames, and opt-out controls. */
+.leaderboard-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 22px;
+}
+.leaderboard-tab {
+  min-height: 44px;
+  padding: 11px 16px;
+  border: 1px solid #61424c;
+  border-radius: 9px;
+  background: #2c2428;
+  color: #e9dde0;
+  font-weight: 700;
+}
+.leaderboard-tab:hover {
+  background: #433039;
+}
+.leaderboard-tab.active,
+.leaderboard-tab[aria-pressed="true"] {
+  background: #a52736;
+  border-color: #d44d5c;
+  color: #fff;
+}
+.leaderboard-username {
+  font-weight: 750;
+  color: #fff !important;
+  overflow-wrap: anywhere;
+}
+.leaderboard-rating {
+  font-weight: 800;
+  color: #ffd9a6 !important;
+  font-variant-numeric: tabular-nums;
+}
+.verified-board-footnote a {
+  color: #ffa7b0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.leaderboard-privacy {
+  margin: 30px 0 72px;
+  padding: clamp(18px, 3vw, 28px);
+  max-width: 760px;
+  border: 1px solid #523b43;
+  border-radius: 13px;
+  background: #201a1e;
+}
+.leaderboard-privacy h2 {
+  margin: 7px 0 11px;
+  font-family: var(--heading-font);
+  font-size: 29px;
+}
+.leaderboard-privacy > p:not(.eyebrow) {
+  max-width: 650px;
+  color: #c8b9bd;
+  line-height: 1.6;
+}
+.leaderboard-privacy-controls {
+  display: grid;
+  gap: 15px;
+  margin-top: 22px;
+}
+.leaderboard-privacy-name {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+}
+.leaderboard-privacy-name input {
+  width: min(100%, 410px);
+  min-height: 44px;
+  padding: 10px 13px;
+  color: #fff;
+  background: #161316;
+  border: 1px solid #70535a;
+  border-radius: 8px;
+  font: inherit;
+}
+.leaderboard-privacy-help {
+  margin: -9px 0 2px;
+  color: #b8a8ad;
+  font-size: 12px;
+}
+.leaderboard-privacy-check {
+  display: flex;
+  gap: 13px;
+  padding: 17px;
+  border: 1px solid #62434c;
+  border-radius: 10px;
+  background: #2b2227;
+  cursor: pointer;
+}
+.leaderboard-privacy-check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--red);
+  flex-shrink: 0;
+}
+.leaderboard-privacy-check span {
+  display: grid;
+  gap: 6px;
+}
+.leaderboard-privacy-check small {
+  color: #d1c0c6;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.leaderboard-privacy-rating {
+  margin: 0;
+  color: #bcb3b6;
+}
+.leaderboard-privacy-rating strong {
+  color: #ffe2a3;
+}
+.leaderboard-privacy-controls > button {
+  justify-self: start;
+  min-height: 44px;
+}
+.leaderboard-privacy-saved {
+  color: #b0e6bf;
+}
+.leaderboard-privacy-error {
+  color: #ffb7c1;
+}
+@media (max-width: 600px) {
+  .leaderboard-tabs > button {
+    flex: 1 1 auto;
+  }
+  .verified-board-table {
+    min-width: 570px;
+  }
+}

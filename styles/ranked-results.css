@@ -186,3 +186,229 @@
     animation: none !important;
   }
 }
+
+/* AI_COACH_RANKED_RESULT_EXPERIENCE_V1: reuse Practice win/loss keyframes.
+   The effects stay behind the content; keyboard controls remain available. */
+.ranked-result-content {
+  isolation: isolate;
+}
+.ranked-result-confetti {
+  top: 112px;
+}
+.ranked-result-sharing {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 18px;
+}
+.ranked-result-sharing button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 3px;
+  color: #d6d6d6;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ranked-result-sharing button:hover,
+.ranked-result-sharing button:focus-visible {
+  color: #fff;
+}
+.ranked-result-share-status {
+  margin-top: 7px;
+  color: #ffb2b8;
+  font-size: 12px;
+}
+/* practice-result-motion.css already disables all shared keyframe motion
+   and decorative particles under prefers-reduced-motion. */
+
+/* AI_COACH_RANKED_ACCOUNT_XP_V1: verified account progression, never inferred rewards. */
+.ranked-xp-panel {
+  margin-top: 19px;
+  padding: 18px;
+  text-align: left;
+  background: #211b1d;
+  border: 1px solid #50343b;
+  border-radius: 12px;
+}
+.ranked-xp-heading,
+.ranked-xp-totals,
+.ranked-xp-progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ranked-xp-heading > span:first-child,
+.ranked-xp-trust,
+.ranked-xp-refresh,
+.ranked-xp-disclaimer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ranked-xp-heading > span:first-child {
+  color: #ffd4d9;
+  font-weight: 700;
+  font-size: 13px;
+}
+.ranked-xp-trust {
+  color: #b4d9bd;
+  font-size: 11px;
+}
+.ranked-xp-totals {
+  align-items: start;
+  margin: 17px 0;
+}
+.ranked-xp-totals > div {
+  display: grid;
+  gap: 5px;
+}
+.ranked-xp-totals > div:last-child {
+  text-align: right;
+}
+.ranked-xp-totals span,
+.ranked-xp-progress-heading,
+.ranked-xp-next {
+  color: #bfb5b8;
+  font-size: 11px;
+}
+.ranked-xp-totals strong {
+  font-size: clamp(20px, 4vw, 27px);
+  font-variant-numeric: tabular-nums;
+}
+.ranked-xp-progress-heading {
+  margin: 10px 0 8px;
+}
+.ranked-xp-progress-heading strong {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.ranked-xp-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: #3b2b30;
+  overflow: hidden;
+}
+.ranked-xp-progress-track > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #e75d68, #ffb2a3);
+  transition: width 300ms ease;
+}
+.ranked-xp-next {
+  margin: 8px 0 0;
+}
+.ranked-xp-message {
+  color: #d3c4c8;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 14px 0;
+}
+.ranked-xp-refresh {
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: #423036;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+}
+.ranked-xp-refresh:hover:not(:disabled),
+.ranked-xp-refresh:focus-visible {
+  background: #593b45;
+}
+.ranked-xp-refresh:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.ranked-xp-disclaimer {
+  margin: 10px 0 0;
+  align-items: start;
+  color: #b5a5aa;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.ranked-xp-disclaimer svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+@media (max-width: 450px) {
+  .ranked-xp-heading {
+    flex-wrap: wrap;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ranked-xp-progress-track > span {
+    transition: none;
+  }
+}
+
+/* Per-match XP receipt. A database row is required before displaying an earned reward. */
+.ranked-match-xp-receipt {
+  margin: 18px 0 14px;
+  padding: 15px;
+  border: 1px solid #55402c;
+  border-radius: 10px;
+  background: #28231c;
+  text-align: left;
+}
+.ranked-match-xp-heading,
+.ranked-match-xp-heading > span,
+.ranked-match-xp-verified,
+.ranked-match-xp-earned,
+.ranked-match-xp-note,
+.ranked-match-xp-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ranked-match-xp-heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  color: #f9ddb0;
+  font-size: 13px;
+  font-weight: 750;
+}
+.ranked-match-xp-verified {
+  color: #a7e2b0;
+  font-size: 11px;
+}
+.ranked-match-xp-receipt p {
+  color: #c8c0b5;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ranked-match-xp-earned {
+  margin-top: 13px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.ranked-match-xp-earned strong {
+  font-size: 27px;
+  color: #ffe2a3;
+  font-variant-numeric: tabular-nums;
+}
+.ranked-match-xp-earned span {
+  color: #d5ccbf;
+  font-size: 12px;
+}
+.ranked-match-xp-refresh {
+  margin-top: 11px;
+  padding: 5px 0;
+  color: #f3d6ae;
+  background: transparent;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ranked-match-xp-refresh:focus-visible {
+  outline: 2px solid #ffe2a3;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ranked-match-xp-receipt * {
+    transition: none !important;
+  }
+}

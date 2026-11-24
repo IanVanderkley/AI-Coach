@@ -1,0 +1,288 @@
+/* Dedicated player pages reuse dashboard visual language without new data sources. */
+.profile-detail-page {
+  padding-top: 22px;
+  padding-bottom: 68px;
+}
+.profile-detail-back,
+.profile-detail-play-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #f5a5ae;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.profile-detail-back {
+  margin-bottom: 24px;
+}
+.profile-detail-back:hover,
+.profile-detail-play-link:hover {
+  color: #ffe1e4;
+}
+.profile-detail-back:focus-visible,
+.profile-detail-play-link:focus-visible,
+.profile-detail-match-list a:focus-visible {
+  outline: 2px solid #ff9da6;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.profile-detail-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: clamp(19px, 3vw, 30px);
+  margin-bottom: 22px;
+  border: 1px solid #633640;
+  border-radius: 14px;
+  background: linear-gradient(125deg, #351e24, #1b191b 72%);
+}
+.profile-detail-hero > svg {
+  flex-shrink: 0;
+  color: #f79fac;
+}
+.profile-detail-hero h1 {
+  font-family: var(--heading-font);
+  font-size: clamp(30px, 4vw, 45px);
+  line-height: 1.1;
+  margin: 8px 0;
+}
+.profile-detail-hero p,
+.profile-detail-note,
+.profile-detail-section-title p {
+  margin: 0;
+  color: #c6b4b9;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.practice-detail-hero {
+  background: linear-gradient(125deg, #202f35, #1b1a1c 72%);
+  border-color: #35444a;
+}
+.practice-detail-hero > svg {
+  color: #a8c9e3;
+}
+.profile-detail-panel,
+.profile-detail-history {
+  margin: 0 0 22px;
+  padding: clamp(17px, 2.7vw, 25px);
+  border: 1px solid #41343a;
+  border-radius: 13px;
+  background: #1d191b;
+}
+.profile-detail-panel-heading,
+.profile-detail-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.profile-detail-panel-heading h2,
+.profile-detail-section-title h2 {
+  font-family: var(--heading-font);
+  margin: 0;
+  font-size: clamp(20px, 2.8vw, 26px);
+}
+.profile-detail-panel-heading > span {
+  color: #c8b9bc;
+  font-size: 12px;
+}
+.profile-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 17px;
+}
+.profile-detail-metrics > div {
+  display: grid;
+  gap: 8px;
+  padding: 17px;
+  background: #2a2226;
+  border: 1px solid #49353d;
+  border-radius: 9px;
+}
+.profile-detail-metrics span {
+  color: #c9b9bf;
+  font-size: 12px;
+}
+.profile-detail-metrics strong {
+  font-size: clamp(22px, 3vw, 33px);
+  font-variant-numeric: tabular-nums;
+}
+.profile-detail-metrics > div:last-child strong {
+  color: #ffbac2;
+}
+.profile-detail-best {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding: 20px;
+  margin: 0 0 19px;
+  border: 1px solid #675437;
+  border-radius: 12px;
+  background: #2b241d;
+}
+.profile-detail-best > svg {
+  color: #f5d399;
+  flex-shrink: 0;
+}
+.profile-detail-best > div {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+}
+.profile-detail-best span {
+  font-size: 12px;
+  color: #dfc8a9;
+}
+.profile-detail-best strong {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.profile-detail-best a,
+.profile-detail-match-list a {
+  padding: 9px 12px;
+  border: 1px solid #6a484e;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.profile-detail-best a:hover,
+.profile-detail-match-list a:hover {
+  background: #483036;
+}
+.profile-detail-note {
+  margin: 16px 0 26px;
+}
+.profile-detail-message {
+  padding: 17px;
+  border: 1px solid #514046;
+  border-radius: 9px;
+  color: #f0d7d9;
+}
+.profile-detail-message a {
+  color: #ffbcc5;
+}
+.profile-detail-section-title {
+  margin: 26px 0 15px;
+}
+.profile-detail-section-title p {
+  margin: 5px 0 0;
+}
+.profile-detail-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 0;
+}
+.profile-detail-filter-row label,
+.profile-detail-filter-row > span {
+  color: #c8b9bc;
+  font-size: 12px;
+}
+.profile-detail-filter-row select {
+  background: #30272b;
+  border: 1px solid #6c4a54;
+  color: #fff;
+  padding: 9px 12px;
+  border-radius: 7px;
+}
+.profile-detail-filter-row select:focus-visible {
+  outline: 2px solid #ff9da6;
+  outline-offset: 2px;
+}
+.profile-detail-filter-row > span {
+  margin-left: auto;
+}
+.profile-detail-match-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.profile-detail-match-list li {
+  display: grid;
+  grid-template-columns: 65px minmax(120px, 1fr) auto auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 2px;
+  border-top: 1px solid #45353d;
+  font-size: 12px;
+}
+.profile-detail-match-list li > span:nth-child(3),
+.profile-detail-match-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.profile-detail-match-list time {
+  color: #bfaeb4;
+}
+.detail-outcome-win {
+  color: #afe4ba;
+  font-weight: 750;
+}
+.detail-outcome-loss {
+  color: #ff9da8;
+  font-weight: 750;
+}
+@media (max-width: 950px) {
+  .profile-detail-match-list li {
+    grid-template-columns: 65px minmax(100px, 1fr) auto;
+  }
+  .profile-detail-match-list time {
+    display: none;
+  }
+}
+@media (max-width: 680px) {
+  .profile-detail-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .profile-detail-hero > svg {
+    display: none;
+  }
+  .profile-detail-best {
+    flex-wrap: wrap;
+  }
+  .profile-detail-match-list li {
+    grid-template-columns: 55px 1fr;
+  }
+  .profile-detail-match-list li > span:nth-child(3) {
+    grid-column: 2;
+  }
+  .profile-detail-match-list li > a {
+    justify-self: start;
+    grid-column: 2;
+  }
+}
+
+/* Give each dashboard card a clear route to its dedicated statistics page. */
+.player-mode-full-link {
+  display: inline-flex;
+  margin-left: 14px;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border: 1px solid #70414a;
+  border-radius: 7px;
+  color: #ffd0d6;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.player-mode-full-link:hover {
+  background: #433035;
+  color: #fff;
+}
+.player-mode-full-link:focus-visible {
+  outline: 2px solid #ff9da6;
+  outline-offset: 3px;
+}
+@media (max-width: 480px) {
+  .player-mode-full-link {
+    margin-left: 0;
+  }
+}

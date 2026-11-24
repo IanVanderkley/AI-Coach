@@ -55,3 +55,17 @@ export function formatRankedDuration(milliseconds: number | null): string {
   const hundredths = Math.floor((milliseconds % 1000) / 10);
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(hundredths).padStart(2, "0")}`;
 }
+
+// AI_COACH_RANKED_RESULT_EXPERIENCE_V1: only share facts received from verified Ranked gameplay.
+// Rewards must never be guessed from the outcome or from a client-supplied value.
+export function formatRankedShareText(result: RankedResultSummary): string {
+  const outcome = result.outcome === "won" ? "Victory" : "Game over";
+  return [
+    `AI-Coach Ranked — ${outcome}`,
+    `${result.rows} × ${result.columns} board · ${result.mineCount} mines`,
+    `Time: ${formatRankedDuration(result.durationMs)}`,
+    `Moves: ${result.moveCount}`,
+    `Flags on board: ${result.flagCount}`,
+    "Server-confirmed Ranked match result",
+  ].join("\n");
+}

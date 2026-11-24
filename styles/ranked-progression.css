@@ -1,0 +1,186 @@
+/* Ranked progression overview and private recent-match history. RP is not active. */
+.ranked-ladders,
+.ranked-history-card {
+  margin: 20px 0 25px;
+  padding: clamp(15px, 3vw, 22px);
+  border: 1px solid #493238;
+  border-radius: 13px;
+  background: #21191c;
+  color: #f5eeee;
+}
+.ranked-ladders-heading,
+.ranked-ladder-title,
+.ranked-history-heading,
+.ranked-history-heading h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.ranked-ladders h2,
+.ranked-history-card h2 {
+  margin: 0;
+  font-family: var(--heading-font);
+  font-size: clamp(19px, 3vw, 24px);
+}
+.ranked-ladders-heading > span,
+.ranked-ladders-note,
+.ranked-history-footnote {
+  font-size: 12px;
+  color: #c5b3b8;
+  line-height: 1.55;
+}
+.ranked-ladder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+  margin-top: 14px;
+}
+.ranked-ladder-card {
+  padding: 15px;
+  border: 1px solid #3d3337;
+  border-radius: 9px;
+  background: #282325;
+}
+.ranked-ladder-card.ranked-ladder-available {
+  border-color: #9a545f;
+  background: #302126;
+}
+.ranked-ladder-title strong {
+  font-size: 14px;
+}
+.ranked-ladder-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #f5b7be;
+}
+.ranked-ladder-card p {
+  margin: 9px 0 0;
+  font-size: 12px;
+  color: #c5b9bd;
+}
+.ranked-ladders-note {
+  margin: 15px 0 0;
+}
+.ranked-history-heading {
+  margin-bottom: 14px;
+}
+.ranked-history-heading h2 {
+  justify-content: flex-start;
+  margin-top: 5px;
+}
+.ranked-history-eyebrow {
+  color: #f1a0aa;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+}
+.ranked-history-heading button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: 1px solid #704a52;
+  border-radius: 7px;
+  background: #38282d;
+  color: #fff;
+}
+.ranked-history-heading button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.ranked-history-card p {
+  color: #c5b3b8;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.ranked-history-card a {
+  color: #ffb4be;
+}
+.ranked-history-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid #443239;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.ranked-history-summary > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  text-align: center;
+  background: #281f23;
+}
+.ranked-history-summary > div + div {
+  border-left: 1px solid #443239;
+}
+.ranked-history-summary span {
+  font-size: 11px;
+  color: #c4b5b9;
+}
+.ranked-history-summary strong {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.ranked-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 13px 0 0;
+}
+.ranked-history-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid #3b3034;
+  padding: 13px 3px;
+}
+.ranked-history-list li > div {
+  display: grid;
+  gap: 5px;
+}
+.ranked-history-list span,
+.ranked-history-list time {
+  font-size: 12px;
+  color: #c1b6b9;
+}
+.ranked-history-win {
+  color: #b9f0be;
+}
+.ranked-history-loss {
+  color: #ffacb7;
+}
+.ranked-history-values {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.ranked-history-values strong {
+  font-size: 16px;
+}
+.ranked-history-values .ranked-history-xp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  color: #ffdda3;
+}
+@media (max-width: 760px) {
+  .ranked-ladder-grid {
+    grid-template-columns: 1fr;
+  }
+  .ranked-ladders-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 470px) {
+  .ranked-history-list li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ranked-history-values {
+    text-align: left;
+  }
+}

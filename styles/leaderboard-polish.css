@@ -1,0 +1,141 @@
+/* Batch 12: one shared width for all leaderboard cards, no fixed uneven panels. */
+.leaderboard-page {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+.leaderboard-page > .leaderboard-hero,
+.leaderboard-page > .verified-board {
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+.leaderboard-page > .leaderboard-hero {
+  display: flex;
+  min-height: 230px;
+}
+.leaderboard-page > .leaderboard-back-link {
+  align-self: flex-start;
+}
+.verified-board {
+  min-height: 350px;
+}
+.verified-board-heading {
+  align-items: flex-start;
+}
+.verified-board-heading > div {
+  min-width: 0;
+  flex: 1 1 310px;
+}
+.verified-board-refresh {
+  flex: 0 0 auto;
+}
+.verified-board-overflow {
+  width: 100%;
+  min-width: 0;
+}
+.verified-board-message {
+  width: 100%;
+  min-height: 165px;
+  text-align: center;
+  align-items: center;
+}
+.verified-board-message > p {
+  max-width: 570px;
+}
+.verified-board-rank {
+  gap: 5px;
+  align-items: center;
+}
+.verified-board-table td,
+.verified-board-table th {
+  vertical-align: middle;
+}
+.rating-tier {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 82px;
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+.rating-tier-bronze {
+  color: #ecc0a0;
+  background: #3e2c28;
+}
+.rating-tier-silver {
+  color: #e1e4ee;
+  background: #363a42;
+}
+.rating-tier-gold {
+  color: #ffdda1;
+  background: #403421;
+}
+.rating-tier-platinum {
+  color: #b5f1e5;
+  background: #233a39;
+}
+.rating-tier-diamond {
+  color: #b6d9ff;
+  background: #283750;
+}
+/* The settings sidebar occupies 246px + 22px gap at desktop width. */
+.settings-page > .leaderboard-privacy {
+  margin: 22px 0 68px calc(246px + 22px);
+  width: calc(100% - 246px - 22px);
+  max-width: none;
+  box-sizing: border-box;
+}
+.leaderboard-privacy-controls {
+  grid-template-columns: minmax(0, 1fr);
+}
+.leaderboard-privacy-name input {
+  width: 100%;
+  max-width: 440px;
+}
+.leaderboard-privacy-check {
+  align-items: center;
+  min-height: 72px;
+}
+.leaderboard-privacy-rating {
+  padding: 13px 16px;
+  background: #2b2427;
+  border: 1px solid #49383d;
+  border-radius: 8px;
+}
+@media (max-width: 760px) {
+  .settings-page > .leaderboard-privacy {
+    margin-left: 0;
+    width: 100%;
+  }
+  .leaderboard-page > .leaderboard-hero {
+    min-height: 0;
+  }
+}
+@media (max-width: 540px) {
+  .verified-board-heading {
+    flex-direction: column;
+  }
+  .verified-board-refresh {
+    align-self: flex-start;
+  }
+  .leaderboard-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .leaderboard-tab {
+    min-width: 0;
+  }
+  .leaderboard-privacy {
+    padding: 18px 16px;
+  }
+}

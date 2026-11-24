@@ -1,0 +1,49 @@
+/* Profile-only, accessible independent match history toggles. */
+.profile-history-toggle,
+.ranked-history-heading .profile-history-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  padding: 3px 0;
+  margin: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.profile-history-toggle:hover,
+.ranked-history-heading .profile-history-toggle:hover {
+  color: #ffd5da;
+  background: transparent;
+}
+.profile-history-toggle:focus-visible,
+.ranked-history-heading .profile-history-toggle:focus-visible {
+  outline: 2px solid #ff909e;
+  outline-offset: 4px;
+}
+.profile-history-chevron {
+  flex: none;
+  margin-left: 6px;
+  transition: transform 180ms ease;
+}
+.profile-history-chevron.is-collapsed {
+  transform: rotate(-90deg);
+}
+.profile-history-match-count {
+  margin: 7px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #cbbfc1;
+}
+.profile-history-body[hidden] {
+  display: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-history-chevron {
+    transition: none;
+  }
+}

@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/play/navbar";
 import { SettingsPanel } from "@/components/settings/settings-panel";
+import { LeaderboardPrivacy } from "@/components/leaderboard/leaderboard-privacy";
 
 export default function SettingsPage() {
   return (
@@ -21,6 +22,7 @@ export default function SettingsPage() {
         </div>
 
         <SettingsPanel />
+        <LeaderboardPrivacy />
       </main>
     </>
   );

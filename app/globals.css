@@ -19,7 +19,20 @@
 @import "../styles/practice-results.css";
 @import "../styles/ranked-input-feedback.css";
 @import "../styles/ranked-results.css";
+@import "../styles/ranked-progression.css";
 @import "../styles/practice-result-motion.css";
 @import "../styles/practice-ux-polish.css";
 @import "../styles/practice-recovery.css";
 @import "../styles/button-theme.css";
+
+/* Player dashboard and compact level badge used across the site. */
+@import "../styles/player-dashboard.css";
+
+/* Profile breakdown from recorded Practice data only. */
+@import "../styles/profile-difficulty-stats.css";
+@import "../styles/profile-detail-pages.css";
+@import "../styles/result-xp-compact.css";
+@import "../styles/leaderboard.css";
+@import "../styles/leaderboard-extra.css";
+@import "../styles/leaderboard-polish.css";
+@import "../styles/ranked-rating.css";

@@ -1,0 +1,82 @@
+/* Match-completion level progress is display-only, never an XP award mechanism. */
+.match-xp-compact {
+  padding: 13px 15px;
+  margin: 0 0 16px;
+  border: 1px solid #4a353c;
+  border-radius: 10px;
+  background: #241d21;
+  text-align: left;
+}
+.match-xp-compact-heading,
+.match-xp-compact-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.match-xp-compact-heading strong {
+  font-size: 13px;
+  color: #ffc4cb;
+}
+.match-xp-compact-heading span {
+  font-size: 12px;
+  color: #d9c6cb;
+}
+.match-xp-compact-track {
+  height: 7px;
+  margin: 10px 0 7px;
+  border-radius: 999px;
+  background: #4c353e;
+  overflow: hidden;
+}
+.match-xp-compact-track > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #cf4a5b, #ff9eac);
+  transition: width 200ms ease;
+}
+.match-xp-compact-foot {
+  font-size: 11px;
+  color: #d6bfc4;
+}
+.match-xp-compact-disclaimer {
+  margin: 9px 0 0;
+  font-size: 10px;
+  color: #af9ca2;
+  line-height: 1.4;
+}
+.match-xp-compact > p[role="status"] {
+  font-size: 12px;
+  color: #d8c1c6;
+  margin: 3px 0;
+}
+/* Ranked already has a verified receipt + progression section. Keep it lean. */
+.ranked-result-dialog .ranked-xp-panel {
+  padding: 12px 14px;
+  margin-top: 14px;
+}
+.ranked-result-dialog .ranked-xp-heading > span:first-child {
+  font-size: 12px;
+}
+.ranked-result-dialog .ranked-xp-totals {
+  margin: 9px 0;
+}
+.ranked-result-dialog .ranked-xp-totals strong {
+  font-size: 19px;
+}
+.ranked-result-dialog .ranked-xp-progress-track {
+  height: 7px;
+}
+.ranked-result-dialog .ranked-xp-refresh {
+  margin-top: 8px;
+  padding: 6px 8px;
+}
+.ranked-result-dialog .ranked-xp-disclaimer {
+  font-size: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .match-xp-compact-track > span {
+    transition: none;
+  }
+}

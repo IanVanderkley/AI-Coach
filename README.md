@@ -36,20 +36,18 @@ Open http://localhost:3000 in your browser.
 
 ### User Accounts
 
-- Sign-in and account creation pages
-- Supabase email/password authentication
-- Sign-out functionality
-- Practice Review profile showing up to five finished games from this browser tab (not a permanent lifetime profile)
-
-Authentication requires a configured Supabase project.
+- Supabase email/password registration, sign-in and sign-out
+- Player dashboard at `/profile` and dedicated `/profile/ranked` and `/profile/practice` pages
+- Account progression from server-owned Ranked match XP receipts; compact result progress bars
+- Account-scoped tracked Practice statistics, with client-recorded outcomes clearly labelled
 
 ### Practice History and Verified Replays
 
-- Temporarily saves up to five completed Practice games in the current browser tab (sessionStorage)
-- Interactive move-by-move replay with visible-board checkpoints and evidence-based deductions
-- Verified coaching explanations and follow-up questions are distinct from experimental AI-generated wording
-- The last game is also saved separately in localStorage for the original Coaching report
-- Browser-held recordings are not tamper-proof server verification and are not Ranked results
+- Guests retain up to five finished Practice recordings in their current browser tab
+- Signed-in players sync up to 100 recent complete recordings to their account
+- Tracked account statistics persist after older Practice recordings are trimmed; historical games already deleted before tracking are not recoverable
+- Practice statistics are account-recorded, not independently verified Ranked accomplishments
+- Move-by-move verified Coaching replay is available for retained recordings
 
 ### AI Coaching
 
@@ -78,10 +76,11 @@ Account-backed persistence still depends on the configured Supabase project.
 
 ### Ranked System
 
-- Authenticated 16 × 16 Ranked gameplay with 40 mines, controlled by server-side Supabase functions
-- Server-verified winning-result recording and read-only fastest-times API
-- Direct client-submitted Ranked results and the older local JSON writer are disabled
-- Competitive rating points and rank tiers are not implemented yet. The verified leaderboard still needs end-to-end validation.
+- Authenticated, server-controlled Intermediate (16 × 16, 40 mines) Ranked gameplay
+- Server-verified victories, server-owned losses, verified result history and lifetime statistics
+- Read-only official fastest-time leaderboard and owner-scoped account XP receipts
+- Verified wins earn 125 XP; legitimate losses earn 10 XP; Practice currently earns no XP
+- RP, rank tiers and placements are **not** implemented yet
 
 ## Project Structure
 
@@ -111,26 +110,27 @@ Never commit API keys or secret credentials.
 
 ## Development Status
 
-The project is still under active development.
-
-Major remaining tasks include:
-
-- Durable, account-backed gameplay history (currently a limited browser-tab history)
-- Persistent database storage
-- Real player statistics and game history
-- Ranked ratings, placements, rank tiers, and an end-to-end verified leaderboard UI
-- Leaderboards and player progression
-- End-to-end browser tests, database deployment verification, and production monitoring
+AI-Coach is actively developed. The current staging backend supports account-backed
+Practice recordings/statistics, server-owned Ranked results and XP. Public launch
+is **not yet approved**; deployment prerequisites and known blockers are recorded
+in [docs/DEPLOYMENT-READINESS.md](docs/DEPLOYMENT-READINESS.md).
 
 ## Testing
 
-Run the project checks:
+`npm run check` checks formatting, production build and TypeScript;
+`npm test` runs regression and security-contract tests. Neither substitutes
+for authenticated browser E2E testing.
+
+For AI-Coach-Staging **preview preflight**, after configuring a private `.env.local`:
 
 ```bash
-npm run check
+node --env-file=.env.local scripts/verify-deployment-config.mjs --target=staging
 ```
 
-This checks formatting, the production build, and TypeScript. It does not replace manual gameplay and integration testing.
+With a staging-configured local server running, `node scripts/check-ranked-http.mjs`
+performs anonymous local-only API smoke checks. See the deployment runbook
+before attempting any Vercel Preview deployment. Never run a remote smoke or
+database migration as part of this check.
 
 ## Team Collaboration
 

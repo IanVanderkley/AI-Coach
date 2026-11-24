@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { PracticeBestUpdate } from "@/lib/practice/personal-best";
 import { formatPracticeShareText } from "@/lib/practice/share-text";
+import { MatchXpBar } from "@/components/play/match-xp-bar";
 import { MineLogo } from "./mine-logo";
 
 export type PracticeResultSummary = {
@@ -201,6 +202,16 @@ export function PracticeResultDialog({
               result.personalBest?.bestSeconds !== undefined &&
               ` · Browser best: ${formatTime(result.personalBest.bestSeconds)}`}
           </p>
+          <MatchXpBar
+            key={
+              result.reviewId ??
+              result.difficulty + ":" + result.durationSeconds + ":" + result.moveCount
+            }
+            resultKey={
+              result.reviewId ??
+              result.difficulty + ":" + result.durationSeconds + ":" + result.moveCount
+            }
+          />
 
           <div className="practice-result-actions">
             <button

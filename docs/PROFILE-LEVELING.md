@@ -5,7 +5,7 @@
 - **Exactly 1,000 XP per level forever**, starting at Level 1 and 0 total XP.
 - `level = Math.floor(totalXp / 1000) + 1` and progress is `totalXp % 1000`.
 - Player level is **not** Ranked RP or a competitive matchmaking rating.
-- For this initial secure release, a **new server-verified Ranked win** gives **125 XP**.
+- New server-verified Ranked wins give **125 XP**. After the separate Ranked outcome XP receipts migration, genuine recorded Ranked losses give **10 XP**. Both use the same one-award-per-match ledger.
 - Guest games and browser-recorded Practice wins give **0 account XP** until a secure earning policy is designed. Practice result displays and personal-best tracking do not change.
 - Existing historical Ranked results are **not backfilled**, avoiding duplicate/unsupported rewards.
 
@@ -39,3 +39,15 @@ These are maintenance queries for an authorized database administrator. Never ex
 - Design server-verifiable Practice XP, if desired, without trusting arbitrary browser boards.
 - Consider account level-up feedback and a compact level indicator next to the username after the profile card and verified rewards are tested in staging.
 - Add explicit capped rewards for other server-controlled events once their abuse cases are reviewed; update this document and use a new migration for rule changes.
+
+## Verified Ranked outcome receipts
+
+A later **staging-first** migration (`ranked_outcome_xp_receipts`) adds three connected capabilities:
+
+- New server-confirmed Ranked losses earn **10 XP**; existing verified Ranked wins still earn **125 XP**.
+- The private `xp_internal.player_xp_ledger` remains one row per Ranked match. Only the trusted server-owned Ranked move and win triggers can award XP. An `AFTER INSERT` trigger on the ledger writes an owner-readable receipt in the **same transaction**.
+- The signed-in player may **SELECT only their own** rows from `public.player_xp_match_receipts` under RLS. No client or service-role INSERT, UPDATE or DELETE is permitted on that table. The result dialog shows an earned amount only when it can read and validate an actual receipt for that match.
+
+Existing wins/losses do not receive new receipts or retroactive XP. A missing receipt is displayed as missing, never interpreted as a zero-XP award. The new result UI can be merged while the migration is pending, but meaningful receipt data only appears after the migration is deployed and a fresh verified match is completed.
+
+Before deploying beyond staging: confirm both direct-reveal and chord losses award exactly once, victories still award 125 XP, ledger/receipt creation rolls back atomically on errors, other users cannot see or mutate rewards, forged API calls and duplicate moves award no XP, and schema/permission advisors report no relevant regressions. Competitive RP and browser-recorded Practice XP remain separate future work.

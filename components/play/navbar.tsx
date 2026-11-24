@@ -5,13 +5,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
-import { Gamepad2, MessageSquare, Settings2, UserRound } from "lucide-react";
+import { Gamepad2, MessageSquare, Settings2, Trophy, UserRound } from "lucide-react";
 
 import { MineLogo } from "./mine-logo";
+import { NavPlayerLevel } from "./nav-player-level"; // AI_COACH_NAV_LEVEL_BADGE_V1
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const navigationItems = [
   { label: "Play", icon: Gamepad2, route: "/" },
+  { label: "Leaderboard", icon: Trophy, route: "/leaderboard" },
   { label: "Profile", icon: UserRound, route: "/profile" },
   { label: "Coaching", icon: MessageSquare, route: "/coaching" },
   { label: "Settings", icon: Settings2, route: "/settings" },
@@ -99,7 +101,10 @@ export function Navbar() {
 
         <nav className="main-nav" aria-label="Main navigation">
           {navigationItems.map(({ label, icon: Icon, route }) => {
-            const active = route ? pathname === route : false;
+            const active = route
+              ? pathname === route ||
+                (route === "/profile" && pathname.startsWith("/profile/"))
+              : false;
 
             if (route) {
               return (
@@ -136,6 +141,7 @@ export function Navbar() {
               <Link href="/profile" className="sign-in">
                 {username}
               </Link>
+              <NavPlayerLevel userId={user.id} pathname={pathname} />
 
               <button type="button" className="sign-out-button" onClick={handleSignOut}>
                 Sign Out
