@@ -10,17 +10,33 @@ const headers = {
 
 // GET /api/ranked/matches/current
 // Restores the signed-in player's active Ranked game.
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Step 1: Verify the currently signed-in player.
     const supabase = await createClient();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // AI_COACH_RANKED_RECOVERY_CLAIMS_PROBE_V1: opt-in development-only JWT-claims experiment.
+    // Default mode still uses getUser(); production claims require explicit opt-in.
+    const useClaimsProbe =
+      process.env.RANKED_AUTH_MODE === "claims" ||
+      (process.env.NODE_ENV === "development" &&
+        process.env.RANKED_AUTH_PROBE === "claims");
+    let verifiedUserId: string | undefined;
+    let authError: unknown = null;
+    if (useClaimsProbe) {
+      const { data, error } = await supabase.auth.getClaims();
+      authError = error;
+      verifiedUserId =
+        typeof data?.claims?.sub === "string" && data.claims.sub.length > 0
+          ? data.claims.sub
+          : undefined;
+    } else {
+      const { data, error } = await supabase.auth.getUser();
+      authError = error;
+      verifiedUserId = data.user?.id;
+    }
 
-    if (authError || !user) {
+    if (authError || !verifiedUserId) {
       return Response.json(
         { error: "You must sign in to play Ranked." },
         { status: 401, headers },
@@ -30,10 +46,35 @@ export async function GET() {
     // Step 2: Find the player's active Ranked match.
     const admin = createAdminClient();
 
+    // AI_COACH_RANKED_CACHED_RECOVERY_V1: an optional opaque hint, never a source of identity.
+    // The existing SQL function checks BOTH user ownership and active match state.
+    // Invalid, expired or foreign match IDs fall through to the original lookup.
+    const knownMatchId = request.headers.get("x-ranked-known-match");
+    if (
+      knownMatchId &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(knownMatchId)
+    ) {
+      const { data: knownBoard, error: knownError } = await admin.rpc(
+        "get_ranked_visible_board",
+        {
+          p_match_id: knownMatchId,
+          p_user_id: verifiedUserId,
+        },
+      );
+      if (
+        !knownError &&
+        knownBoard &&
+        knownBoard.matchId === knownMatchId &&
+        knownBoard.status === "active"
+      ) {
+        return Response.json(knownBoard, { status: 200, headers });
+      }
+    }
+
     const { data: match, error: matchError } = await admin
       .from("ranked_matches")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", verifiedUserId)
       .eq("status", "active")
       .maybeSingle();
 
@@ -58,9 +99,8 @@ export async function GET() {
     // This function verifies ownership again.
     const { data, error: boardError } = await admin.rpc("get_ranked_visible_board", {
       p_match_id: match.id,
-      p_user_id: user.id,
+      p_user_id: verifiedUserId,
     });
-
     if (boardError) {
       console.error("Ranked board recovery failed:", boardError);
 

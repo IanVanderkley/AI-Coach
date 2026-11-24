@@ -49,12 +49,29 @@ export async function POST(request: Request) {
     // Step 1: Verify the player is signed in.
     const supabase = await createClient();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // AI_COACH_RANKED_ACTION_CLAIMS_PROBE_V1: opt-in dev-only verified JWT claims.
+    // Default requests still call getUser(); production claims require explicit opt-in.
+    // Never use decoded/unverified cookies, request payloads or getSession().user for identity.
+    const useClaimsProbe =
+      process.env.RANKED_AUTH_MODE === "claims" ||
+      (process.env.NODE_ENV === "development" &&
+        process.env.RANKED_AUTH_PROBE === "claims");
+    let verifiedUserId: string | undefined;
+    let authError: unknown = null;
+    if (useClaimsProbe) {
+      const { data, error } = await supabase.auth.getClaims();
+      authError = error;
+      verifiedUserId =
+        typeof data?.claims?.sub === "string" && data.claims.sub.length > 0
+          ? data.claims.sub
+          : undefined;
+    } else {
+      const { data, error } = await supabase.auth.getUser();
+      authError = error;
+      verifiedUserId = data.user?.id;
+    }
 
-    if (authError || !user) {
+    if (authError || !verifiedUserId) {
       return Response.json(
         { error: "You must sign in to play Ranked." },
         { status: 401, headers },
@@ -67,11 +84,10 @@ export async function POST(request: Request) {
 
     const { data, error: chordError } = await admin.rpc("chord_ranked_cell", {
       p_match_id: matchId,
-      p_user_id: user.id,
+      p_user_id: verifiedUserId,
       p_row: row,
       p_column: column,
     });
-
     if (chordError) {
       console.error("Ranked chord failed:", chordError);
 

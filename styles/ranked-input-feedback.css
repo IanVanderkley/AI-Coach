@@ -1,0 +1,30 @@
+/* AI_COACH_RANKED_INPUT_FEEDBACK_V1: visual-only pending actions; Ranked authority stays on the server. */
+.ranked-server-board .cell.ranked-input-pending {
+  position: relative;
+  box-shadow:
+    inset 0 0 0 2px #ff7d86,
+    0 0 0 1px #30171a;
+  filter: brightness(1.13);
+}
+.ranked-server-board .cell.ranked-input-pending::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgb(255 189 194 / 55%);
+  border-radius: 2px;
+  pointer-events: none;
+  animation: ranked-input-awaiting 500ms ease-in-out infinite alternate;
+}
+@keyframes ranked-input-awaiting {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ranked-server-board .cell.ranked-input-pending::after {
+    animation: none;
+  }
+}
