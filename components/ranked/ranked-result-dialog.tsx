@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
 import { MineLogo } from "@/components/play/mine-logo";
+import { RankedXpProgress } from "@/components/ranked/ranked-xp-progress"; // AI_COACH_RANKED_ACCOUNT_XP_V1
 import {
   formatRankedDuration,
   formatRankedShareText,
@@ -199,9 +200,10 @@ export function RankedResultDialog({
           <button type="button" className="ranked-result-view-board" onClick={onDismiss}>
             View finished board
           </button>
+          <RankedXpProgress key={result.matchId} matchId={result.matchId} />
           <p className="ranked-result-note">
-            XP and RP changes are not displayed here yet. This screen reports only
-            server-confirmed gameplay statistics.
+            Account XP is a saved balance, not a per-match award. Competitive Ranked RP is
+            not tracked here yet.
           </p>
         </div>
       ) : null}
