@@ -13,7 +13,7 @@ const headers = {
 // Creates a Ranked match or resumes the player's active match.
 export async function POST(request: Request) {
   // Only accept requests from the same website origin.
-  const invalidRequest = validateRankedStartRequest(request);
+  const invalidRequest = await validateRankedStartRequest(request);
   if (invalidRequest) return invalidRequest;
 
   try {
