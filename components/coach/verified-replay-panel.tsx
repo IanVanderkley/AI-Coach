@@ -1,32 +1,36 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   CircleHelp,
+  Pause,
+  Play,
   ShieldCheck,
+  SkipBack,
+  SkipForward,
   TriangleAlert,
 } from "lucide-react";
-
 import {
   replayRecordedGame,
   type Proof,
   type ReplayFrame,
   type VisibleCell,
 } from "@/lib/coach/verified-replay";
+import { recommendedReveal } from "@/lib/coach/visual-coaching";
+import {
+  explainMove,
+  openingIndex,
+  timelineMove,
+  cellLabel,
+} from "@/lib/coach/teaching-review";
+import { TeachingProof } from "@/components/coach/teaching-proof";
+import { useReplayTooltips } from "@/lib/settings/replay-tooltips";
+import { useReplayView, type ReplayView } from "@/lib/settings/replay-view";
 import type { PracticeSession } from "@/lib/practice/history";
-
-type BoardViewProps = {
-  cells: readonly VisibleCell[];
-  columns: number;
-  selectedIndex: number;
-  title: string;
-  safeProofs: readonly Proof[];
-  mineProofs: readonly Proof[];
-};
 
 const numberClasses: Record<number, string> = {
   1: "number-one",
@@ -38,18 +42,19 @@ const numberClasses: Record<number, string> = {
   7: "number-seven",
   8: "number-eight",
 };
-
-function formatDecision(decision: ReplayFrame["decision"]) {
-  if (decision === "good") return "Proven good decision";
-  if (decision === "mistake") return "Verified mistake";
-  return "Not enough evidence";
-}
-
-function formatAction(frame: ReplayFrame) {
-  const action = frame.move.action;
-  return `${action[0].toUpperCase()}${action.slice(1)} at row ${frame.move.row + 1}, column ${frame.move.col + 1}`;
-}
-
+type BoardViewProps = {
+  cells: readonly VisibleCell[];
+  columns: number;
+  selectedIndex: number;
+  title: string;
+  safeProofs: readonly Proof[];
+  mineProofs: readonly Proof[];
+  recommendation?: number | null;
+  decision: ReplayFrame["decision"];
+  clues?: readonly number[];
+  targets?: readonly number[];
+  tooltips: boolean;
+};
 function BoardView({
   cells,
   columns,
@@ -57,21 +62,49 @@ function BoardView({
   title,
   safeProofs,
   mineProofs,
+  recommendation,
+  decision,
+  clues = [],
+  targets = [],
+  tooltips,
 }: BoardViewProps) {
-  const safe = new Set(safeProofs.map((proof) => proof.index));
-  const mines = new Set(mineProofs.map((proof) => proof.index));
-  const cellWidth = columns >= 25 ? 20 : 25;
+  const safe = new Set(safeProofs.map((p) => p.index));
+  const mines = new Set(mineProofs.map((p) => p.index));
+  const sources = new Set(clues);
+  const taught = new Set(targets);
   const boardStyle: CSSProperties = {
-    gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
+    gridTemplateColumns: `24px repeat(${columns}, 36px)`,
   };
-
   return (
     <div className="verified-board-panel">
       <h4>{title}</h4>
-      <div className="verified-board-scroll">
-        <div className="verified-board" style={boardStyle} role="img" aria-label={title}>
+      <div
+        className="verified-board-scroll"
+        tabIndex={0}
+        role="region"
+        aria-label={`${title}, scrollable board`}
+      >
+        <div
+          className="verified-board"
+          style={boardStyle}
+          role="img"
+          aria-label={`${title}. ${cells.length / columns} rows, ${columns} columns. ${cellLabel(selectedIndex, columns)} is the chosen square.`}
+        >
+          <span className="coach-board-coordinate" aria-hidden="true" />
+          {Array.from({ length: columns }, (_, col) => (
+            <span
+              key={`col-${col}`}
+              className="coach-board-coordinate"
+              aria-hidden="true"
+            >
+              {col + 1}
+            </span>
+          ))}
           {cells.map((cell, index) => {
             const number = cell.revealed && !cell.exploded ? cell.adjacentMines : null;
+            const proof =
+              !cell.revealed &&
+              (safe.has(index) ? "proven safe" : mines.has(index) ? "proven mine" : null);
             const fact = cell.exploded
               ? "exploded mine"
               : cell.revealed
@@ -79,44 +112,49 @@ function BoardView({
                 : cell.flagged
                   ? "player flag"
                   : "covered";
-            const proof =
-              !cell.revealed &&
-              (safe.has(index) ? "proven safe" : mines.has(index) ? "proven mine" : null);
             const selected = index === selectedIndex;
             return (
-              <span
+              <BoardCell
                 key={index}
-                className={[
-                  "verified-cell",
-                  cell.revealed ? "verified-revealed" : "verified-covered",
-                  cell.exploded ? "verified-exploded" : "",
-                  cell.flagged ? "verified-flagged" : "",
-                  selected ? "verified-selected" : "",
-                  proof === "proven safe" ? "verified-safe" : "",
-                  proof === "proven mine" ? "verified-mine" : "",
-                  number !== null && number > 0 ? (numberClasses[number] ?? "") : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                title={`Row ${Math.floor(index / columns) + 1}, column ${(index % columns) + 1}: ${fact}${proof ? `, ${proof}` : ""}`}
-                aria-hidden="true"
+                rowLabel={index % columns === 0 ? Math.floor(index / columns) + 1 : null}
               >
-                {cell.exploded
-                  ? "✹"
-                  : cell.flagged
-                    ? "⚑"
-                    : number !== null
-                      ? number > 0
-                        ? number
-                        : ""
-                      : proof === "proven safe"
-                        ? "✓"
-                        : proof === "proven mine"
-                          ? "!"
-                          : cell.revealed
-                            ? "✹"
+                <span
+                  className={[
+                    "verified-cell",
+                    cell.revealed ? "verified-revealed" : "verified-covered",
+                    cell.exploded ? "verified-exploded" : "",
+                    cell.flagged ? "verified-flagged" : "",
+                    selected ? "verified-selected" : "",
+                    index === recommendation ? "verified-recommended" : "",
+                    sources.has(index) ? "verified-clue" : "",
+                    taught.has(index) ? "verified-teaching-target" : "",
+                    proof === "proven safe" ? "verified-safe" : "",
+                    proof === "proven mine" ? "verified-mine" : "",
+                    number !== null && number > 0 ? (numberClasses[number] ?? "") : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  data-decision={selected ? decision : undefined}
+                  title={
+                    tooltips
+                      ? `${cellLabel(index, columns)}: ${fact}${proof ? `, ${proof}` : ""}${sources.has(index) ? ", supporting clue" : ""}`
+                      : undefined
+                  }
+                  aria-hidden="true"
+                >
+                  {cell.exploded || (cell.revealed && number === null)
+                    ? "✹"
+                    : cell.flagged
+                      ? "⚑"
+                      : number !== null
+                        ? number || ""
+                        : proof === "proven safe"
+                          ? "✓"
+                          : proof === "proven mine"
+                            ? "!"
                             : ""}
-              </span>
+                </span>
+              </BoardCell>
             );
           })}
         </div>
@@ -124,11 +162,25 @@ function BoardView({
     </div>
   );
 }
+function BoardCell({
+  rowLabel,
+  children,
+}: {
+  rowLabel: number | null;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      {rowLabel !== null && (
+        <span className="coach-board-coordinate" aria-hidden="true">
+          {rowLabel}
+        </span>
+      )}
+      {children}
+    </>
+  );
+}
 
-/**
- * Gameplay evidence comes from visible numbers, not hindsight from the mine layout.
- * The layout is only used to replay how a square actually opened after the move.
- */
 export function VerifiedReplayPanel({
   game,
   focusMoveNumber,
@@ -140,7 +192,10 @@ export function VerifiedReplayPanel({
 }) {
   const replay = useMemo(() => {
     try {
-      return { value: replayRecordedGame(game), error: "" };
+      const value = replayRecordedGame(game);
+      if (value.status !== (game.outcome === "win" ? "won" : "lost"))
+        throw new Error("Recorded outcome does not match the replay.");
+      return { value, error: "" };
     } catch (error) {
       return {
         value: null,
@@ -149,68 +204,127 @@ export function VerifiedReplayPanel({
       };
     }
   }, [game]);
-
-  const frames = replay.value?.frames ?? [];
-  const important = useMemo(() => {
-    // Prioritize proven mistakes, then strong decisions. Do not create filler.
-    const candidates = frames
-      .map((frame, index) => ({ frame, index }))
-      .filter(({ frame }) => frame.changed && frame.decision !== "not-enough-evidence");
-    const mistakes = candidates.filter(({ frame }) => frame.decision === "mistake");
-    const good = candidates.filter(({ frame }) => frame.decision === "good");
-    return [...mistakes, ...good].slice(0, 5);
-  }, [frames]);
-  const [selectedMove, setSelectedMove] = useState<number | null>(null);
-  useEffect(() => {
-    if (focusMoveNumber != null) setSelectedMove(focusMoveNumber - 1);
-  }, [focusMoveNumber, focusRequestId]);
-  const selectedIndex =
-    selectedMove !== null && selectedMove < frames.length
-      ? selectedMove
-      : (important[0]?.index ?? 0);
-  const current = frames[selectedIndex];
-  const counts = useMemo(
-    () => ({
-      mistakes: frames.filter((frame) => frame.changed && frame.decision === "mistake")
-        .length,
-      good: frames.filter((frame) => frame.changed && frame.decision === "good").length,
-      uncertain: frames.filter(
-        (frame) => frame.changed && frame.decision === "not-enough-evidence",
-      ).length,
-    }),
+  const start = openingIndex(game.moves);
+  const frames = useMemo(
+    () => replay.value?.frames.slice(start) ?? [],
+    [replay.value, start],
+  );
+  const reviewFrames = useMemo(
+    () => frames.slice(1).filter((frame) => frame.changed),
     [frames],
   );
-
-  if (!replay.value || frames.length === 0) {
+  const important = useMemo(
+    () =>
+      frames
+        .map((frame, index) => ({ frame, index }))
+        .filter(
+          ({ frame, index }) =>
+            index > 0 && frame.changed && frame.decision !== "not-enough-evidence",
+        )
+        .sort(
+          (a, b) =>
+            Number(a.frame.decision !== "mistake") -
+            Number(b.frame.decision !== "mistake"),
+        )
+        .slice(0, 5),
+    [frames],
+  );
+  const last = Math.max(0, frames.length - 1);
+  const [cursor, setCursor] = useState<number | null>(null);
+  const { view: preferredView } = useReplayView();
+  const [viewOverride, setBoardMode] = useState<ReplayView | null>(null);
+  const boardMode = viewOverride ?? preferredView;
+  const [showProofs, setShowProofs] = useState(true);
+  const [playing, setPlaying] = useState(false);
+  const { enabled: tooltips } = useReplayTooltips();
+  const position = Math.max(0, Math.min(last, cursor ?? important[0]?.index ?? 0));
+  const selectedIndex = timelineMove(position, last);
+  const current = frames[selectedIndex];
+  useEffect(() => {
+    setCursor(null);
+    setPlaying(false);
+    setBoardMode(null);
+    setShowProofs(true);
+  }, [game]);
+  useEffect(() => {
+    if (
+      focusMoveNumber != null &&
+      Number.isInteger(focusMoveNumber) &&
+      focusMoveNumber > start + 1 &&
+      focusMoveNumber <= start + frames.length
+    ) {
+      setCursor(focusMoveNumber - start - 1);
+      setPlaying(false);
+    }
+  }, [focusMoveNumber, focusRequestId, start, frames.length]);
+  useEffect(() => {
+    if (!playing) return;
+    let animation = 0;
+    let initial: number | null = null;
+    const from = position;
+    function tick(now: number) {
+      initial ??= now;
+      const value = Math.min(last, from + (now - initial) / 850);
+      setCursor(value);
+      if (value >= last) setPlaying(false);
+      else animation = window.requestAnimationFrame(tick);
+    }
+    animation = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(animation);
+    // Start one animation per playback session, not on every fractional tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing, last]);
+  const explanation = useMemo(
+    () =>
+      current && selectedIndex > 0
+        ? explainMove(current, game.rows, game.columns, game.mineCount)
+        : undefined,
+    [current, selectedIndex, game.rows, game.columns, game.mineCount],
+  );
+  const counts = useMemo(
+    () => ({
+      mistakes: reviewFrames.filter((f) => f.decision === "mistake").length,
+      good: reviewFrames.filter((f) => f.decision === "good").length,
+      uncertain: reviewFrames.filter((f) => f.decision === "not-enough-evidence").length,
+    }),
+    [reviewFrames],
+  );
+  function goTo(index: number) {
+    setPlaying(false);
+    setCursor(timelineMove(index, last));
+  }
+  const tip = (label: string) => (tooltips ? label : undefined);
+  if (!replay.value || !current)
     return (
       <section className="verified-report" aria-label="Verified replay">
         <h3>Verified Replay</h3>
         <p role="alert">{replay.error || "No recorded moves are available to replay."}</p>
       </section>
     );
-  }
-
-  const position = current.move.row * game.columns + current.move.col;
-  const selectedProof = [...current.deductions.safe, ...current.deductions.mines].find(
-    (proof) => proof.index === position,
-  );
-  const outcome = game.outcome === "win" ? "WIN" : "LOSS";
-
+  const opening = selectedIndex === 0;
+  const chosen = current.move.row * game.columns + current.move.col;
+  const recommendation = opening ? null : recommendedReveal(current);
+  const decision = opening ? "not-enough-evidence" : current.decision;
+  const mode = opening && boardMode === "before" ? "after" : boardMode;
   return (
-    <section className="verified-report" aria-label="Verified gameplay analysis">
+    <section
+      className="verified-report"
+      id="coach-replay-workspace"
+      tabIndex={-1}
+      aria-label="Verified gameplay analysis"
+    >
       <div className="verified-heading">
         <div>
-          <span className="subtle-label">REPLAYED FROM YOUR REAL GAME</span>
+          <span className="subtle-label">YOUR GAME, MOVE BY MOVE</span>
           <h3>
             <ShieldCheck size={21} aria-hidden="true" /> Verified Move Review
           </h3>
           <p>
-            {outcome} · {game.difficulty} · {game.rows} × {game.columns} ·{" "}
-            {game.moves.length} actions
+            {game.outcome === "win" ? "WIN" : "LOSS"} · {game.difficulty} · {game.rows} ×{" "}
+            {game.columns} · {last} review moves
           </p>
         </div>
       </div>
-
       <div className="verified-totals" aria-label="Decision classifications">
         <div>
           <TriangleAlert size={15} aria-hidden="true" />
@@ -229,42 +343,34 @@ export function VerifiedReplayPanel({
         </div>
       </div>
       <p className="verified-note">
-        These categories describe what could be proven from the visible board. “Not enough
-        evidence” does not mean a move was bad or an unavoidable guess. Flags are player
-        marks, not confirmed mines.
+        Move 0 opens the board and is not assessed. Uncertain moves are not automatically
+        mistakes or unavoidable guesses.
       </p>
-
-      {important.length > 0 ? (
+      {important.length > 0 && (
         <div className="verified-moments">
-          <h4>Most useful verified moments</h4>
+          <h4>Key decisions</h4>
           <div className="verified-moment-buttons">
             {important.map(({ frame, index }) => (
               <button
                 key={index}
                 type="button"
-                className={
-                  index === selectedIndex ? "verified-moment active" : "verified-moment"
-                }
-                onClick={() => setSelectedMove(index)}
+                className={`verified-moment${index === selectedIndex ? " active" : ""}`}
+                data-kind={frame.decision}
+                onClick={() => goTo(index)}
                 aria-pressed={index === selectedIndex}
               >
-                Move {frame.actionNumber} ·{" "}
-                {frame.decision === "mistake" ? "Mistake" : "Good"}
+                Move {index} · {frame.decision === "mistake" ? "Mistake" : "Good"}
               </button>
             ))}
           </div>
         </div>
-      ) : (
-        <p className="verified-note">
-          This game has no provably good or mistaken moves under the current rules. You
-          can still inspect its move history.
-        </p>
       )}
-
       <div className="verified-move-nav">
         <button
           type="button"
-          onClick={() => setSelectedMove(Math.max(0, selectedIndex - 1))}
+          className="coach-replay-nav"
+          data-tip={tip("Go to the previous recorded move")}
+          onClick={() => goTo(selectedIndex - 1)}
           disabled={selectedIndex === 0}
         >
           <ChevronLeft size={17} aria-hidden="true" /> Previous
@@ -273,72 +379,217 @@ export function VerifiedReplayPanel({
           <span>Move</span>
           <select
             value={selectedIndex}
-            onChange={(event) => setSelectedMove(Number(event.target.value))}
+            onChange={(event) => goTo(Number(event.target.value))}
           >
             {frames.map((frame, index) => (
               <option value={index} key={index}>
-                #{frame.actionNumber}: {frame.move.action} ({frame.move.row + 1},{" "}
-                {frame.move.col + 1})
+                {index === 0
+                  ? "Move 0: opening reveal"
+                  : `#${index}: ${frame.move.action} (${frame.move.row + 1}, ${frame.move.col + 1})`}
               </option>
             ))}
           </select>
         </label>
         <button
           type="button"
-          onClick={() => setSelectedMove(Math.min(frames.length - 1, selectedIndex + 1))}
-          disabled={selectedIndex === frames.length - 1}
+          className="coach-replay-nav"
+          data-tip={tip("Go to the next recorded move")}
+          onClick={() => goTo(selectedIndex + 1)}
+          disabled={selectedIndex === last}
         >
           Next <ChevronRight size={17} aria-hidden="true" />
         </button>
       </div>
-
-      <div className="verified-decision">
-        <strong>{formatDecision(current.decision)}</strong>
-        <span>{formatAction(current)}</span>
-        <p>
-          {current.changed
-            ? current.explanation
-            : "This action did not change the visible board."}
-        </p>
-        {current.changed && selectedProof && (
-          <p className="verified-evidence">Evidence: {selectedProof.reason}</p>
-        )}
-        {current.changed && current.mistakeType === "unnecessary-guess" && (
-          <p className="verified-evidence">
-            Examples of proven-safe alternatives:{" "}
-            {current.deductions.safe
-              .slice(0, 3)
-              .map(
-                (proof) =>
-                  `row ${Math.floor(proof.index / game.columns) + 1}, column ${(proof.index % game.columns) + 1}`,
+      <label className="coach-replay-timeline">
+        <span>
+          Move {selectedIndex} of {last}
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={last || 1}
+          step="any"
+          value={position}
+          disabled={last === 0}
+          aria-label="Replay timeline"
+          aria-valuetext={`Move ${selectedIndex} of ${last}`}
+          style={
+            {
+              "--replay-progress": `${last ? (position / last) * 100 : 0}%`,
+            } as CSSProperties
+          }
+          onChange={(event) => {
+            setPlaying(false);
+            setCursor(Number(event.target.value));
+          }}
+          onKeyDown={(event) => {
+            if (
+              ["ArrowLeft", "ArrowDown", "ArrowRight", "ArrowUp", "Home", "End"].includes(
+                event.key,
               )
-              .join("; ")}
-          </p>
-        )}
+            ) {
+              event.preventDefault();
+              goTo(
+                event.key === "Home"
+                  ? 0
+                  : event.key === "End"
+                    ? last
+                    : selectedIndex +
+                      (["ArrowLeft", "ArrowDown"].includes(event.key) ? -1 : 1),
+              );
+            }
+          }}
+        />
+      </label>
+      <div className="coach-replay-toolbar" aria-label="Replay controls">
+        <div className="coach-replay-control-group">
+          <button
+            type="button"
+            aria-label="First move"
+            data-tip={tip("Return to the opening board (Move 0)")}
+            onClick={() => goTo(0)}
+            disabled={selectedIndex === 0}
+          >
+            <SkipBack size={19} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="coach-playback"
+            aria-label={playing ? "Pause replay" : "Play replay"}
+            data-tip={tip(playing ? "Pause replay" : "Play the recorded moves")}
+            disabled={last === 0}
+            onClick={() => {
+              if (playing) {
+                setPlaying(false);
+                return;
+              }
+              if (position >= last) setCursor(0);
+              setPlaying(true);
+            }}
+          >
+            {playing ? (
+              <Pause size={21} fill="currentColor" aria-hidden="true" />
+            ) : (
+              <Play size={21} fill="currentColor" aria-hidden="true" />
+            )}
+          </button>
+          <button
+            type="button"
+            aria-label="Last move"
+            data-tip={tip("Jump to the final move")}
+            onClick={() => goTo(last)}
+            disabled={selectedIndex === last}
+          >
+            <SkipForward size={19} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="coach-replay-control-group">
+          {(["before", "after", "compare"] as const).map((view) => (
+            <button
+              key={view}
+              type="button"
+              aria-pressed={mode === view}
+              disabled={opening && view === "before"}
+              data-tip={tip(
+                view === "before"
+                  ? "Inspect the information available before the move"
+                  : view === "after"
+                    ? "See what happened after the move"
+                    : "Compare the boards before and after the action",
+              )}
+              onClick={() => {
+                setBoardMode(view);
+                setPlaying(false);
+              }}
+            >
+              {view === "compare"
+                ? "Compare"
+                : view === "before"
+                  ? "Before move"
+                  : "After move"}
+            </button>
+          ))}
+        </div>
+        <label
+          data-tip={tip(
+            "Highlight proven safe cells, mines, and the numbered clues used in the explanation",
+          )}
+        >
+          <input
+            type="checkbox"
+            checked={showProofs}
+            onChange={(event) => setShowProofs(event.target.checked)}
+          />{" "}
+          Show deductions
+        </label>
       </div>
-
-      <div className="verified-boards">
-        <BoardView
-          title={`Before move ${current.actionNumber}`}
-          cells={current.before}
-          columns={game.columns}
-          selectedIndex={position}
-          safeProofs={current.deductions.safe}
-          mineProofs={current.deductions.mines}
-        />
-        <BoardView
-          title={`After move ${current.actionNumber}`}
-          cells={current.after}
-          columns={game.columns}
-          selectedIndex={position}
-          safeProofs={[]}
-          mineProofs={[]}
-        />
+      <div className={`verified-boards ${mode === "compare" ? "" : "single-board"}`}>
+        {mode !== "after" && (
+          <BoardView
+            title={`Before move ${selectedIndex}`}
+            cells={current.before}
+            columns={game.columns}
+            selectedIndex={chosen}
+            safeProofs={showProofs ? current.deductions.safe : []}
+            mineProofs={showProofs ? current.deductions.mines : []}
+            recommendation={showProofs ? recommendation : null}
+            clues={showProofs ? explanation?.clues : []}
+            targets={showProofs ? explanation?.targets : []}
+            decision={decision}
+            tooltips={tooltips}
+          />
+        )}
+        {mode !== "before" && (
+          <BoardView
+            title={opening ? "Opening board · Move 0" : `After move ${selectedIndex}`}
+            cells={current.after}
+            columns={game.columns}
+            selectedIndex={chosen}
+            safeProofs={[]}
+            mineProofs={[]}
+            decision={decision}
+            tooltips={tooltips}
+          />
+        )}
       </div>
       <p className="verified-legend">
-        Before: ✓ provably safe · ! provably mined · ⚑ player flag · outlined cell =
-        chosen square. Deductions reflect only information available before that action.
+        ✓ safe · ! mine · ⚑ player flag · blue numbered clue = proof source · dashed green
+        outline = suggested reveal · solid outline = chosen square.
       </p>
+      <div className="verified-decision" data-decision={decision}>
+        <strong>
+          {opening
+            ? "Move 0 · Opening reveal"
+            : current.decision === "good"
+              ? "Proven good decision"
+              : current.decision === "mistake"
+                ? "Verified mistake"
+                : "Not enough evidence"}
+        </strong>
+        <span>
+          {current.move.action} at {cellLabel(chosen, game.columns)}
+        </span>
+        <p>
+          {opening
+            ? "This reveal establishes the starting board. It is excluded from the coaching assessment."
+            : current.changed
+              ? explanation?.summary || current.explanation
+              : "This action did not change the visible board."}
+        </p>
+      </div>
+      {showProofs && mode !== "after" && recommendation !== null && (
+        <p className="verified-note">
+          Recommended safe reveal: {cellLabel(recommendation, game.columns)}. The dashed
+          green outline marks this square.
+        </p>
+      )}
+      {!opening && <TeachingProof explanation={explanation} expanded={true} />}
+      {!opening && explanation?.nextStep && (
+        <div className="coach-lesson-next">
+          <strong>Use this in your next game</strong>
+          <p>{explanation.nextStep}</p>
+        </div>
+      )}
     </section>
   );
 }

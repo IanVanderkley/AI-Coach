@@ -10,9 +10,35 @@ import {
 import { getSupabaseBrowserClient } from "../supabase/client.ts";
 
 /** Storage boundary for completed Practice recordings. UI code depends on this contract only. */
+export type PracticeReviewSummary = {
+  id: string;
+  difficulty: string;
+  outcome: "win" | "loss";
+  rows: number;
+  columns: number;
+  durationSeconds: number;
+  moveCount: number;
+  completedAt: string;
+};
+
+function localReviewSummary(game: SavedPracticeSession): PracticeReviewSummary {
+  return {
+    id: game.id,
+    difficulty: game.difficulty,
+    outcome: game.outcome,
+    rows: game.rows,
+    columns: game.columns,
+    durationSeconds: game.durationSeconds,
+    moveCount: game.moves.length,
+    completedAt: game.completedAt,
+  };
+}
+
 export interface PracticeRepository {
   save(session: PracticeSession): Promise<SavedPracticeSession>;
   listRecent(): Promise<SavedPracticeSession[]>;
+  listReviewSummaries(): Promise<PracticeReviewSummary[]>;
+  loadReview(id: string): Promise<SavedPracticeSession | null>;
   load(id?: string | null): Promise<SavedPracticeSession | null>;
   getStorageMode(): Promise<"local" | "account">;
   syncPending(): Promise<void>;
@@ -143,6 +169,12 @@ export function createLocalPracticeRepository(): PracticeRepository {
         ? (loadRecentPracticeSessions().find((game) => game.id === id) ?? null)
         : (loadRecentPracticeSessions()[0] ?? null);
     },
+    async listReviewSummaries() {
+      return loadRecentPracticeSessions().map(localReviewSummary);
+    },
+    async loadReview(id) {
+      return loadRecentPracticeSessions().find((game) => game.id === id) ?? null;
+    },
     async getStorageMode() {
       return "local";
     },
@@ -237,6 +269,82 @@ export function createSupabasePracticeRepository(
       return saved;
     },
     listRecent,
+    async listReviewSummaries() {
+      return withAccount(
+        async (client, userId) => {
+          // Metadata only: no hidden layout, moves, or analysis for the history picker.
+          const { data, error } = await client
+            .from("practice_games")
+            .select(
+              "client_record_id,difficulty,rows,columns,outcome,duration_seconds,completed_at,move_count",
+            )
+            .eq("user_id", userId)
+            .order("completed_at", { ascending: false })
+            .limit(100);
+          if (error) throw error;
+          return (data ?? []).map((game) => ({
+            id: game.client_record_id,
+            difficulty: game.difficulty,
+            outcome: game.outcome,
+            rows: game.rows,
+            columns: game.columns,
+            durationSeconds: game.duration_seconds,
+            moveCount: game.move_count,
+            completedAt: game.completed_at,
+          }));
+        },
+        () => local.listReviewSummaries(),
+      );
+    },
+    async loadReview(id) {
+      return withAccount(
+        async (client, userId) => {
+          const { data, error } = await client
+            .from("practice_games")
+            .select(
+              "id,client_record_id,game,difficulty,rows,columns,mine_count,outcome,duration_seconds,mine_indices,completed_at,move_count",
+            )
+            .eq("user_id", userId)
+            .eq("client_record_id", id)
+            .limit(1);
+          if (error) throw error;
+          const game = (data ?? [])[0] as PracticeGameRow | undefined;
+          if (!game) return null;
+          if (
+            game.client_record_id !== id ||
+            !Number.isSafeInteger(game.move_count) ||
+            game.move_count < 1 ||
+            game.move_count > 10000
+          )
+            throw new Error("Invalid saved Practice recording.");
+          const moves: PracticeMoveRow[] = [];
+          // Fetch only this recording; do not let a global API row limit silently
+          // truncate a long recording or another game's moves.
+          while (moves.length < game.move_count) {
+            const { data: page, error: moveError } = await client
+              .from("practice_game_moves")
+              .select("game_id,move_number,row,column,action_type,at_ms,after_hash")
+              .eq("game_id", game.id)
+              .order("move_number", { ascending: true })
+              .range(moves.length, Math.min(game.move_count - 1, moves.length + 499));
+            if (moveError) throw moveError;
+            const batch = (page ?? []) as PracticeMoveRow[];
+            if (
+              !batch.length ||
+              batch.length > game.move_count - moves.length ||
+              batch.some(
+                (move, i) =>
+                  move.game_id !== game.id || move.move_number !== moves.length + i + 1,
+              )
+            )
+              throw new Error("The saved recording is incomplete or out of order.");
+            moves.push(...batch);
+          }
+          return fromRows(game, moves);
+        },
+        () => local.loadReview(id),
+      );
+    },
     async load(id) {
       const sessions = await listRecent();
       return id

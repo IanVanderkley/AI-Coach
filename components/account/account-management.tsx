@@ -1,0 +1,223 @@
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+import type { User } from "@supabase/supabase-js";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { authError, validEmail } from "@/lib/account/validation";
+export function AccountManagement({ deletionEnabled }: { deletionEnabled: boolean }) {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [ready, setReady] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    let active = true;
+    const client = getSupabaseBrowserClient();
+    if (!client) {
+      setReady(true);
+      return;
+    }
+    void client.auth
+      .getUser()
+      .then(({ data }) => {
+        if (active) {
+          setUser(data.user);
+          setReady(true);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setReady(true);
+          setMessage("Could not verify your account. Refresh to retry.");
+        }
+      });
+    const {
+      data: { subscription },
+    } = client.auth.onAuthStateChange((_event, session) => {
+      if (active) setUser(session?.user ?? null);
+    });
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+  async function run(action: () => Promise<string>) {
+    if (busy) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      setMessage(await action());
+    } catch {
+      setMessage("Could not complete the request. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  function changeEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const email = String(new FormData(event.currentTarget).get("email") ?? "").trim();
+    if (!validEmail(email)) {
+      setMessage("Enter a valid new email.");
+      return;
+    }
+    void run(async () => {
+      const client = getSupabaseBrowserClient();
+      if (!client) throw Error();
+      const { error } = await client.auth.updateUser(
+        { email },
+        { emailRedirectTo: window.location.origin + "/auth/callback?kind=email" },
+      );
+      return error
+        ? authError(error)
+        : "Check your email addresses for confirmation instructions. Your current email stays active until the change is confirmed.";
+    });
+  }
+  function resetPassword() {
+    void run(async () => {
+      const client = getSupabaseBrowserClient();
+      if (!client || !user?.email) throw Error();
+      const { error } = await client.auth.resetPasswordForEmail(user.email, {
+        redirectTo: window.location.origin + "/auth/callback?kind=recovery",
+      });
+      return error ? authError(error) : "Check your inbox for the password reset link.";
+    });
+  }
+  function signOutAll() {
+    void run(async () => {
+      const client = getSupabaseBrowserClient();
+      if (!client) throw Error();
+      const { error } = await client.auth.signOut({ scope: "global" });
+      if (error) return authError(error);
+      router.replace("/sign-in");
+      router.refresh();
+      return "Signed out of all devices.";
+    });
+  }
+  function deleteAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!deletionEnabled) return;
+    const form = new FormData(event.currentTarget);
+    const password = String(form.get("password") ?? "");
+    const confirmation = String(form.get("confirmation") ?? "");
+    if (confirmation !== "DELETE" || !password) {
+      setMessage("Enter your current password and type DELETE.");
+      return;
+    }
+    void run(async () => {
+      const response = await fetch("/api/account/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, confirmation }),
+      });
+      const result = await response.json();
+      if (!response.ok || result.deleted !== true)
+        return result.error ?? "Could not delete account.";
+      const client = getSupabaseBrowserClient();
+      await client?.auth.signOut({ scope: "local" }).catch(() => {});
+      router.replace("/sign-in?accountDeleted=1");
+      router.refresh();
+      return "Account deleted.";
+    });
+  }
+  return (
+    <section className="account-management" aria-labelledby="account-management-title">
+      <h2 id="account-management-title">Account management</h2>
+      {!ready ? (
+        <p>Checking account…</p>
+      ) : !user ? (
+        <p>
+          <Link href="/sign-in">Sign in</Link> to manage your account.
+        </p>
+      ) : (
+        <>
+          <p>
+            Signed in as <strong>{user.email}</strong> ·{" "}
+            {user.email_confirmed_at ? "Email verified" : "Email not verified"}
+          </p>
+          <details>
+            <summary>Change email address</summary>
+            <form onSubmit={changeEmail}>
+              <label>
+                New email
+                <input
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  maxLength={254}
+                />
+              </label>
+              <button className="auth-submit" disabled={busy}>
+                Send confirmation
+              </button>
+            </form>
+          </details>
+          <details>
+            <summary>Change password</summary>
+            <p>Send a secure link to your current email address.</p>
+            <button
+              className="auth-submit"
+              type="button"
+              disabled={busy}
+              onClick={resetPassword}
+            >
+              Send password reset link
+            </button>
+          </details>
+          <details>
+            <summary>Sign out of all devices</summary>
+            <p>This ends other active account sessions as well as this one.</p>
+            <button
+              className="auth-submit"
+              type="button"
+              disabled={busy}
+              onClick={signOutAll}
+            >
+              Sign out everywhere
+            </button>
+          </details>
+          <details>
+            <summary>Delete account</summary>
+            <p>
+              This permanently deletes your account and associated saved game history,
+              Ranked results, leaderboard profile, XP and coaching settings. This cannot
+              be undone.
+            </p>
+            {deletionEnabled ? (
+              <form onSubmit={deleteAccount}>
+                <label>
+                  Current password
+                  <input
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                  />
+                </label>
+                <label>
+                  Type DELETE to confirm
+                  <input
+                    name="confirmation"
+                    autoComplete="off"
+                    required
+                    pattern="DELETE"
+                  />
+                </label>
+                <button className="auth-submit" disabled={busy}>
+                  Permanently delete account
+                </button>
+              </form>
+            ) : (
+              <p>
+                Self-service deletion is not enabled until staging verification is
+                complete. Contact the project administrator for deletion requests.
+              </p>
+            )}
+          </details>
+        </>
+      )}
+      {message && <p role="status">{message}</p>}
+    </section>
+  );
+}

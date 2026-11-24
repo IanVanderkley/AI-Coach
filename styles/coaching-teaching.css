@@ -1,0 +1,335 @@
+/* Coaching-specific polish: fixed square geometry, fluid scrubber, and proof lessons. */
+.coach-visual-layout > .coach-controls {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.coach-visual-layout .coach-controls > * {
+  min-width: 0;
+}
+.coach-visual-layout .coach-controls .coach-selected-game {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+}
+.coach-visual-layout .coach-selected-game-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.coach-visual-layout .coach-selected-game-header strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.coach-visual-layout .coach-selected-game-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.coach-visual-layout .coach-selected-game-stats > div {
+  min-width: 0;
+  text-align: center;
+  padding: 8px 4px;
+}
+.coach-visual-layout .coach-selected-game-stats strong {
+  font-size: clamp(12px, 1.5vw, 18px);
+  white-space: nowrap;
+}
+.coach-visual-layout .coach-selected-game-stats span {
+  font-size: 11px;
+}
+.coach-visual-layout .coach-controls .coach-actions {
+  width: 100%;
+}
+.coach-visual-layout .coach-controls .coach-actions > button {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px;
+}
+.coach-visual-layout .coach-controls details {
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (min-width: 850px) {
+  .coach-visual-layout > .coach-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 0.55fr);
+    align-items: center;
+  }
+  .coach-visual-layout .coach-controls .coach-selected-game {
+    grid-column: 1;
+  }
+}
+.coach-visual-layout .verified-board-scroll {
+  overflow: auto;
+  max-height: min(690px, 75vh);
+  padding: 12px;
+}
+.coach-visual-layout .verified-board {
+  grid-auto-rows: 36px;
+  grid-template-rows: 24px;
+  gap: 2px;
+  width: max-content;
+  max-width: none;
+  box-sizing: content-box;
+  padding: 12px;
+}
+.coach-visual-layout .verified-board .verified-cell {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  box-sizing: border-box;
+  aspect-ratio: 1;
+  font-size: 15px;
+}
+.coach-board-coordinate {
+  display: grid;
+  place-items: center;
+  color: #b8b8b8;
+  font-size: 11px;
+}
+.coach-visual-layout .verified-cell.verified-clue {
+  box-shadow: inset 0 0 0 2px #7eb8ff;
+  color: #b9dbff;
+}
+.coach-visual-layout
+  .verified-cell.verified-teaching-target:not(.verified-selected):not(
+    .verified-recommended
+  ) {
+  outline: 2px solid #c2eaff;
+  outline-offset: -2px;
+}
+.coach-visual-layout .verified-selected[data-decision="mistake"] {
+  outline: 3px solid #ff8d98;
+  outline-offset: -3px;
+}
+.coach-visual-layout .verified-selected[data-decision="good"] {
+  outline: 3px solid #9ff2b7;
+  outline-offset: -3px;
+}
+.coach-visual-layout .verified-move-nav .coach-replay-nav {
+  background: #b62634;
+  color: #fff;
+  border-color: #df4655;
+  font-weight: 650;
+}
+.coach-visual-layout .verified-move-nav .coach-replay-nav:hover:not(:disabled) {
+  background: #d12f40;
+}
+.coach-visual-layout .verified-move-nav .coach-replay-nav:disabled {
+  opacity: 0.45;
+}
+.coach-visual-layout .coach-replay-toolbar {
+  justify-content: center;
+  gap: 14px;
+}
+.coach-replay-control-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.coach-replay-control-group button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.coach-visual-layout .coach-replay-toolbar .coach-playback {
+  background: #b62634;
+  color: white;
+  border-color: #df4655;
+  min-width: 48px;
+}
+.coach-visual-layout .coach-replay-toolbar .coach-playback:hover:not(:disabled) {
+  background: #d12f40;
+}
+.coach-visual-layout .coach-replay-timeline {
+  margin: 20px 0 12px;
+}
+.coach-visual-layout .coach-replay-timeline input {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 28px;
+  background: transparent;
+  cursor: grab;
+  touch-action: pan-y;
+  margin: 0;
+}
+.coach-visual-layout .coach-replay-timeline input:active {
+  cursor: grabbing;
+}
+.coach-visual-layout .coach-replay-timeline input::-webkit-slider-runnable-track {
+  height: 7px;
+  border-radius: 8px;
+  background: linear-gradient(
+    to right,
+    #c42b39 var(--replay-progress),
+    #444 var(--replay-progress)
+  );
+}
+.coach-visual-layout .coach-replay-timeline input::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffc0c7;
+  border-radius: 50%;
+  background: #c42b39;
+  margin-top: -6.5px;
+  box-shadow: 0 2px 7px #0008;
+}
+.coach-visual-layout .coach-replay-timeline input::-moz-range-track {
+  height: 7px;
+  border-radius: 8px;
+  background: linear-gradient(
+    to right,
+    #c42b39 var(--replay-progress),
+    #444 var(--replay-progress)
+  );
+}
+.coach-visual-layout .coach-replay-timeline input::-moz-range-thumb {
+  width: 17px;
+  height: 17px;
+  border: 2px solid #ffc0c7;
+  border-radius: 50%;
+  background: #c42b39;
+}
+.coach-visual-layout .coach-replay-timeline input:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.coach-visual-layout [data-tip] {
+  position: relative;
+}
+.coach-visual-layout [data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 10;
+  width: max-content;
+  max-width: 210px;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #292929;
+  border: 1px solid #666;
+  box-shadow: 0 5px 12px #0007;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms,
+    visibility 120ms;
+}
+@media (hover: hover) {
+  .coach-visual-layout [data-tip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 1.2s;
+  }
+}
+.coach-visual-layout [data-tip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 1.2s;
+}
+.coach-proof-steps {
+  margin: 16px 0 4px;
+  padding: 14px 16px;
+  background: #1d2026;
+  border: 1px solid #3b4e66;
+  border-radius: 7px;
+}
+.coach-proof-steps summary {
+  font-size: 14px;
+  font-weight: 700;
+  color: #bedcff;
+  cursor: pointer;
+}
+.coach-proof-steps ol {
+  display: grid;
+  gap: 10px;
+  list-style: decimal;
+  padding-left: 22px;
+  margin: 12px 0 0;
+}
+.coach-proof-steps li {
+  padding: 10px 12px;
+  background: #17191e;
+  border-radius: 5px;
+  border-left: 2px solid #7eb8ff;
+}
+.coach-proof-steps li strong {
+  display: block;
+  font-size: 13px;
+  color: #c5dfff;
+}
+.coach-proof-steps li p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.coach-tooltip-settings {
+  margin: 24px 0;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.coach-tooltip-settings h2 {
+  font-size: 20px;
+  font-weight: 650;
+  margin: 0 0 12px;
+}
+.coach-tooltip-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.coach-tooltip-option input {
+  accent-color: #b62634;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.coach-tooltip-option > span {
+  display: grid;
+  gap: 4px;
+}
+.coach-tooltip-option > span > span {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+@media (max-width: 700px) {
+  .coach-visual-layout .verified-board {
+    padding: 5px;
+  }
+  .coach-visual-layout .verified-board-scroll {
+    padding: 5px;
+  }
+  .coach-visual-layout .verified-totals {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .coach-visual-layout .verified-move-nav {
+    gap: 6px;
+  }
+  .coach-visual-layout .verified-move-nav label {
+    flex-basis: 100%;
+    order: -1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach-visual-layout [data-tip]::after {
+    transition: visibility 0s;
+  }
+}

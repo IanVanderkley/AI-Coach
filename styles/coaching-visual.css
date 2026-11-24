@@ -1,0 +1,213 @@
+/* Visual-first coaching only. No changes to live gameplay or Ranked. */
+.coach-visual-layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+.coach-visual-layout > .coach-controls {
+  position: static;
+  min-width: 0;
+  padding: clamp(14px, 2vw, 24px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 10px 24px;
+}
+.coach-visual-layout .coach-controls > .subtle-label,
+.coach-visual-layout .coach-controls > h2,
+.coach-visual-layout .coach-controls > .coach-controls-copy,
+.coach-visual-layout .coach-controls > .coach-journey,
+.coach-visual-layout .coach-controls > .coach-error {
+  grid-column: 1 / -1;
+}
+.coach-visual-layout .coach-controls h2,
+.coach-visual-layout .coach-controls-copy,
+.coach-visual-layout .coach-actions,
+.coach-visual-layout .coach-selected-game {
+  margin: 0;
+}
+.coach-visual-layout .coach-journey {
+  display: none;
+}
+.coach-visual-layout .coach-report-intro {
+  margin-bottom: 12px;
+}
+.coach-visual-layout .verified-report {
+  margin-bottom: 18px;
+  scroll-margin-top: 20px;
+}
+.coach-visual-layout .verified-totals {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.coach-visual-layout .verified-totals > div:first-child {
+  border-top: 2px solid #f17883;
+}
+.coach-visual-layout .verified-totals > div:nth-child(2) {
+  border-top: 2px solid #80d7a5;
+}
+.coach-visual-layout .verified-totals > div:nth-child(3) {
+  border-top: 2px solid #a7a7b0;
+}
+.coach-replay-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+.coach-replay-toolbar button {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  background: #252525;
+  padding: 7px 12px;
+  border-radius: 5px;
+  color: #eee;
+  font-size: 13px;
+}
+.coach-replay-toolbar button[aria-pressed="true"] {
+  background: #84212e;
+  border-color: #cf4655;
+}
+.coach-replay-toolbar button:disabled {
+  opacity: 0.45;
+}
+.coach-replay-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.coach-replay-timeline {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.coach-replay-timeline input,
+.coach-replay-toolbar input {
+  accent-color: #c42b39;
+}
+.coach-replay-timeline input {
+  width: 100%;
+}
+.coach-visual-layout .verified-boards.single-board {
+  grid-template-columns: minmax(0, 1fr);
+}
+.coach-visual-layout .verified-board-scroll {
+  max-height: 620px;
+  padding: 10px;
+}
+.coach-visual-layout .verified-board {
+  margin-inline: auto;
+}
+.coach-visual-layout .verified-cell.verified-safe:not(.verified-revealed) {
+  background: #203c2d;
+  box-shadow: inset 0 0 0 1px #80d7a5;
+}
+.coach-visual-layout .verified-cell.verified-mine:not(.verified-revealed) {
+  background: #422a1e;
+  box-shadow: inset 0 0 0 1px #ffb36b;
+}
+.coach-visual-layout .verified-cell.verified-recommended {
+  outline: 3px dashed #b6f4ca;
+  outline-offset: -3px;
+}
+.coach-visual-layout .verified-decision[data-decision="good"] {
+  border-left-color: #80d7a5;
+}
+.coach-visual-layout .verified-decision[data-decision="mistake"] {
+  border-left-color: #f17883;
+}
+.coach-visual-layout .verified-decision[data-decision="not-enough-evidence"] {
+  border-left-color: #a7a7b0;
+}
+.coach-visual-layout .verified-selected {
+  outline-color: #fff;
+}
+.coach-visual-layout .verified-selected[data-decision="mistake"] {
+  outline-color: #ff8d98;
+}
+.coach-visual-layout .verified-selected[data-decision="good"] {
+  outline-color: #9ff2b7;
+}
+.coach-visual-layout .verified-legend {
+  margin-top: 10px;
+}
+.coach-next-focus {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--red);
+  padding: 16px;
+  margin: 14px 0;
+  border-radius: 6px;
+  background: #202020;
+  display: grid;
+  gap: 8px;
+}
+.coach-next-focus h4 {
+  font-weight: 700;
+  font-size: 18px;
+}
+.coach-next-focus p {
+  margin: 0;
+  line-height: 1.5;
+}
+.coach-next-focus .evidence-review-button {
+  justify-self: start;
+}
+.coach-preference-summary {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.coach-visual-layout .evidence-moment-list {
+  margin-top: 14px;
+}
+.coach-visual-layout .evidence-moment details {
+  margin: 8px 0;
+}
+.coach-visual-layout .evidence-moment summary,
+.coach-visual-layout .evidence-focus-tools > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+.coach-visual-layout .evidence-focus-tools {
+  margin: 16px 0;
+}
+.coach-visual-layout .evidence-focus-tools[open] > summary {
+  margin-bottom: 12px;
+}
+.coach-visual-layout
+  :is(button, select, input, summary, .verified-board-scroll):focus-visible {
+  outline: 2px solid #f5d4d7;
+  outline-offset: 3px;
+}
+@media (max-width: 700px) {
+  .coach-visual-layout > .coach-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .coach-visual-layout .verified-totals > div {
+    padding: 8px;
+    gap: 4px;
+  }
+  .coach-visual-layout .verified-totals span {
+    overflow-wrap: anywhere;
+  }
+  .coach-visual-layout .verified-boards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .coach-visual-layout .verified-board-scroll {
+    max-height: 460px;
+  }
+  .coach-visual-layout .evidence-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach-visual-layout *,
+  .coach-visual-layout *::before,
+  .coach-visual-layout *::after {
+    scroll-behavior: auto !important;
+  }
+}

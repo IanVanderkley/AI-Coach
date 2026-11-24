@@ -1,6 +1,10 @@
 import { Navbar } from "@/components/play/navbar";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 import { LeaderboardPrivacy } from "@/components/leaderboard/leaderboard-privacy";
+import { ReplayTooltipSetting } from "@/components/settings/replay-tooltip-setting";
+import { AccountManagement } from "@/components/account/account-management";
+
+export const dynamic = "force-dynamic";
 
 export default function SettingsPage() {
   return (
@@ -22,6 +26,10 @@ export default function SettingsPage() {
         </div>
 
         <SettingsPanel />
+        <ReplayTooltipSetting />
+        <AccountManagement
+          deletionEnabled={process.env.ACCOUNT_DELETION_ENABLED === "true"}
+        />
         <LeaderboardPrivacy />
       </main>
     </>

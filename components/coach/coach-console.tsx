@@ -1,30 +1,15 @@
 "use client";
 
 import Link from "next/link";
-
-import {
-  CheckCircle2,
-  CircleHelp,
-  Flame,
-  Gamepad2,
-  History,
-  Loader2,
-  Play,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  TriangleAlert,
-  Trophy,
-} from "lucide-react";
+import { ArrowLeft, Clock3, History, Loader2, Play, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
 import { CoachReportView } from "@/components/coach/coach-report-view";
 import { EvidenceCoachPanel } from "@/components/coach/evidence-coach-panel";
 import { VerifiedReplayPanel } from "@/components/coach/verified-replay-panel";
+import { ReviewOverview } from "@/components/coach/review-overview";
 import { analyzeGameplay, toRuleReport } from "@/lib/coach/analyze";
 import { loadLastGame } from "@/lib/coach/last-game";
 import { loadPracticeReviewHandoff } from "@/lib/practice/review-handoff";
-import type { StoredLastGame } from "@/lib/coach/last-game";
 import { shapeReportForPreferences } from "@/lib/coach/preferences";
 import { loadCoachPreferences } from "@/lib/settings/coach-preferences";
 import { createSettingsRepository } from "@/lib/settings/repository";
@@ -34,154 +19,250 @@ import type { CoachResult, GameplaySession } from "@/lib/coach/types";
 import type { PracticeSession } from "@/lib/practice/history";
 import {
   createPracticeRepository,
-  type PracticeRepository,
+  type PracticeReviewSummary,
 } from "@/lib/practice/repository";
+import { useHistoryGrades } from "@/lib/settings/history-grades";
+import { scorePracticeReview, type ReviewScore } from "@/lib/coach/review-score";
 
 type ProviderStatus = {
   configured: boolean;
   provider: { id: string; model: string } | null;
 };
-
-type RecordedGame = {
-  session: GameplaySession | null;
-  practice: PracticeSession;
-  summary: string;
-};
-
-const SAMPLES: Array<{ key: string; label: string; session: GameplaySession }> = [
+type Selection = { id: string; game: PracticeSession; review: ReviewScore };
+const SAMPLES = [
   { key: "loss", label: "Analyze a loss", session: SAMPLE_LOSS_SESSION },
   { key: "win", label: "Analyze a win", session: SAMPLE_WIN_SESSION },
 ];
 
-async function loadSelectedPracticeGame(
-  repository: PracticeRepository,
-  gameId: string | null,
-): Promise<{
-  game: RecordedGame | null;
-  message: string;
-}> {
-  // Use the same validated temporary-session store as the Practice Review page.
-  // The id is optional; no id means the latest completed Practice game.
-  const value = await repository.load(gameId);
-  if (!value) {
-    return {
-      game: null,
-      message: gameId
-        ? "That game is no longer in this browser tab's recent recordings."
-        : "Finish a Practice game first to unlock your own coaching report.",
-    };
-  }
-
-  // The modern Coach API supports rectangular boards, including Expert.
-  const squareSession: GameplaySession = {
-    game: "minesweeper",
-    difficulty: value.difficulty,
-    rows: value.rows,
-    columns: value.columns,
-    mineCount: value.mineCount,
-    outcome: value.outcome,
-    durationSeconds: value.durationSeconds,
-    mines: value.mines,
-    moves: value.moves,
-  };
-
-  return {
-    game: {
-      session: squareSession,
-      practice: value,
-      summary: `${value.difficulty} · ${value.rows} × ${value.columns} · ${value.outcome === "win" ? "Win" : "Loss"} · ${value.moves.length} actions`,
-    },
-    message: "",
-  };
+function timeLabel(seconds: number) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 export function CoachConsole() {
-  const [status, setStatus] = useState<ProviderStatus | null>(null);
-  const [statusUnavailable, setStatusUnavailable] = useState(false);
-  const [loadingKey, setLoadingKey] = useState<string | null>(null);
-  const [result, setResult] = useState<CoachResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const repository = useMemo(() => createPracticeRepository(), []);
+  const [games, setGames] = useState<PracticeReviewSummary[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState("");
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const { enabled: autoGrades, ready: gradesReady } = useHistoryGrades();
+  const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
+  const [unavailableGrades, setUnavailableGrades] = useState<Record<string, boolean>>({});
+  const [scores, setScores] = useState<Record<string, ReviewScore>>({});
   const [preferences, setPreferences] = useState<CoachPreferences | null>(null);
-  const [classicLastGame, setClassicLastGame] = useState<StoredLastGame | null>(null);
-  const [lastGame, setLastGame] = useState<RecordedGame | null>(null);
-  const [selectedReplay, setSelectedReplay] = useState<PracticeSession | null>(null);
+  const [status, setStatus] = useState<ProviderStatus | null>(null);
   const [replayFocus, setReplayFocus] = useState<{
     moveNumber: number;
     request: number;
   } | null>(null);
+  const [result, setResult] = useState<CoachResult | null>(null);
+  const [loadingKey, setLoadingKey] = useState<string | null>(null);
+  const request = useRef(0);
+  const demoRequest = useRef(0);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const lastView = useRef(false);
+  const reviewing =
+    pendingId !== null || selection !== null || loadingKey !== null || result !== null;
+  useEffect(() => {
+    if (lastView.current !== reviewing) {
+      lastView.current = reviewing;
+      heading.current?.focus({ preventScroll: true });
+      heading.current?.scrollIntoView({ block: "start" });
+    }
+  }, [reviewing]);
+
+  function backToGames() {
+    ++request.current;
+    ++demoRequest.current;
+    setSelection(null);
+    setPendingId(null);
+    setReplayFocus(null);
+    setResult(null);
+    setLoadingKey(null);
+    setError("");
+    // A return from a direct review link should stay on history after refresh.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("gameId");
+    url.searchParams.delete("reviewId");
+    if (url.searchParams.get("source") === "practice") url.searchParams.delete("source");
+    if (url.href !== window.location.href)
+      window.history.replaceState(window.history.state, "", url);
+  }
   const chooseReplayMove = useCallback((moveNumber: number) => {
     setReplayFocus((previous) => ({ moveNumber, request: (previous?.request ?? 0) + 1 }));
-  }, []);
-  const [practiceMessage, setPracticeMessage] = useState("");
-  const autoAnalysisStarted = useRef(false);
-  const practiceRepository = useMemo(() => createPracticeRepository(), []);
-
-  // Retain the original last-game localStorage and cross-tab updates.
-  useEffect(() => {
-    const refresh = () => setClassicLastGame(loadLastGame());
-    refresh();
-    window.addEventListener("storage", refresh);
-    return () => window.removeEventListener("storage", refresh);
+    const workspace = document.getElementById("coach-replay-workspace");
+    workspace?.focus({ preventScroll: true });
+    workspace?.scrollIntoView({ block: "start" });
   }, []);
 
-  useEffect(() => {
-    let alive = true;
-    loadCoachPreferences(createSettingsRepository())
-      .then((loaded) => {
-        if (alive) setPreferences(loaded);
-      })
-      .catch(() => {
-        if (alive) setPreferences(null);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // Ask the API which provider, if any, is configured. No key is a normal state.
-  useEffect(() => {
-    let alive = true;
-    fetch("/api/coach")
-      .then((response) =>
-        response.ok ? response.json() : Promise.reject(new Error("status")),
-      )
-      .then((data: ProviderStatus) => {
-        if (alive) setStatus(data);
-      })
-      .catch(() => {
-        if (alive) setStatusUnavailable(true);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const analyze = useCallback(
-    async (key: string, session: GameplaySession) => {
-      const payload: GameplaySession = preferences
-        ? { ...session, preferences }
-        : session;
-      setLoadingKey(key);
-      setError(null);
+  // This function is the only path that generates a main review. It runs after
+  // an explicit game selection (or an explicit review link from Play/Profile).
+  const openGame = useCallback(
+    async (id: string, handoff?: PracticeSession) => {
+      const token = ++request.current;
+      ++demoRequest.current;
+      setPendingId(id);
+      setError("");
+      setSelection(null);
+      setReplayFocus(null);
       setResult(null);
+      setLoadingKey(null);
       try {
-        const response = await fetch("/api/coach", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as {
-            error?: string;
-          } | null;
-          // Invalid input must be surfaced, not silently reanalysed and treated
-          // as a verified report by the browser fallback.
-          setError(payload?.error ?? `The coaching API replied with ${response.status}.`);
-          return;
-        }
-        setResult((await response.json()) as CoachResult);
+        const game = handoff ?? (await repository.loadReview(id));
+        if (token !== request.current) return;
+        if (!game)
+          throw new Error("This game is no longer available in your recent recordings.");
+        const review = scorePracticeReview(game);
+        setScores((previous) => ({ ...previous, [id]: review }));
+        setReviewed((previous) => ({ ...previous, [id]: true }));
+        setSelection({ id, game, review });
+      } catch (reason) {
+        if (token === request.current)
+          setError(
+            reason instanceof Error ? reason.message : "Could not load this game.",
+          );
+      } finally {
+        if (token === request.current) setPendingId(null);
+      }
+    },
+    [repository],
+  );
+
+  useEffect(() => {
+    let active = true;
+    const params = new URLSearchParams(window.location.search);
+    const reviewId = params.get("reviewId");
+    const gameId = params.get("gameId");
+    if (params.get("source") === "practice" && reviewId) {
+      let storage: Storage | null = null;
+      try {
+        storage = window.sessionStorage;
       } catch {
-        // Rule analysis can still work locally without an AI provider or server.
+        /* Browser storage blocked. */
+      }
+      const handoff = loadPracticeReviewHandoff(storage, reviewId);
+      if (handoff) void openGame(`handoff-${reviewId}`, handoff);
+      else
+        setError(
+          "This completed game's replay is unavailable in this tab. Choose a saved game below.",
+        );
+    } else if (gameId) {
+      void openGame(gameId);
+    }
+    const initialRequest = request.current;
+    // A plain visit only reads metadata; no replay, grade, or provider call.
+    void repository
+      .listReviewSummaries()
+      .then((recent) => {
+        if (!active) return;
+        setGames(recent);
+        if (
+          request.current === initialRequest &&
+          params.get("source") === "practice" &&
+          !reviewId &&
+          !gameId &&
+          recent[0]
+        )
+          void openGame(recent[0].id);
+      })
+      .catch(() => {
+        if (active)
+          setHistoryError(
+            "Could not load your recent Practice games. Refresh to try again.",
+          );
+      })
+      .finally(() => {
+        if (active) setHistoryLoading(false);
+      });
+    return () => {
+      active = false;
+      ++request.current;
+      ++demoRequest.current;
+    };
+  }, [repository, openGame]);
+
+  useEffect(() => {
+    let active = true;
+    void loadCoachPreferences(createSettingsRepository())
+      .then((value) => {
+        if (active) setPreferences(value);
+      })
+      .catch(() => {});
+    // Configuration status is not a coaching request; GET does not invoke a provider.
+    void fetch("/api/coach")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((value: ProviderStatus | null) => {
+        if (active) setStatus(value);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const scoreSnapshot = useRef(scores);
+  useEffect(() => {
+    scoreSnapshot.current = scores;
+  }, [scores]);
+  const unavailableSnapshot = useRef(unavailableGrades);
+  useEffect(() => {
+    unavailableSnapshot.current = unavailableGrades;
+  }, [unavailableGrades]);
+  // Grade only one saved recording at a time. No report components or provider calls.
+  // Pause while a player is reviewing a game; yield between recordings.
+  useEffect(() => {
+    if (!gradesReady || !autoGrades || reviewing || historyLoading) return;
+    let cancelled = false;
+    async function populateGrades() {
+      for (const item of games) {
+        if (cancelled) return;
+        if (scoreSnapshot.current[item.id] || unavailableSnapshot.current[item.id])
+          continue;
+        try {
+          const recording = await repository.loadReview(item.id);
+          if (cancelled) return;
+          if (!recording) throw new Error("Missing recording");
+          const score = scorePracticeReview(recording);
+          if (!cancelled) setScores((previous) => ({ ...previous, [item.id]: score }));
+        } catch {
+          if (!cancelled)
+            setUnavailableGrades((previous) => ({ ...previous, [item.id]: true }));
+        }
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+      }
+    }
+    void populateGrades();
+    return () => {
+      cancelled = true;
+    };
+  }, [gradesReady, autoGrades, reviewing, historyLoading, games, repository]);
+  const selectedReplay = selection?.game ?? null;
+  const analyze = async (key: string, session: GameplaySession) => {
+    const token = ++demoRequest.current;
+    const payload = preferences ? { ...session, preferences } : session;
+    setLoadingKey(key);
+    setResult(null);
+    setError("");
+    try {
+      const response = await fetch("/api/coach", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (token !== demoRequest.current) return;
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        if (token === demoRequest.current)
+          setError(body?.error ?? `The coaching API replied with ${response.status}.`);
+        return;
+      }
+      const value = (await response.json()) as CoachResult;
+      if (token === demoRequest.current) setResult(value);
+    } catch {
+      if (token === demoRequest.current)
         setResult({
           report: preferences
             ? shapeReportForPreferences(
@@ -192,369 +273,254 @@ export function CoachConsole() {
           fallbackReason:
             "The coaching API could not be reached, so the built-in rule coach ran in your browser.",
         });
-      } finally {
-        setLoadingKey(null);
-      }
-    },
-    [preferences],
-  );
-
-  // A finished Practice match links here with ?source=practice. Automatically
-  // analyse it once on arrival; the player can rerun the report using the button.
-  useEffect(() => {
-    let active = true;
-    const params = new URLSearchParams(window.location.search);
-    const reviewId = params.get("reviewId");
-    if (params.get("source") === "practice" && reviewId) {
-      let storage: Storage | null = null;
-      try {
-        storage = window.sessionStorage;
-      } catch {
-        /* Blocked by browser */
-      }
-      const selected = loadPracticeReviewHandoff(storage, reviewId);
-      if (!selected) {
-        const message =
-          "This completed game's replay is unavailable in this tab. Return to Play or choose a saved game in Profile.";
-        setLastGame(null);
-        setSelectedReplay(null);
-        setPracticeMessage(message);
-        setError(message);
-      } else {
-        setLastGame({
-          practice: selected,
-          session: selected,
-          summary: `${selected.difficulty} · ${selected.rows} × ${selected.columns} · ${selected.outcome === "win" ? "Win" : "Loss"} · ${selected.moves.length} actions`,
-        });
-        setPracticeMessage("");
-        setError(null);
-        setSelectedReplay(selected);
-        autoAnalysisStarted.current = true;
-      }
-      return () => {
-        active = false;
-      };
+    } finally {
+      if (token === demoRequest.current) setLoadingKey(null);
     }
-    void loadSelectedPracticeGame(practiceRepository, params.get("gameId"))
-      .then((saved) => {
-        if (!active) return;
-        setLastGame(saved.game);
-        setPracticeMessage(saved.message);
-
-        if (params.get("source") === "practice" && !autoAnalysisStarted.current) {
-          autoAnalysisStarted.current = true;
-          if (saved.game) {
-            setSelectedReplay(saved.game.practice);
-          } else {
-            setError(saved.message);
-          }
-        }
-      })
-      .catch(() => {
-        if (!active) return;
-        const message =
-          "Could not load this Practice recording. Check your connection and try again.";
-        setPracticeMessage(message);
-        if (params.get("source") === "practice") setError(message);
-      });
-    return () => {
-      active = false;
-    };
-  }, [practiceRepository]);
-
-  let providerLine: string;
-  if (statusUnavailable) {
-    providerLine = "Verified coaching works locally · AI status unavailable";
-  } else if (status?.configured && status.provider) {
-    providerLine = `AI provider ready · ${status.provider.id} · ${status.provider.model}`;
-  } else if (status) {
-    providerLine = "Verified rule coaching ready · AI focus selection optional";
-  } else {
-    providerLine = "Checking the coaching API…";
+  };
+  function openDemo(key: string, session: GameplaySession) {
+    ++request.current;
+    setSelection(null);
+    setPendingId(null);
+    setReplayFocus(null);
+    void analyze(key, session);
   }
 
   return (
-    <div className="coach-layout">
-      <section className="coach-controls" aria-label="Run a coaching analysis">
-        <span className="subtle-label">YOUR COACHING DASHBOARD</span>
-        <h2>{lastGame ? "Let's learn from this game" : "Turn games into progress"}</h2>
-        <p className="coach-controls-copy">
-          Play, see what happened, and learn one thing for next time. The replay shows the
-          same board you played, one move at a time.
-        </p>
-        <div className="coach-journey" aria-label="Three steps to improve">
-          <div className="coach-journey-step">
-            <span className="coach-journey-step-icon">
-              <Gamepad2 size={18} aria-hidden="true" />
-            </span>
+    <div className="coach-visual-layout coach-full-page">
+      {!reviewing ? (
+        <section className="coach-history-screen" aria-labelledby="coach-history-title">
+          <div className="coach-history-heading">
             <div>
-              <strong>1. Play</strong>
-              <span>Finish any Practice game.</span>
+              <h2 id="coach-history-title" ref={heading} tabIndex={-1}>
+                Recent Practice Matches
+              </h2>
+              <p>
+                Choose a saved game to review your performance and learn from your moves.
+              </p>
             </div>
+            {!historyLoading && !historyError && (
+              <span>
+                {games.length} {games.length === 1 ? "match" : "matches"}
+              </span>
+            )}
           </div>
-          <div className="coach-journey-step">
-            <span className="coach-journey-step-icon">
-              <ShieldCheck size={18} aria-hidden="true" />
-            </span>
-            <div>
-              <strong>2. Review</strong>
-              <span>See exactly where each move led.</span>
-            </div>
-          </div>
-          <div className="coach-journey-step">
-            <span className="coach-journey-step-icon">
-              <Target size={18} aria-hidden="true" />
-            </span>
-            <div>
-              <strong>3. Improve</strong>
-              <span>Use a proven tip in the next game.</span>
-            </div>
-          </div>
-        </div>
-
-        {lastGame ? (
-          <div
-            className={`coach-selected-game ${lastGame.practice.outcome === "win" ? "is-win" : "is-loss"}`}
-          >
-            <div className="coach-selected-game-header">
-              {lastGame.practice.outcome === "win" ? (
-                <Trophy size={19} aria-hidden="true" />
-              ) : (
-                <Flame size={19} aria-hidden="true" />
-              )}
-              <strong>
-                {lastGame.practice.difficulty} Practice ·{" "}
-                {lastGame.practice.outcome === "win" ? "Victory" : "Loss"}
-              </strong>
-            </div>
-            <div
-              className="coach-selected-game-stats"
-              aria-label="Selected game statistics"
-            >
-              <div>
-                <span>Time</span>
-                <strong>
-                  {Math.floor(lastGame.practice.durationSeconds / 60)
-                    .toString()
-                    .padStart(2, "0")}
-                  :{(lastGame.practice.durationSeconds % 60).toString().padStart(2, "0")}
-                </strong>
-              </div>
-              <div>
-                <span>Moves</span>
-                <strong>{lastGame.practice.moves.length}</strong>
-              </div>
-              <div>
-                <span>Board</span>
-                <strong>
-                  {lastGame.practice.rows} × {lastGame.practice.columns}
-                </strong>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="coach-empty-guide">
-            <p>
-              {practiceMessage ||
-                "Complete a Practice game to see your own replay and coaching."}
+          {error && (
+            <p className="coach-error" role="alert">
+              <TriangleAlert size={15} aria-hidden="true" />
+              {error}
             </p>
-            <Link className="coach-btn" href="/">
-              Play a Practice game
-            </Link>
-          </div>
-        )}
-
-        {lastGame && (
-          <div className="coach-actions">
-            <button
-              type="button"
-              className="coach-btn"
-              onClick={() => {
-                setSelectedReplay(lastGame.practice);
-                setReplayFocus(null);
-                setResult(null);
-                setError(null);
-              }}
-              disabled={loadingKey !== null}
-            >
-              <Play size={15} aria-hidden="true" />
-              View my move-by-move replay
-            </button>
-          </div>
-        )}
-
-        <details className="coach-demo-tests">
-          <summary>More tools and sample reports</summary>
-          {classicLastGame && (
-            <button
-              type="button"
-              className="coach-btn secondary"
-              onClick={() => {
-                setSelectedReplay(null);
-                setReplayFocus(null);
-                void analyze("classic", classicLastGame.session);
-              }}
-              disabled={loadingKey !== null}
-            >
-              <History size={15} aria-hidden="true" />
-              Run classic report (experimental)
-            </button>
+          )}
+          {historyLoading ? (
+            <p role="status">Loading recent games…</p>
+          ) : historyError ? (
+            <p className="coach-error" role="alert">
+              {historyError}
+            </p>
+          ) : !games.length ? (
+            <div className="coach-empty-guide">
+              <p>No saved Practice games yet.</p>
+              <Link className="coach-btn" href="/">
+                Play a Practice game
+              </Link>
+            </div>
+          ) : (
+            <>
+              <ul className="coach-history-list" aria-label="Select a saved game">
+                {games.map((game) => {
+                  const score =
+                    autoGrades || reviewed[game.id] ? scores[game.id] : undefined;
+                  return (
+                    <li className="coach-history-row" key={game.id}>
+                      <span className={`result-dot ${game.outcome}`} aria-hidden="true" />
+                      <div className="coach-history-result">
+                        <strong>
+                          {game.outcome === "win" ? "Win" : "Loss"} · {game.difficulty}
+                        </strong>
+                        <span>
+                          {game.rows} × {game.columns} ·{" "}
+                          {new Date(game.completedAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <span className="coach-history-detail">
+                        <Clock3 size={14} aria-hidden="true" />{" "}
+                        {timeLabel(game.durationSeconds)}
+                      </span>
+                      <span className="coach-history-detail">
+                        {game.moveCount} actions
+                      </span>
+                      <span className="coach-history-score">
+                        {score?.grade ? (
+                          <span
+                            className="grade-badge"
+                            data-grade={score.grade}
+                            aria-label={`Coaching grade ${score.grade}, ${score.score} out of 100`}
+                          >
+                            <span className="grade-letter">{score.grade}</span>
+                            <span className="grade-score">{score.score}/100</span>
+                          </span>
+                        ) : (
+                          <span className="coach-history-ungraded">
+                            {score
+                              ? "Not graded"
+                              : gradesReady && autoGrades
+                                ? unavailableGrades[game.id]
+                                  ? "Unavailable"
+                                  : "Grading…"
+                                : "Not reviewed"}
+                          </span>
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        className="practice-review-link coach-history-action"
+                        onClick={() => void openGame(game.id)}
+                        aria-label={`Review ${game.difficulty} ${game.outcome === "win" ? "win" : "loss"} from ${new Date(game.completedAt).toLocaleString()}`}
+                      >
+                        <Play size={14} aria-hidden="true" /> Review game
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="verified-note">
+                Showing your saved Practice recordings.{" "}
+                {autoGrades
+                  ? "Grades are calculated as recordings load; detailed lessons open on request."
+                  : "Grades appear after you review a game."}
+              </p>
+            </>
           )}
           <details className="coach-demo-tests">
-            <summary>Experimental sample reports (not verified)</summary>
-            <p>
-              These examples use the earlier scoring engine for comparison, not your
-              recorded game. Results may be approximate or unsupported.
+            <summary>More tools and sample reports</summary>
+            <p className="verified-note">
+              Earlier experimental reports are separate from verified lessons.
             </p>
             <div className="coach-actions">
+              <button
+                type="button"
+                className="coach-btn secondary"
+                disabled={loadingKey !== null}
+                onClick={() => {
+                  const classic = loadLastGame();
+                  if (classic) openDemo("classic", classic.session);
+                  else setError("No classic recording is available.");
+                }}
+              >
+                <History size={15} aria-hidden="true" /> Run classic report (experimental)
+              </button>
               {SAMPLES.map(({ key, label, session }) => (
                 <button
                   key={key}
                   type="button"
-                  className="coach-btn"
-                  onClick={() => {
-                    setSelectedReplay(null);
-                    setReplayFocus(null);
-                    void analyze(key, session);
-                  }}
+                  className="coach-btn secondary"
                   disabled={loadingKey !== null}
+                  onClick={() => openDemo(key, session)}
                 >
-                  {loadingKey === key ? (
-                    <Loader2 className="coach-spin" size={16} aria-hidden="true" />
-                  ) : (
-                    <Play size={15} aria-hidden="true" />
-                  )}
                   {label} (demo)
                 </button>
               ))}
             </div>
           </details>
-        </details>
-
-        <details className="coach-extra-info">
-          <summary>How accurate is this review?</summary>
-          <span className="coach-provider" data-ready={status?.configured ? "yes" : "no"}>
-            <Sparkles size={13} aria-hidden="true" />
-            {providerLine}
-          </span>
-          <ul className="coach-help">
-            <li>
-              Finish any Practice game to replay verified board decisions, including
-              Expert.
-            </li>
-            <li>
-              Up to five recent Practice games are stored temporarily in this browser tab.
-            </li>
-            {preferences ? (
-              <li>
-                Classic Coach settings: {preferences.coachingStyle} tone,{" "}
-                {preferences.explanationDetail} detail.
-              </li>
-            ) : null}
-            <li>
-              The verified teaching report runs locally. Optional AI focus selection sends
-              verified findings to the provider, never the hidden mine layout. The older
-              experimental report is separate and unverified.
-            </li>
-          </ul>
-        </details>
-
-        {error ? (
-          <p className="coach-error" role="alert">
-            <TriangleAlert size={14} aria-hidden="true" />
-            {error}
-          </p>
-        ) : null}
-      </section>
-
-      <section aria-label="Coaching report" aria-live="polite">
-        {selectedReplay ? (
-          <>
-            <div className="coach-report-intro">
-              <ShieldCheck size={26} aria-hidden="true" />
-              <div className="coach-report-intro-copy">
-                <strong>Your game, explained visually</strong>
-                <p>
-                  Use the board replay to compare moves. A move is only labelled when the
-                  visible board proves it.
-                </p>
-              </div>
-              <div className="coach-report-legend" aria-label="Move classification key">
-                <span className="good">
-                  <CheckCircle2 size={15} aria-hidden="true" />
-                  Proven good
-                </span>
-                <span className="bad">
-                  <TriangleAlert size={15} aria-hidden="true" />
-                  Verified mistake
-                </span>
-                <span className="unknown">
-                  <CircleHelp size={15} aria-hidden="true" />
-                  Uncertain
-                </span>
-              </div>
+          <details className="coach-extra-info">
+            <summary>How accurate is this review?</summary>
+            <p className="verified-note">
+              The replay and visual lessons use visible-board evidence. The Practice score
+              is a learning aid, not a Ranked result.{" "}
+              {status?.configured
+                ? "Optional AI focus is available to eligible signed-in users."
+                : "External AI is optional; the rule coach works without it."}
+            </p>
+          </details>
+        </section>
+      ) : (
+        <section aria-label="Coaching report" className="coach-selected-review">
+          <div className="coach-review-navigation">
+            <button
+              type="button"
+              className="coach-btn coach-history-action"
+              onClick={backToGames}
+            >
+              <ArrowLeft size={16} aria-hidden="true" /> Back to games
+            </button>
+            <h2 ref={heading} tabIndex={-1}>
+              {selectedReplay
+                ? `${selectedReplay.difficulty} Practice · ${selectedReplay.outcome === "win" ? "Victory" : "Loss"}`
+                : pendingId
+                  ? "Game review"
+                  : "Sample report"}
+            </h2>
+          </div>
+          {error && (
+            <p className="coach-error" role="alert">
+              <TriangleAlert size={15} aria-hidden="true" />
+              {error}
+            </p>
+          )}
+          {pendingId ? (
+            <div className="coach-placeholder" role="status">
+              <Loader2 className="coach-spin" size={22} aria-hidden="true" /> Preparing
+              your selected game…
             </div>
-            <EvidenceCoachPanel game={selectedReplay} onReviewMove={chooseReplayMove} />
-            <VerifiedReplayPanel
-              game={selectedReplay}
-              focusMoveNumber={replayFocus?.moveNumber}
-              focusRequestId={replayFocus?.request}
-            />
-            {lastGame?.session ? (
+          ) : selectedReplay && selection ? (
+            <div key={selection.id}>
+              <ReviewOverview review={selection.review} onReviewMove={chooseReplayMove} />
+              <VerifiedReplayPanel
+                game={selectedReplay}
+                focusMoveNumber={replayFocus?.moveNumber}
+                focusRequestId={replayFocus?.request}
+              />
+              <EvidenceCoachPanel
+                game={selectedReplay}
+                onReviewMove={chooseReplayMove}
+                preferences={preferences}
+                aiAvailable={status?.configured === true && status.provider !== null}
+              />
               <details className="verified-experimental">
                 <summary>Earlier AI coach draft (experimental)</summary>
                 <p>
-                  This older report uses simpler analysis and a prototype grade. Its
-                  scores and claims are not evidence-verified. It runs only if you request
-                  it, and may call your configured AI provider.
+                  Older prototype scoring and unverified narrative. Runs only on request
+                  and may use a configured provider.
                 </p>
                 <button
                   type="button"
                   className="coach-btn"
                   disabled={loadingKey !== null}
-                  onClick={() => {
-                    if (lastGame?.session) void analyze("practice", lastGame.session);
-                  }}
+                  onClick={() => void analyze("practice", selectedReplay)}
                 >
                   {loadingKey === "practice"
                     ? "Preparing draft…"
                     : "Run experimental report"}
                 </button>
-                {result ? (
+                {result && (
                   <div className="coach-report-panel">
                     <CoachReportView
                       report={result.report}
                       fallbackReason={result.fallbackReason}
                     />
                   </div>
-                ) : null}
+                )}
               </details>
-            ) : null}
-          </>
-        ) : result ? (
-          <>
-            <p className="verified-note">
-              Demo report using the previous experimental scoring engine; it is not a
-              verified coaching report.
-            </p>
-            <div className="coach-report-panel">
-              <CoachReportView
-                report={result.report}
-                fallbackReason={result.fallbackReason}
-              />
             </div>
-          </>
-        ) : (
-          <div className="coach-placeholder">
-            <Sparkles size={22} aria-hidden="true" />
-            <p>
-              {loadingKey
-                ? "Analyzing a sample game…"
-                : "Choose a recorded Practice game to see verified coaching."}
-            </p>
-          </div>
-        )}
-      </section>
+          ) : result ? (
+            <>
+              <p className="verified-note">
+                Experimental report — not a verified coaching lesson.
+              </p>
+              <div className="coach-report-panel">
+                <CoachReportView
+                  report={result.report}
+                  fallbackReason={result.fallbackReason}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="coach-placeholder" role="status">
+              <Loader2 className="coach-spin" size={22} aria-hidden="true" /> Analyzing a
+              sample game…
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

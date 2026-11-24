@@ -1,0 +1,501 @@
+.coach-proof-steps {
+  min-width: 0;
+}
+.coach-proof-rule {
+  color: #e1e1e1;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.coach-proof-steps .coach-proof-lessons {
+  padding: 0;
+  list-style: none;
+  gap: 16px;
+}
+.coach-proof-steps .coach-proof-lesson {
+  padding: 16px;
+  min-width: 0;
+}
+.coach-proof-lesson h5 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+.coach-proof-step-number {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #315275;
+  color: #fff;
+  flex: 0 0 auto;
+}
+.coach-proof-board-scroll {
+  overflow: auto;
+  max-height: 460px;
+  padding: 10px;
+  background: #111;
+  border-radius: 6px;
+}
+.coach-proof-grid {
+  display: grid;
+  grid-auto-rows: 36px;
+  grid-template-rows: 24px;
+  gap: 3px;
+  width: max-content;
+  margin-inline: auto;
+}
+.coach-proof-coordinate {
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: #bdbdbd;
+}
+.coach-proof-cell {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  box-sizing: border-box;
+  background: #353535;
+  border: 1px solid #484848;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 750;
+  color: #f1f1f1;
+}
+.coach-proof-cell[data-kind="revealed"] {
+  background: #222;
+  border-color: #292929;
+}
+.coach-proof-cell[data-kind="clue"] {
+  background: #233a54;
+  border: 2px solid #9ecbff;
+  color: #e0efff;
+}
+.coach-proof-cell[data-kind="shared"] {
+  background: #2c4260;
+  border: 2px solid #7eb8ff;
+  color: #d5e8ff;
+}
+.coach-proof-cell[data-kind="safe"],
+.coach-proof-cell[data-kind="known-safe"] {
+  background: #1d392b;
+  border: 2px solid #8ee4af;
+  color: #bbf5d1;
+}
+.coach-proof-cell[data-kind="mine"],
+.coach-proof-cell[data-kind="known-mine"] {
+  background: #482a1d;
+  border: 2px solid #ffaf78;
+  color: #ffd2aa;
+}
+.coach-proof-cell[data-kind="known-safe"],
+.coach-proof-cell[data-kind="known-mine"] {
+  border-style: dashed;
+}
+.coach-proof-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  font-size: 11px;
+  color: #c9c9c9;
+  margin: 8px 0 14px;
+}
+.coach-proof-lesson .coach-proof-conclusion {
+  background: #37251f;
+  padding: 10px;
+  border-radius: 5px;
+}
+.coach-proof-lesson .coach-proof-conclusion[data-safe="true"] {
+  background: #203629;
+}
+.coach-proof-lesson .coach-proof-conclusion strong {
+  color: #f2f2f2;
+}
+.coach-proof-lesson .coach-proof-habit {
+  margin-top: 12px;
+}
+.coach-proof-lesson .coach-proof-habit strong,
+.coach-proof-equations strong {
+  display: inline;
+}
+.coach-proof-technical {
+  margin-top: 12px;
+}
+.coach-proof-technical summary {
+  color: #a8c4e3;
+  font-size: 12px;
+}
+.coach-lesson-next {
+  padding: 14px;
+  margin: 12px 0;
+  background: #222;
+  border-left: 3px solid #8bd9a9;
+  border-radius: 5px;
+}
+.coach-lesson-next p {
+  margin-top: 5px;
+  line-height: 1.6;
+}
+.coach-replay-view-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 18px;
+}
+.coach-replay-view-setting > span {
+  display: grid;
+  gap: 4px;
+}
+.coach-replay-view-setting > span > span {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.coach-replay-view-setting select {
+  background: #262626;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 9px;
+  color: var(--text-primary, #fff);
+  max-width: 100%;
+}
+
+/* Coaching has two exclusive full-width screens, not a sidebar grid. */
+.coach-visual-layout.coach-full-page {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+.coach-history-screen,
+.coach-selected-review {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.coach-history-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.coach-history-heading h2,
+.coach-review-navigation h2 {
+  font-family: var(--heading-font);
+  margin: 0;
+  font-size: clamp(22px, 2.5vw, 30px);
+  scroll-margin-top: 24px;
+}
+.coach-history-heading p {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.coach-history-heading > span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.coach-history-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  gap: 8px;
+}
+.coach-history-row {
+  display: grid;
+  grid-template-columns:
+    auto minmax(0, 1fr) minmax(66px, auto) minmax(70px, auto)
+    76px auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 6px;
+  min-width: 0;
+}
+.coach-history-row .result-dot {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ee7783;
+}
+.coach-history-row .result-dot.win {
+  background: #8bd9a9;
+}
+.coach-history-result {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.coach-history-result strong {
+  font-size: 15px;
+  line-height: 1.35;
+}
+.coach-history-result > span,
+.coach-history-detail {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.coach-history-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.coach-history-score {
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+}
+.coach-history-ungraded {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: center;
+}
+.coach-history-score .grade-badge {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+}
+.coach-history-score .grade-letter {
+  font-size: 25px;
+  line-height: 1;
+}
+.coach-history-score .grade-score {
+  font-size: 10px;
+}
+.coach-history-score .grade-badge[data-grade="S"],
+.coach-history-score .grade-badge[data-grade="A"] {
+  background: #203327;
+  border-color: #345740;
+}
+.coach-history-score .grade-badge[data-grade="S"] .grade-letter,
+.coach-history-score .grade-badge[data-grade="A"] .grade-letter {
+  color: #9ee5b0;
+}
+.coach-history-row .practice-review-link {
+  min-height: 38px;
+  border: 0;
+  cursor: pointer;
+}
+.coach-review-navigation {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.coach-history-screen > details {
+  margin-top: 12px;
+}
+.coach-history-screen > details .coach-actions {
+  margin-top: 12px;
+}
+@media (max-width: 740px) {
+  .coach-history-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+  .coach-history-row .coach-history-detail {
+    grid-column: 2;
+  }
+  .coach-history-score {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+  .coach-history-row .practice-review-link {
+    grid-column: 2 / -1;
+    justify-self: stretch;
+  }
+}
+.coach-selected-review {
+  min-width: 0;
+}
+.coach-review-overview {
+  padding: clamp(14px, 2vw, 24px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 18px;
+  min-width: 0;
+}
+.coach-review-headline {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 12px 0;
+}
+.coach-review-headline h2 {
+  font-family: var(--heading-font);
+  font-size: clamp(19px, 2vw, 27px);
+  line-height: 1.2;
+  margin: 0;
+}
+.coach-review-headline p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin: 5px 0 0;
+}
+.coach-review-headline .grade-badge {
+  width: 68px;
+  height: 68px;
+}
+.coach-review-headline .grade-badge[data-grade="S"],
+.coach-review-headline .grade-badge[data-grade="A"] {
+  background: #203327;
+  border-color: #345740;
+}
+.coach-review-headline .grade-badge[data-grade="S"] .grade-letter,
+.coach-review-headline .grade-badge[data-grade="A"] .grade-letter {
+  color: #9ee5b0;
+}
+.coach-review-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+.coach-review-metrics > div {
+  padding: 10px;
+  background: #111;
+  border-radius: 5px;
+  min-width: 0;
+}
+.coach-review-metrics dt {
+  color: var(--text-secondary);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.coach-review-metrics dd {
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+.coach-review-focus {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #222;
+  border-radius: 5px;
+  padding: 12px;
+}
+.coach-review-focus > svg {
+  flex: 0 0 auto;
+  color: #e2b28b;
+}
+.coach-review-focus > p {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: 13px;
+}
+.coach-review-overview > details {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.coach-review-overview > details p {
+  line-height: 1.6;
+  margin-top: 8px;
+}
+@media (max-width: 650px) {
+  .coach-review-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Shared red action treatment, scoped to the two Coaching navigation actions. */
+.coach-full-page .coach-history-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  min-height: 40px;
+  border: 1px solid #b62634;
+  border-radius: 6px;
+  background: #b62634;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.coach-full-page .coach-history-action > svg {
+  flex: 0 0 auto;
+}
+.coach-full-page .coach-history-action:hover {
+  background: #c42b39;
+  border-color: #c42b39;
+}
+.coach-full-page .coach-history-action:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+.account-management {
+  margin-block: 24px;
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.account-management h2,
+.account-management h3 {
+  margin: 0;
+}
+.account-management p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.account-management form {
+  display: grid;
+  gap: 10px;
+  max-width: 460px;
+}
+.account-management input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #222;
+  color: #fff;
+}
+.account-management details {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.account-management details summary {
+  cursor: pointer;
+}
+.account-auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 16px;
+}
+.account-auth-links button,
+.account-auth-links a {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  cursor: pointer;
+}
