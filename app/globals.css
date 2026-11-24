@@ -30,3 +30,5 @@
 
 /* Profile breakdown from recorded Practice data only. */
 @import "../styles/profile-difficulty-stats.css";
+@import "../styles/profile-detail-pages.css";
+@import "../styles/result-xp-compact.css";

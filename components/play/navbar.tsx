@@ -100,7 +100,10 @@ export function Navbar() {
 
         <nav className="main-nav" aria-label="Main navigation">
           {navigationItems.map(({ label, icon: Icon, route }) => {
-            const active = route ? pathname === route : false;
+            const active = route
+              ? pathname === route ||
+                (route === "/profile" && pathname.startsWith("/profile/"))
+              : false;
 
             if (route) {
               return (

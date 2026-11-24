@@ -106,6 +106,12 @@ export function PlayerModeCard({
         <Link className="player-mode-link" href={historyHref}>
           View recent {label.toLowerCase()} matches
         </Link>
+        <Link
+          className="player-mode-full-link"
+          href={ranked ? "/profile/ranked" : "/profile/practice"}
+        >
+          Full {label} statistics
+        </Link>
       </div>
     </section>
   );
