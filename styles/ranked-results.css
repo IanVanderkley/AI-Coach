@@ -186,3 +186,40 @@
     animation: none !important;
   }
 }
+
+/* AI_COACH_RANKED_RESULT_EXPERIENCE_V1: reuse Practice win/loss keyframes.
+   The effects stay behind the content; keyboard controls remain available. */
+.ranked-result-content {
+  isolation: isolate;
+}
+.ranked-result-confetti {
+  top: 112px;
+}
+.ranked-result-sharing {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 18px;
+}
+.ranked-result-sharing button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 3px;
+  color: #d6d6d6;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ranked-result-sharing button:hover,
+.ranked-result-sharing button:focus-visible {
+  color: #fff;
+}
+.ranked-result-share-status {
+  margin-top: 7px;
+  color: #ffb2b8;
+  font-size: 12px;
+}
+/* practice-result-motion.css already disables all shared keyframe motion
+   and decorative particles under prefers-reduced-motion. */
