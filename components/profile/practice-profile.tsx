@@ -13,6 +13,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import { RankedHistory } from "@/components/profile/ranked-history"; // AI_COACH_RANKED_HISTORY_V1
 import { PlayerModeCard } from "@/components/profile/player-mode-card";
+import { PracticeDifficultyStats } from "@/components/profile/practice-difficulty-stats";
+import {
+  parseRankedLifetimeResponse,
+  type RankedLifetimeStats,
+} from "@/lib/profile/ranked-lifetime";
+import { summarizePracticeDifficulties } from "@/lib/profile/practice-difficulty";
 import type { RankedHistoryEntry } from "@/lib/ranked/history";
 import {
   summarizeRecentOutcomes,
@@ -47,6 +53,8 @@ export function PracticeProfile() {
   const [practiceExpanded, setPracticeExpanded] = useState(true);
   // AI_COACH_PLAYER_DASHBOARD_V1: these stats describe available recent records, never all-time results.
   const [rankedMatches, setRankedMatches] = useState<RankedHistoryEntry[] | null>(null);
+  // AI_COACH_LIFETIME_RANKED_V1: the lifetime total comes only from an authenticated server endpoint.
+  const [rankedLifetime, setRankedLifetime] = useState<RankedLifetimeStats | null>(null);
   const repository = useMemo(() => createPracticeRepository(), []);
 
   useEffect(() => {
@@ -68,6 +76,30 @@ export function PracticeProfile() {
     };
   }, [repository]);
 
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    async function loadRankedLifetime() {
+      try {
+        const response = await fetch("/api/profile/ranked-lifetime", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Ranked lifetime unavailable");
+        const payload: unknown = await response.json();
+        const verified = parseRankedLifetimeResponse(payload);
+        if (active) setRankedLifetime(verified);
+      } catch {
+        if (active) setRankedLifetime(null);
+      }
+    }
+    void loadRankedLifetime();
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, []);
+
   const summary = useMemo(() => {
     const current = games ?? [];
     return {
@@ -86,6 +118,14 @@ export function PracticeProfile() {
     return summarizeRecentOutcomes(rankedMatches.map((game) => game.outcome));
   }, [rankedMatches]);
   const overallStats = combineRecentStats(practiceStats, rankedStats);
+  const practiceDifficulties = useMemo(() => {
+    if (games === null || loadError) return null;
+    try {
+      return summarizePracticeDifficulties(games);
+    } catch {
+      return null;
+    }
+  }, [games, loadError]);
 
   return (
     <main className="page-shell profile-page player-dashboard-page">
@@ -155,9 +195,16 @@ export function PracticeProfile() {
         className="player-dashboard-mode-grid"
         aria-label="Recent results by game mode"
       >
-        <PlayerModeCard mode="ranked" stats={rankedStats} />
+        <PlayerModeCard
+          mode="ranked"
+          stats={rankedLifetime}
+          scope="lifetime"
+          fastestWinMs={rankedLifetime?.fastestWinMs ?? null}
+        />
         <PlayerModeCard mode="practice" stats={practiceStats} />
       </div>
+
+      <PracticeDifficultyStats breakdown={practiceDifficulties} />
 
       <div className="player-dashboard-history-heading">
         <h2>Recent matches</h2>

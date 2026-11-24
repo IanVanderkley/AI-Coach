@@ -58,7 +58,7 @@ test("missing or failed mode history must not turn into a misleading zero", () =
 test("the profile overview is above both mode cards and the two existing history sections", () => {
   assert.match(practice, /Player Dashboard/);
   assert.match(practice, /combineRecentStats\(practiceStats, rankedStats\)/);
-  assert.match(practice, /<PlayerModeCard mode="ranked" stats=\{rankedStats\}/);
+  assert.match(practice, /mode="ranked"[\s\S]*?stats=\{rankedLifetime\}/);
   assert.match(practice, /<PlayerModeCard mode="practice" stats=\{practiceStats\}/);
   assert.match(practice, /<RankedHistory onRecentMatches=\{setRankedMatches\}/);
   assert.ok(

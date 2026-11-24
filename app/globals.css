@@ -27,3 +27,6 @@
 
 /* Player dashboard and compact level badge used across the site. */
 @import "../styles/player-dashboard.css";
+
+/* Profile breakdown from recorded Practice data only. */
+@import "../styles/profile-difficulty-stats.css";
