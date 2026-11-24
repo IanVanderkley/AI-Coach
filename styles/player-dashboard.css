@@ -1,0 +1,287 @@
+/* AI-Coach Player Dashboard V1. All summary numbers are recent-record snapshots. */
+.nav-account {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.nav-player-level {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border: 1px solid #934c58;
+  border-radius: 999px;
+  background: #382026;
+  color: #ffd7dd;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.nav-player-level:hover,
+.nav-player-level:focus-visible {
+  border-color: #e77f8e;
+  background: #4d2932;
+}
+.nav-player-level:focus-visible {
+  outline: 2px solid #ff9aa5;
+  outline-offset: 3px;
+}
+
+.player-dashboard-page .profile-heading {
+  margin-bottom: 23px;
+}
+.player-dashboard-overview {
+  padding: clamp(18px, 2.3vw, 26px);
+  border: 1px solid #403439;
+  border-radius: 13px;
+  background: #1d191a;
+  margin-bottom: 20px;
+}
+.player-dashboard-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 14px;
+}
+.player-dashboard-eyebrow,
+.player-mode-eyebrow {
+  display: block;
+  color: #f09aa6;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+}
+.player-dashboard-heading h2 {
+  margin: 5px 0 0;
+  font-family: var(--heading-font);
+  font-size: clamp(22px, 3vw, 29px);
+}
+.player-dashboard-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #c8b4b7;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.player-dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.player-dashboard-metric {
+  padding: 15px 16px;
+  border-radius: 9px;
+  background: #292224;
+  border: 1px solid #433238;
+  display: grid;
+  gap: 8px;
+}
+.player-dashboard-metric span {
+  color: #c8b9bc;
+  font-size: 12px;
+}
+.player-dashboard-metric strong {
+  font-size: clamp(24px, 3.3vw, 35px);
+  font-weight: 750;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.player-dashboard-metric .metric-accent {
+  color: #ffadb7;
+}
+.player-dashboard-honesty {
+  margin: 16px 0 0;
+  color: #bbaeb0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.player-dashboard-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 0 30px;
+}
+.player-mode-card {
+  padding: 20px;
+  border: 1px solid #493238;
+  border-radius: 13px;
+  background: #21191c;
+  min-width: 0;
+}
+.player-mode-practice {
+  background: #1c1d1f;
+  border-color: #383b41;
+}
+.player-mode-header,
+.player-mode-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.player-mode-header {
+  justify-content: space-between;
+}
+.player-mode-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: #44262d;
+  color: #ff9daa;
+}
+.player-mode-practice .player-mode-icon {
+  background: #29343a;
+  color: #a7c9ed;
+}
+.player-mode-label h3 {
+  margin: 4px 0 0;
+  font-family: var(--heading-font);
+  font-size: 23px;
+}
+.player-mode-toggle {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #64434a;
+  border-radius: 7px;
+  background: #38282d;
+  color: #fff;
+  cursor: pointer;
+}
+.player-mode-toggle:hover {
+  background: #4e333b;
+}
+.player-mode-toggle:focus-visible {
+  outline: 2px solid #ff9aa5;
+  outline-offset: 3px;
+}
+.player-mode-toggle svg {
+  transition: transform 170ms ease;
+}
+.player-mode-toggle svg.is-collapsed {
+  transform: rotate(-90deg);
+}
+.player-mode-body[hidden] {
+  display: none !important;
+}
+.player-mode-main-stat {
+  margin: 20px 0 16px;
+  display: grid;
+  gap: 3px;
+}
+.player-mode-main-stat strong {
+  font-size: clamp(29px, 4vw, 40px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.player-mode-main-stat span {
+  color: #b5a7ab;
+  font-size: 12px;
+}
+.player-mode-secondary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.player-mode-secondary > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  background: #30272a;
+  border-radius: 8px;
+}
+.player-mode-practice .player-mode-secondary > div {
+  background: #272b30;
+}
+.player-mode-secondary strong {
+  font-size: 21px;
+  font-variant-numeric: tabular-nums;
+}
+.player-mode-secondary span {
+  color: #bcaeb1;
+  font-size: 11px;
+}
+.player-mode-context {
+  min-height: 36px;
+  margin: 16px 0 12px;
+  color: #b8aaad;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.player-mode-link {
+  color: #ffb3bf;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.player-mode-link:hover,
+.player-mode-link:focus-visible {
+  color: #fff;
+}
+.player-dashboard-history-heading {
+  margin: 4px 0 12px;
+}
+.player-dashboard-history-heading h2 {
+  margin: 0;
+  font-family: var(--heading-font);
+  font-size: clamp(22px, 3vw, 28px);
+}
+.player-dashboard-history-heading p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: #baaeb1;
+}
+.player-dashboard-page .ranked-history-card {
+  margin-top: 0;
+}
+.player-dashboard-page .practice-session-card {
+  margin-top: 20px;
+}
+@media (max-width: 890px) {
+  .player-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .player-dashboard-mode-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 510px) {
+  .player-dashboard-heading {
+    flex-direction: column;
+  }
+  .player-dashboard-status {
+    white-space: normal;
+  }
+  .player-dashboard-metrics {
+    gap: 8px;
+  }
+  .player-dashboard-metric {
+    padding: 12px;
+  }
+  .player-dashboard-metric strong {
+    font-size: 25px;
+  }
+  .player-mode-card {
+    padding: 16px;
+  }
+  .player-mode-secondary > div {
+    padding: 10px;
+  }
+  .nav-player-level {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-mode-toggle svg {
+    transition: none;
+  }
+}

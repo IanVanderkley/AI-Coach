@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import { Gamepad2, MessageSquare, Settings2, UserRound } from "lucide-react";
 
 import { MineLogo } from "./mine-logo";
+import { NavPlayerLevel } from "./nav-player-level"; // AI_COACH_NAV_LEVEL_BADGE_V1
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const navigationItems = [
@@ -136,6 +137,7 @@ export function Navbar() {
               <Link href="/profile" className="sign-in">
                 {username}
               </Link>
+              <NavPlayerLevel userId={user.id} pathname={pathname} />
 
               <button type="button" className="sign-out-button" onClick={handleSignOut}>
                 Sign Out

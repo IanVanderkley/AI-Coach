@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { History, RefreshCw, ShieldCheck } from "lucide-react";
+import { ChevronDown, History, RefreshCw, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { RankedHistoryEntry } from "@/lib/ranked/history";
@@ -13,9 +13,16 @@ type HistoryState =
   | { kind: "error" }
   | { kind: "ready"; matches: RankedHistoryEntry[] };
 
-export function RankedHistory() {
+// AI_COACH_PLAYER_DASHBOARD_V1: share only the same already-validated recent rows with the overview.
+export function RankedHistory({
+  onRecentMatches,
+}: {
+  onRecentMatches?: (matches: RankedHistoryEntry[] | null) => void;
+}) {
   const [state, setState] = useState<HistoryState>({ kind: "loading" });
   const [revision, setRevision] = useState(0);
+  // AI_COACH_COLLAPSIBLE_HISTORY_V1
+  const [rankedExpanded, setRankedExpanded] = useState(true);
 
   useEffect(() => {
     let live = true;
@@ -56,6 +63,11 @@ export function RankedHistory() {
     };
   }, [revision]);
 
+  // Updating dashboard stats never fetches or changes match data.
+  useEffect(() => {
+    onRecentMatches?.(state.kind === "ready" ? state.matches : null);
+  }, [state, onRecentMatches]);
+
   const matches = state.kind === "ready" ? state.matches : [];
   const wins = matches.filter((game) => game.outcome === "won").length;
   const losses = matches.filter((game) => game.outcome === "lost").length;
@@ -66,8 +78,32 @@ export function RankedHistory() {
         <div>
           <span className="ranked-history-eyebrow">RANKED ACTIVITY</span>
           <h2 id="ranked-history-title">
-            <History size={20} aria-hidden="true" /> Recent Ranked matches
+            <button
+              type="button"
+              className="profile-history-toggle"
+              aria-expanded={rankedExpanded}
+              aria-controls="ranked-history-body"
+              onClick={() => setRankedExpanded((current) => !current)}
+            >
+              <History size={20} aria-hidden="true" /> Recent Ranked Matches
+              <ChevronDown
+                size={18}
+                aria-hidden="true"
+                className={
+                  rankedExpanded
+                    ? "profile-history-chevron"
+                    : "profile-history-chevron is-collapsed"
+                }
+              />
+            </button>
           </h2>
+          <p className="profile-history-match-count">
+            {state.kind === "ready"
+              ? String(matches.length) + " matches"
+              : state.kind === "loading"
+                ? "Loading matches…"
+                : "Match history"}
+          </p>
         </div>
         <button
           type="button"
@@ -77,88 +113,94 @@ export function RankedHistory() {
           <RefreshCw size={14} aria-hidden="true" /> Refresh
         </button>
       </div>
-      {state.kind === "loading" && (
-        <p role="status">Loading your server-recorded matches…</p>
-      )}
-      {state.kind === "guest" && (
-        <p>
-          Sign in to see your private Ranked match history.{" "}
-          <Link href="/sign-in">Sign in</Link>
-        </p>
-      )}
-      {state.kind === "error" && (
-        <p role="alert">
-          Ranked history is unavailable right now. Your existing XP and matches are
-          unchanged.
-        </p>
-      )}
-      {state.kind === "ready" && (
-        <>
-          <div
-            className="ranked-history-summary"
-            aria-label="Recent Ranked match summary"
-          >
-            <div>
-              <span>Recent matches</span>
-              <strong>{matches.length}</strong>
-            </div>
-            <div>
-              <span>Wins</span>
-              <strong>{wins}</strong>
-            </div>
-            <div>
-              <span>Losses</span>
-              <strong>{losses}</strong>
-            </div>
-          </div>
-          {matches.length === 0 ? (
-            <p>
-              No completed server-recorded Ranked matches to show yet.{" "}
-              <Link href="/ranked">Play Ranked</Link>
-            </p>
-          ) : (
-            <ol className="ranked-history-list">
-              {matches.map((game, index) => (
-                <li key={`${game.finishedAt}-${index}`}>
-                  <div>
-                    <strong
-                      className={
-                        game.outcome === "won"
-                          ? "ranked-history-win"
-                          : "ranked-history-loss"
-                      }
-                    >
-                      {game.outcome === "won" ? "Victory" : "Defeat"}
-                    </strong>
-                    <span>
-                      {game.rows} × {game.columns} · {game.mineCount} mines ·{" "}
-                      {game.moveCount} moves
-                    </span>
-                    <time dateTime={game.finishedAt}>
-                      {new Date(game.finishedAt).toLocaleString()}
-                    </time>
-                  </div>
-                  <div className="ranked-history-values">
-                    <strong>{formatRankedDuration(game.durationMs)}</strong>
-                    {game.earnedXp === null ? (
-                      <span>XP receipt not available</span>
-                    ) : (
-                      <span className="ranked-history-xp">
-                        <ShieldCheck size={13} aria-hidden="true" /> +{game.earnedXp} XP
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-          <p className="ranked-history-footnote">
-            Only your latest ten completed Intermediate matches are considered. These
-            counts are not lifetime stats or RP. XP appears only when a matching database
-            receipt exists.
+      <div
+        id="ranked-history-body"
+        hidden={!rankedExpanded}
+        className="profile-history-body"
+      >
+        {state.kind === "loading" && (
+          <p role="status">Loading your server-recorded matches…</p>
+        )}
+        {state.kind === "guest" && (
+          <p>
+            Sign in to see your private Ranked match history.{" "}
+            <Link href="/sign-in">Sign in</Link>
           </p>
-        </>
-      )}
+        )}
+        {state.kind === "error" && (
+          <p role="alert">
+            Ranked history is unavailable right now. Your existing XP and matches are
+            unchanged.
+          </p>
+        )}
+        {state.kind === "ready" && (
+          <>
+            <div
+              className="ranked-history-summary"
+              aria-label="Recent Ranked match summary"
+            >
+              <div>
+                <span>Recent matches</span>
+                <strong>{matches.length}</strong>
+              </div>
+              <div>
+                <span>Wins</span>
+                <strong>{wins}</strong>
+              </div>
+              <div>
+                <span>Losses</span>
+                <strong>{losses}</strong>
+              </div>
+            </div>
+            {matches.length === 0 ? (
+              <p>
+                No completed server-recorded Ranked matches to show yet.{" "}
+                <Link href="/ranked">Play Ranked</Link>
+              </p>
+            ) : (
+              <ol className="ranked-history-list">
+                {matches.map((game, index) => (
+                  <li key={`${game.finishedAt}-${index}`}>
+                    <div>
+                      <strong
+                        className={
+                          game.outcome === "won"
+                            ? "ranked-history-win"
+                            : "ranked-history-loss"
+                        }
+                      >
+                        {game.outcome === "won" ? "Victory" : "Defeat"}
+                      </strong>
+                      <span>
+                        {game.rows} × {game.columns} · {game.mineCount} mines ·{" "}
+                        {game.moveCount} moves
+                      </span>
+                      <time dateTime={game.finishedAt}>
+                        {new Date(game.finishedAt).toLocaleString()}
+                      </time>
+                    </div>
+                    <div className="ranked-history-values">
+                      <strong>{formatRankedDuration(game.durationMs)}</strong>
+                      {game.earnedXp === null ? (
+                        <span>XP receipt not available</span>
+                      ) : (
+                        <span className="ranked-history-xp">
+                          <ShieldCheck size={13} aria-hidden="true" /> +{game.earnedXp} XP
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+            <p className="ranked-history-footnote">
+              Only your latest ten completed Intermediate matches are considered. These
+              counts are not lifetime stats or RP. XP appears only when a matching
+              database receipt exists.
+            </p>
+          </>
+        )}
+      </div>
     </section>
   );
 }
