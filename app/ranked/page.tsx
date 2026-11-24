@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
 import { Navbar } from "@/components/play/navbar";
+import { RankedResultDialog } from "@/components/ranked/ranked-result-dialog";
+import { buildRankedResult } from "@/lib/ranked/result-summary"; // AI_COACH_RANKED_RESULT_DIALOG_V1
 
 type Position = {
   row: number;
@@ -27,6 +29,7 @@ type RankedBoard = {
   revealedCells: RevealedCell[];
   flaggedCells: Position[];
   flagCount: number;
+  durationMs?: number;
 };
 
 type RevealResult = {
@@ -34,6 +37,7 @@ type RevealResult = {
   status: "active" | "won" | "lost";
   moveCount: number;
   revealedCells: RevealedCell[];
+  durationMs?: number;
 };
 
 const numberClasses: Record<number, string> = {
@@ -47,17 +51,55 @@ const numberClasses: Record<number, string> = {
   8: "number-eight",
 };
 
+// AI_COACH_RANKED_CACHED_RECOVERY_V1: session-only match ID hint; no hidden board or account data stored.
+// The server validates match ownership on EVERY use of this ID.
+const RANKED_MATCH_STORAGE_KEY = "ai-coach:ranked:last-active-match:v1";
+const RANKED_MATCH_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function readRememberedMatchId(): string | null {
+  try {
+    const value = window.sessionStorage.getItem(RANKED_MATCH_STORAGE_KEY);
+    return value && RANKED_MATCH_ID_PATTERN.test(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberMatchId(value: string | null) {
+  try {
+    if (value && RANKED_MATCH_ID_PATTERN.test(value)) {
+      window.sessionStorage.setItem(RANKED_MATCH_STORAGE_KEY, value);
+    } else {
+      window.sessionStorage.removeItem(RANKED_MATCH_STORAGE_KEY);
+    }
+  } catch {
+    // Session storage may be disabled; normal recovery still works.
+  }
+}
+
 export default function RankedPage() {
   const [board, setBoard] = useState<RankedBoard | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [submittingMove, setSubmittingMove] = useState(false);
+  // AI_COACH_RANKED_INPUT_FEEDBACK_V1: only visual feedback; board state remains server-authoritative.
+  const [pendingCell, setPendingCell] = useState<{
+    row: number;
+    column: number;
+    action: "reveal" | "flag" | "chord";
+  } | null>(null);
   const [inputMode, setInputMode] = useState<"reveal" | "flag">("reveal");
   const [noMatch, setNoMatch] = useState(false);
   const [error, setError] = useState("");
+  const [dismissedResultMatchId, setDismissedResultMatchId] = useState<string | null>(
+    null,
+  );
 
   // Prevent multiple requests from being sent at the same time.
   const moveInFlight = useRef(false);
+  // AI_COACH_RANKED_SINGLE_INITIAL_LOAD_V1: suppress React Strict Mode's duplicate mount effect.
+  const initialRecoveryRequested = useRef(false);
 
   // Restore the player's visible board from Supabase.
   const loadBoard = useCallback(async () => {
@@ -65,17 +107,23 @@ export default function RankedPage() {
     setError("");
 
     try {
+      const rememberedMatchId = readRememberedMatchId();
       const response = await fetch("/api/ranked/matches/current", {
         cache: "no-store",
+        ...(rememberedMatchId
+          ? { headers: { "X-Ranked-Known-Match": rememberedMatchId } }
+          : {}),
       });
 
       if (response.status === 404) {
+        rememberMatchId(null);
         setBoard(null);
         setNoMatch(true);
         return;
       }
 
       if (response.status === 401) {
+        rememberMatchId(null);
         setBoard(null);
         setNoMatch(false);
         setError("Sign in to play Ranked.");
@@ -87,6 +135,7 @@ export default function RankedPage() {
       }
 
       const data: RankedBoard = await response.json();
+      rememberMatchId(data.status === "active" ? data.matchId : null);
 
       setBoard(data);
       setNoMatch(false);
@@ -99,6 +148,8 @@ export default function RankedPage() {
 
   // Load the saved game when the page opens.
   useEffect(() => {
+    if (initialRecoveryRequested.current) return;
+    initialRecoveryRequested.current = true;
     void loadBoard();
   }, [loadBoard]);
 
@@ -117,6 +168,7 @@ export default function RankedPage() {
       }
 
       setBoard(null);
+      rememberMatchId(null);
       setInputMode("reveal");
       await loadBoard();
     } catch {
@@ -133,6 +185,7 @@ export default function RankedPage() {
     }
 
     moveInFlight.current = true;
+    setPendingCell({ row, column, action: "reveal" });
     setSubmittingMove(true);
     setError("");
 
@@ -146,6 +199,7 @@ export default function RankedPage() {
           matchId: board.matchId,
           row,
           column,
+          firstMoveDone: board.firstMoveDone,
         }),
       });
 
@@ -186,6 +240,7 @@ export default function RankedPage() {
           revealedCells: Array.from(revealed.values()),
           moveCount: verifiedResult.moveCount,
           status: verifiedResult.status,
+          durationMs: verifiedResult.durationMs,
           firstMoveDone: true,
         };
       });
@@ -194,6 +249,7 @@ export default function RankedPage() {
         error instanceof Error ? error.message : "Could not process your Ranked move.",
       );
     } finally {
+      setPendingCell(null);
       moveInFlight.current = false;
       setSubmittingMove(false);
     }
@@ -217,6 +273,7 @@ export default function RankedPage() {
     }
 
     moveInFlight.current = true;
+    setPendingCell({ row, column, action: "flag" });
     setSubmittingMove(true);
     setError("");
 
@@ -274,6 +331,7 @@ export default function RankedPage() {
         error instanceof Error ? error.message : "Could not process your Ranked flag.",
       );
     } finally {
+      setPendingCell(null);
       moveInFlight.current = false;
       setSubmittingMove(false);
     }
@@ -328,6 +386,7 @@ export default function RankedPage() {
     if (flagCount !== selected.adjacentMines || !hasHiddenNeighbor) return;
 
     moveInFlight.current = true;
+    setPendingCell({ row, column, action: "chord" });
     setSubmittingMove(true);
     setError("");
 
@@ -378,6 +437,7 @@ export default function RankedPage() {
           revealedCells: Array.from(revealed.values()),
           moveCount: verifiedResult.moveCount,
           status: verifiedResult.status,
+          durationMs: verifiedResult.durationMs,
         };
       });
     } catch (error) {
@@ -385,10 +445,13 @@ export default function RankedPage() {
         error instanceof Error ? error.message : "Could not process your Ranked chord.",
       );
     } finally {
+      setPendingCell(null);
       moveInFlight.current = false;
       setSubmittingMove(false);
     }
   }
+
+  const rankedResult = buildRankedResult(board, dismissedResultMatchId);
 
   // Build the visible board using only server-provided information.
   const revealed = new Map<string, number>();
@@ -489,7 +552,7 @@ export default function RankedPage() {
             {/* Server-controlled Minesweeper board. */}
             <div className="board-area">
               <div
-                className="minesweeper-board"
+                className="minesweeper-board ranked-server-board"
                 onContextMenu={(event) => event.preventDefault()}
                 role="grid"
                 aria-label="Ranked Minesweeper board"
@@ -507,12 +570,18 @@ export default function RankedPage() {
 
                   const isRevealed = revealed.has(key);
                   const isFlagged = flags.has(key);
+                  const isPending =
+                    pendingCell?.row === row && pendingCell?.column === column;
+                  // Preview flags only: the stored flag list changes after server confirmation.
+                  const isVisuallyFlagged =
+                    isPending && pendingCell?.action === "flag" ? !isFlagged : isFlagged;
                   const number = revealed.get(key) ?? 0;
 
                   const classes = [
                     "cell",
                     isRevealed ? "revealed" : "unrevealed",
-                    isFlagged ? "flagged" : "",
+                    isVisuallyFlagged ? "flagged" : "",
+                    isPending ? "ranked-input-pending" : "",
                     isRevealed && number > 0 ? numberClasses[number] : "",
                   ]
                     .filter(Boolean)
@@ -524,6 +593,7 @@ export default function RankedPage() {
                       type="button"
                       role="gridcell"
                       className={classes}
+                      aria-busy={isPending}
                       onClick={() => {
                         // Clicking an opened number automatically attempts a chord.
                         if (isRevealed && number > 0) {
@@ -547,7 +617,7 @@ export default function RankedPage() {
                       }
                       disabled={board.status !== "active" || (isRevealed && number === 0)}
                     >
-                      {isFlagged ? (
+                      {isVisuallyFlagged ? (
                         <Flag className="cell-flag" fill="currentColor" />
                       ) : isRevealed && number > 0 ? (
                         number
@@ -585,6 +655,18 @@ export default function RankedPage() {
           </section>
         )}
       </main>
+      <RankedResultDialog
+        result={rankedResult}
+        busy={starting}
+        onDismiss={() => {
+          if (board) setDismissedResultMatchId(board.matchId);
+        }}
+        onPlayAgain={() => {
+          if (starting) return;
+          if (board) setDismissedResultMatchId(board.matchId);
+          void startMatch();
+        }}
+      />
     </>
   );
 }

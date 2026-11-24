@@ -12,8 +12,10 @@ const headers = {
 // POST /api/ranked/matches/reveal
 // Handles both the first reveal and subsequent reveals.
 export async function POST(request: Request) {
+  const probeStartMs = performance.now();
   // Block requests from other website origins.
   const parsed = await readRankedMoveJson(request);
+  const probeParsedMs = performance.now();
   if (!parsed.ok) return parsed.response;
   const body: unknown = parsed.value;
 
@@ -22,11 +24,12 @@ export async function POST(request: Request) {
   }
 
   const payload = body as Record<string, unknown>;
-  const { matchId, row, column } = payload;
+  const { matchId, row, column, firstMoveDone } = payload;
 
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   if (
+    (firstMoveDone !== undefined && typeof firstMoveDone !== "boolean") ||
     typeof matchId !== "string" ||
     !uuidPattern.test(matchId) ||
     typeof row !== "number" ||
@@ -48,12 +51,32 @@ export async function POST(request: Request) {
     // Step 1: Verify the signed-in player.
     const supabase = await createClient();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // AI_COACH_RANKED_DEV_CLAIMS_PROBE_V1: compare verified JWT claims with getUser in development.
+    // This is explicitly opt-in; production retains its online user validation.
+    // Never trust cookies, request bodies, or unverified decoded tokens for identity.
+    const useClaimsProbe =
+      process.env.NODE_ENV === "development" &&
+      process.env.RANKED_AUTH_PROBE === "claims";
+    let verifiedUserId: string | undefined;
+    let authError: unknown = null;
 
-    if (authError || !user) {
+    if (useClaimsProbe) {
+      // getClaims verifies the JWT signature. Asymmetric keys may validate
+      // locally after JWKS caching; symmetric keys fall back to online auth.
+      const { data, error } = await supabase.auth.getClaims();
+      authError = error;
+      verifiedUserId =
+        typeof data?.claims?.sub === "string" && data.claims.sub.length > 0
+          ? data.claims.sub
+          : undefined;
+    } else {
+      const { data, error } = await supabase.auth.getUser();
+      authError = error;
+      verifiedUserId = data.user?.id;
+    }
+    const probeAuthenticatedMs = performance.now();
+
+    if (authError || !verifiedUserId) {
       return Response.json(
         { error: "You must sign in to play Ranked." },
         { status: 401, headers },
@@ -62,61 +85,99 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
 
-    // Step 2: Verify the match belongs to this player
-    // and is still active.
-    const { data: match, error: matchError } = await admin
-      .from("ranked_matches")
-      .select("id")
-      .eq("id", matchId)
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .maybeSingle();
+    // AI_COACH_RANKED_FAST_REVEAL_HINT_V1: the browser only supplies a routing hint.
+    // SQL RPCs independently verify ownership, active status, and first-move state.
+    // Older clients without the hint retain the original guarded lookup path.
+    let functionName: "reveal_ranked_cell" | "reveal_first_ranked_cell";
+    if (typeof firstMoveDone === "boolean") {
+      functionName = firstMoveDone ? "reveal_ranked_cell" : "reveal_first_ranked_cell";
+    } else {
+      // AI_COACH_RANKED_PARALLEL_LOOKUPS_V1: overlap independent reads, keeping all existing checks.
+      // Both responses remain server-only; the move RPC rechecks ownership.
+      const [{ data: match, error: matchError }, { data: state, error: stateError }] =
+        await Promise.all([
+          admin
+            .from("ranked_matches")
+            .select("id")
+            .eq("id", matchId)
+            .eq("user_id", verifiedUserId)
+            .eq("status", "active")
+            .maybeSingle(),
+          admin
+            .from("ranked_match_state")
+            .select("first_move_done")
+            .eq("match_id", matchId)
+            .maybeSingle(),
+        ]);
 
-    if (matchError) {
-      console.error("Ranked match lookup failed:", matchError);
+      // Preserve the original error precedence and HTTP statuses.
+      if (matchError) {
+        console.error("Ranked match lookup failed:", matchError);
 
-      return Response.json(
-        { error: "Could not load Ranked match." },
-        { status: 500, headers },
-      );
+        return Response.json(
+          { error: "Could not load Ranked match." },
+          { status: 500, headers },
+        );
+      }
+
+      if (!match) {
+        return Response.json(
+          { error: "Active Ranked match not found." },
+          { status: 404, headers },
+        );
+      }
+
+      if (stateError || !state) {
+        console.error("Ranked state lookup failed:", stateError);
+
+        return Response.json(
+          { error: "Could not load Ranked board." },
+          { status: 500, headers },
+        );
+      }
+
+      // Step 4: Choose the appropriate database function.
+      functionName = state.first_move_done
+        ? "reveal_ranked_cell"
+        : "reveal_first_ranked_cell";
     }
-
-    if (!match) {
-      return Response.json(
-        { error: "Active Ranked match not found." },
-        { status: 404, headers },
-      );
-    }
-
-    // Step 3: Check whether the first move is complete.
-    const { data: state, error: stateError } = await admin
-      .from("ranked_match_state")
-      .select("first_move_done")
-      .eq("match_id", matchId)
-      .maybeSingle();
-
-    if (stateError || !state) {
-      console.error("Ranked state lookup failed:", stateError);
-
-      return Response.json(
-        { error: "Could not load Ranked board." },
-        { status: 500, headers },
-      );
-    }
-
-    // Step 4: Choose the appropriate database function.
-    const functionName = state.first_move_done
-      ? "reveal_ranked_cell"
-      : "reveal_first_ranked_cell";
+    const probeLookupsDoneMs = performance.now();
 
     // Both database functions verify ownership again
     // and lock the match before updating it.
     const { data, error: revealError } = await admin.rpc(functionName, {
       p_match_id: matchId,
-      p_user_id: user.id,
+      p_user_id: verifiedUserId,
       p_row: row,
       p_column: column,
     });
+    const probeRpcMs = performance.now();
+
+    // AI_COACH_RANKED_REVEAL_LATENCY_PROBE_V1: DEVELOPMENT diagnostics only; never print account or board data.
+    const probeDurations = {
+      parse: probeParsedMs - probeStartMs,
+      auth: probeAuthenticatedMs - probeParsedMs,
+      lookups: probeLookupsDoneMs - probeAuthenticatedMs,
+      rpc: probeRpcMs - probeLookupsDoneMs,
+      total: probeRpcMs - probeStartMs,
+    };
+    const responseHeaders =
+      process.env.NODE_ENV === "development"
+        ? {
+            ...headers,
+            "Server-Timing": Object.entries(probeDurations)
+              .map(([stage, milliseconds]) => `${stage};dur=${milliseconds.toFixed(1)}`)
+              .join(", "),
+          }
+        : headers;
+    if (process.env.NODE_ENV === "development") {
+      console.info(
+        "[Ranked timing] reveal " +
+          Object.entries(probeDurations)
+            .map(([stage, milliseconds]) => `${stage}=${milliseconds.toFixed(1)}ms`)
+            .join(" "),
+      );
+    }
 
     if (revealError) {
       console.error("Ranked reveal failed:", revealError);
@@ -141,7 +202,7 @@ export async function POST(request: Request) {
     }
 
     // Return the verified move result.
-    return Response.json(data, { status: 200, headers });
+    return Response.json(data, { status: 200, headers: responseHeaders });
   } catch (error) {
     console.error("Ranked reveal API error:", error);
 

@@ -12,6 +12,7 @@ const headers = {
 // POST /api/ranked/matches/chord
 // Chords a revealed numbered square in a Ranked match.
 export async function POST(request: Request) {
+  const probeActionStartedMs = performance.now();
   // Only allow requests from our own website.
   const parsed = await readRankedMoveJson(request);
   if (!parsed.ok) return parsed.response;
@@ -49,12 +50,29 @@ export async function POST(request: Request) {
     // Step 1: Verify the player is signed in.
     const supabase = await createClient();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // AI_COACH_RANKED_ACTION_CLAIMS_PROBE_V1: opt-in dev-only verified JWT claims.
+    // Default and production requests still call getUser() for a fresh user record.
+    // Never use decoded/unverified cookies, request payloads or getSession().user for identity.
+    const useClaimsProbe =
+      process.env.NODE_ENV === "development" &&
+      process.env.RANKED_AUTH_PROBE === "claims";
+    let verifiedUserId: string | undefined;
+    let authError: unknown = null;
+    if (useClaimsProbe) {
+      const { data, error } = await supabase.auth.getClaims();
+      authError = error;
+      verifiedUserId =
+        typeof data?.claims?.sub === "string" && data.claims.sub.length > 0
+          ? data.claims.sub
+          : undefined;
+    } else {
+      const { data, error } = await supabase.auth.getUser();
+      authError = error;
+      verifiedUserId = data.user?.id;
+    }
+    const probeActionAuthenticatedMs = performance.now();
 
-    if (authError || !user) {
+    if (authError || !verifiedUserId) {
       return Response.json(
         { error: "You must sign in to play Ranked." },
         { status: 401, headers },
@@ -67,10 +85,19 @@ export async function POST(request: Request) {
 
     const { data, error: chordError } = await admin.rpc("chord_ranked_cell", {
       p_match_id: matchId,
-      p_user_id: user.id,
+      p_user_id: verifiedUserId,
       p_row: row,
       p_column: column,
     });
+    const probeActionRpcMs = performance.now();
+    if (process.env.NODE_ENV === "development") {
+      console.info(
+        "[Ranked timing] chord " +
+          `auth=${(probeActionAuthenticatedMs - probeActionStartedMs).toFixed(1)}ms ` +
+          `rpc=${(probeActionRpcMs - probeActionAuthenticatedMs).toFixed(1)}ms ` +
+          `total=${(probeActionRpcMs - probeActionStartedMs).toFixed(1)}ms`,
+      );
+    }
 
     if (chordError) {
       console.error("Ranked chord failed:", chordError);

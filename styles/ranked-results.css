@@ -1,0 +1,188 @@
+/* Ranked outcome display. All gameplay and rewards remain server-authoritative. */
+.ranked-result-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(92vw, 520px);
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #3f3f3f;
+  border-radius: 16px;
+  color: #f5f5f5;
+  background: #171717;
+  box-shadow: 0 28px 85px rgb(0 0 0 / 75%);
+}
+.ranked-result-dialog::backdrop {
+  background: rgb(0 0 0 / 80%);
+  backdrop-filter: blur(4px);
+}
+.ranked-result-content {
+  position: relative;
+  padding: clamp(24px, 5vw, 38px);
+  text-align: center;
+}
+.ranked-result-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #282828;
+  color: #ddd;
+}
+.ranked-result-close:hover,
+.ranked-result-close:focus-visible {
+  background: #393939;
+}
+.ranked-result-emblem {
+  display: grid;
+  place-items: center;
+  width: 86px;
+  height: 86px;
+  margin: 4px auto 20px;
+  border-radius: 50%;
+}
+.ranked-result-win .ranked-result-emblem {
+  color: #ffe6a1;
+  border: 1px solid #826a31;
+  background: radial-gradient(circle at 45% 35%, #675428, #28231b 75%);
+  animation: ranked-result-arrive 500ms ease-out both;
+}
+.ranked-result-loss .ranked-result-emblem {
+  color: #ff6871;
+  border: 1px solid #66343a;
+  background: #2b2022;
+  animation: ranked-result-arrive 500ms ease-out both;
+}
+.ranked-result-mine {
+  width: 58px;
+  height: 58px;
+}
+.ranked-result-eyebrow {
+  color: #ff818c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+.ranked-result-content h2 {
+  margin: 8px 0;
+  font-family: var(--heading-font);
+  font-size: clamp(34px, 7vw, 46px);
+  line-height: 1;
+}
+.ranked-result-description {
+  max-width: 375px;
+  margin: 0 auto 24px;
+  color: #c1c1c1;
+  line-height: 1.55;
+}
+.ranked-result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid #3b3b3b;
+  border-radius: 10px;
+  background: #202020;
+  overflow: hidden;
+}
+.ranked-result-stats > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 4px;
+}
+.ranked-result-stats > div + div {
+  border-left: 1px solid #3b3b3b;
+}
+.ranked-result-stats span {
+  font-size: 11px;
+  color: #aaa;
+}
+.ranked-result-stats strong {
+  font-size: clamp(17px, 4vw, 24px);
+  font-variant-numeric: tabular-nums;
+}
+.ranked-result-board-label {
+  margin: 14px 0 22px;
+  font-size: 12px;
+  color: #b7b7b7;
+}
+.ranked-result-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.ranked-result-actions > * {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 46px;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.ranked-result-primary {
+  background: var(--red);
+}
+.ranked-result-primary:hover:not(:disabled) {
+  background: #ef545f;
+}
+.ranked-result-primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.ranked-result-secondary {
+  background: #323232;
+}
+.ranked-result-secondary:hover {
+  background: #424242;
+}
+.ranked-result-view-board {
+  display: block;
+  margin: 18px auto 0;
+  padding: 8px;
+  background: transparent;
+  color: #d3d3d3;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ranked-result-view-board:hover {
+  color: white;
+}
+.ranked-result-note {
+  margin: 13px 0 0;
+  font-size: 11px;
+  color: #a4a4a4;
+  line-height: 1.5;
+}
+@keyframes ranked-result-arrive {
+  from {
+    opacity: 0.5;
+    transform: scale(0.84);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (max-width: 440px) {
+  .ranked-result-dialog {
+    width: min(95vw, 520px);
+  }
+  .ranked-result-actions {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ranked-result-emblem {
+    animation: none !important;
+  }
+}
