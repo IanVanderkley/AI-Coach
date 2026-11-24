@@ -17,6 +17,18 @@ export const CASES = [
     expected: 401,
   },
   {
+    name: "Unauthenticated Ranked history",
+    method: "GET",
+    path: "/api/ranked/history",
+    expected: 401,
+  },
+  {
+    name: "Unauthenticated Ranked lifetime statistics",
+    method: "GET",
+    path: "/api/profile/ranked-lifetime",
+    expected: 401,
+  },
+  {
     name: "Invalid Ranked coordinates",
     method: "POST",
     path: "/api/ranked/matches/reveal",
