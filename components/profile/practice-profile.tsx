@@ -5,6 +5,7 @@ import { CalendarDays, Clock3, Gamepad2, History, Play, Target } from "lucide-re
 import { useEffect, useMemo, useState } from "react";
 
 import { ProfileLevelCard } from "@/components/profile/profile-level-card";
+import { RankedHistory } from "@/components/profile/ranked-history"; // AI_COACH_RANKED_HISTORY_V1
 import type { SavedPracticeSession } from "@/lib/practice/history";
 import { createPracticeRepository } from "@/lib/practice/repository";
 
@@ -83,6 +84,7 @@ export function PracticeProfile() {
       </div>
 
       <ProfileLevelCard />
+      <RankedHistory />
 
       <section className="profile-summary" aria-label="Current session Practice results">
         <div className="profile-stat">

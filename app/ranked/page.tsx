@@ -7,6 +7,7 @@ import type { CSSProperties } from "react";
 
 import { Navbar } from "@/components/play/navbar";
 import { RankedResultDialog } from "@/components/ranked/ranked-result-dialog";
+import { RankedLadderOverview } from "@/components/ranked/ranked-ladder-overview"; // AI_COACH_RANKED_LADDER_OVERVIEW_V1
 import { buildRankedResult } from "@/lib/ranked/result-summary"; // AI_COACH_RANKED_RESULT_DIALOG_V1
 
 type Position = {
@@ -482,6 +483,8 @@ export default function RankedPage() {
         <p>
           <Link href="/">← Back to Practice</Link>
         </p>
+
+        <RankedLadderOverview />
 
         {loading && <p role="status">Loading your Ranked match...</p>}
 
