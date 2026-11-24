@@ -52,11 +52,12 @@ export async function POST(request: Request) {
     const supabase = await createClient();
 
     // AI_COACH_RANKED_DEV_CLAIMS_PROBE_V1: compare verified JWT claims with getUser in development.
-    // This is explicitly opt-in; production retains its online user validation.
+    // Production may opt in with RANKED_AUTH_MODE=claims; default remains getUser().
     // Never trust cookies, request bodies, or unverified decoded tokens for identity.
     const useClaimsProbe =
-      process.env.NODE_ENV === "development" &&
-      process.env.RANKED_AUTH_PROBE === "claims";
+      process.env.RANKED_AUTH_MODE === "claims" ||
+      (process.env.NODE_ENV === "development" &&
+        process.env.RANKED_AUTH_PROBE === "claims");
     let verifiedUserId: string | undefined;
     let authError: unknown = null;
 

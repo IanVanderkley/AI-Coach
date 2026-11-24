@@ -17,10 +17,11 @@ export async function GET(request: Request) {
     const supabase = await createClient();
 
     // AI_COACH_RANKED_RECOVERY_CLAIMS_PROBE_V1: opt-in development-only JWT-claims experiment.
-    // Production and default mode still call getUser() for fresh account checks.
+    // Default mode still uses getUser(); production claims require explicit opt-in.
     const useClaimsProbe =
-      process.env.NODE_ENV === "development" &&
-      process.env.RANKED_AUTH_PROBE === "claims";
+      process.env.RANKED_AUTH_MODE === "claims" ||
+      (process.env.NODE_ENV === "development" &&
+        process.env.RANKED_AUTH_PROBE === "claims");
     let verifiedUserId: string | undefined;
     let authError: unknown = null;
     if (useClaimsProbe) {

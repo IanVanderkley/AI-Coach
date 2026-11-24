@@ -8,11 +8,12 @@ const routes = [
   ["chord", "chord_ranked_cell"],
 ];
 for (const [action, rpc] of routes) {
-  test(`${action} add-on remains opt-in and production still calls getUser`, () => {
+  test(`${action} claims mode requires opt-in and default still calls getUser`, () => {
     const source = readFileSync(`app/api/ranked/matches/${action}/route.ts`, "utf8");
     assert.ok(source.includes(marker));
     assert.ok(source.includes('process.env.NODE_ENV === "development"'));
     assert.ok(source.includes('process.env.RANKED_AUTH_PROBE === "claims"'));
+    assert.ok(source.includes('process.env.RANKED_AUTH_MODE === "claims"'));
     assert.ok(source.includes("supabase.auth.getClaims()"));
     assert.ok(source.includes("supabase.auth.getUser()"));
     assert.ok(source.includes('typeof data?.claims?.sub === "string"'));
