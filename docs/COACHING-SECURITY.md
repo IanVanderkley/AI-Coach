@@ -9,7 +9,7 @@
 - Paid AI requires ALL of: `COACH_PAID_AI_ENABLED=true`, a configured model provider, a valid Supabase session checked via `auth.getUser()`, and an atomic successful reservation from `reserve_coach_ai_request`.
 - Every paid entrypoint (`POST /api/coach` and `POST /api/coach/verified`) shares the SAME database-backed quota: max **3/minute/user**, **10/day/user**, **200/day globally** (UTC). Unauthenticated users, outages, and exhausted quotas get deterministic rule output instead.
 - These limits count **requests reserved** rather than precise consumed tokens, so they are NOT a monetary cap. Before enabling paid AI, configure the provider's billing budget/alerts and restrict the permitted model and keys at the provider.
-- Provider requests cap output to 512 tokens and timeouts to at most 15 seconds. Inputs have server-side character limits. Provider errors are not reflected to the browser.
+- Provider requests cap output to 900 tokens and timeouts to at most 15 seconds. Inputs have server-side character limits. Provider errors are not reflected to the browser.
 - JSON body limits are enforced on a stream while reading: 100 KB for legacy coaching, 200 KB for verified recording routes. Oversized bodies are rejected even with a forged Content-Length. POST rejects cross-origin requests.
 - Never derive authentication or rate-limit identity from `x-forwarded-for` or caller-supplied user IDs. The user ID comes solely from the verified Supabase session.
 

@@ -51,6 +51,9 @@ export function CoachReportView({
   fallbackReason: string | null;
 }) {
   const items = metricItems(report);
+  // Older deployments may not send mistake explanations yet; never crash the
+  // whole report because one optional section is missing.
+  const mistakes = report.mistakes ?? [];
 
   return (
     <article className="coach-report">
@@ -111,6 +114,9 @@ export function CoachReportView({
             Key moment · move {report.keyMoment.moveNumber}
           </span>
           <p>{report.keyMoment.description}</p>
+          {report.keyMoment.why ? (
+            <p className="coach-keymoment-why">{report.keyMoment.why}</p>
+          ) : null}
           <span className="coach-coords">
             Row {report.keyMoment.row + 1}, column {report.keyMoment.col + 1}
           </span>
@@ -142,6 +148,49 @@ export function CoachReportView({
           </ul>
         </section>
       </div>
+
+      {mistakes.length > 0 ? (
+        <section className="coach-mistakes" aria-label="Why each mistake happened">
+          <h4 className="coach-list-improve">
+            <AlertTriangle size={15} aria-hidden="true" />
+            Why each mistake happened
+          </h4>
+          <div className="coach-mistake-list">
+            {mistakes.map((mistake, index) => {
+              const clueText = mistake.clues
+                .map((clue) => `row ${clue.row + 1}, column ${clue.col + 1}`)
+                .join("; ");
+              return (
+                <article
+                  className="coach-mistake"
+                  key={`${mistake.moveNumber}-${mistake.row}-${mistake.col}-${index}`}
+                >
+                  <div className="coach-mistake-head">
+                    <span className="coach-mistake-move">Move {mistake.moveNumber}</span>
+                    <strong>{mistake.title}</strong>
+                  </div>
+                  <p>{mistake.why}</p>
+                  <p className="coach-mistake-fix">
+                    <span>Do this instead:</span> {mistake.fix}
+                  </p>
+                  {mistake.betterMove ? (
+                    <span className="coach-coords">
+                      Safe move that was available: row {mistake.betterMove.row + 1},
+                      column {mistake.betterMove.col + 1}
+                    </span>
+                  ) : null}
+                  {clueText ? (
+                    <span className="coach-coords">Clues used: {clueText}</span>
+                  ) : null}
+                  <span className="coach-coords">
+                    Square: row {mistake.row + 1}, column {mistake.col + 1}
+                  </span>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
 
       <div className="next-step">
         <span className="subtle-label">Next game</span>
