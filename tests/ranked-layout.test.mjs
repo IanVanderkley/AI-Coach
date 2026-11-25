@@ -14,7 +14,8 @@ test("Ranked offers primary play and explicit resume without a new match request
 test("Ranked stats and controls retain server values and revision guards", () => {
   assert.match(page, /\{board.moveCount\}/);
   assert.match(page, /\{board.flagCount\}/);
-  assert.match(page, /Mines left \(estimate\)/);
+  assert.match(page, /Mines left/);
+  assert.doesNotMatch(page, /Mines left \(estimate\)/);
   assert.equal((page.match(/expectedMoveCount: board\.moveCount/g) ?? []).length, 3);
   assert.match(page, /aria-pressed=\{inputMode === "reveal"\}/);
   assert.match(page, /aria-pressed=\{inputMode === "flag"\}/);

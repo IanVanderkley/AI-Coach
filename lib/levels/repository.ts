@@ -8,7 +8,9 @@ export type PlayerLevelLookup = { state: "guest" } | { state: "ready"; totalXp: 
  * public endpoint can award XP; only the server-owned verified
  * Ranked result trigger can do so.
  */
-export async function loadPlayerLevel(): Promise<PlayerLevelLookup> {
+export async function loadPlayerLevel(
+  expectedUserId?: string,
+): Promise<PlayerLevelLookup> {
   const client = getSupabaseBrowserClient();
 
   if (!client) {
@@ -28,7 +30,7 @@ export async function loadPlayerLevel(): Promise<PlayerLevelLookup> {
     throw new Error("Unable to verify your account right now.");
   }
 
-  if (!auth.user) {
+  if (!auth.user || (expectedUserId && auth.user.id !== expectedUserId)) {
     return { state: "guest" };
   }
 

@@ -99,7 +99,7 @@ const RECOVERED_NOTICE: RankedNotice = {
   tone: "success",
   title: "Board refreshed",
   description:
-    "Your board has been synchronized. Check whether your move was applied before continuing. If the match ended, see Ranked history.",
+    "Your board has been synchronized. Check whether your move was applied before continuing. If the match ended, see your match history in Coaching.",
 };
 
 export default function RankedPage() {
@@ -651,7 +651,7 @@ export default function RankedPage() {
                 </div>
                 <div>
                   <Bomb size={17} aria-hidden="true" />
-                  <dt>Mines left (estimate)</dt>
+                  <dt>Mines left</dt>
                   <dd>{Math.max(0, board.mineCount - board.flagCount)}</dd>
                 </div>
               </dl>

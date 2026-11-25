@@ -26,10 +26,12 @@ test("both statistics pages are real routes with navigation and page metadata", 
   has(practicePage, /Practice Statistics \| AI-Coach/, "Practice title missing");
 });
 
-test("dashboard summary cards link to full statistics without deleting history anchors", () => {
+test("dashboard cards link to statistics and Coaching match history", () => {
   has(modeCard, /\/profile\/ranked/, "missing Ranked detail link");
   has(modeCard, /\/profile\/practice/, "missing Practice detail link");
-  has(modeCard, /href=\{historyHref\}/, "history anchors were removed");
+  has(modeCard, /href=\{historyHref\}/, "Coaching history link missing");
+  has(modeCard, /\/coaching#coach-history-title/, "Practice coaching history missing");
+  has(modeCard, /\/coaching#ranked-history-title/, "Ranked history link missing");
   has(modeCard, /Full \{label\} statistics/, "full statistics link missing");
   has(
     navbar,
@@ -50,7 +52,8 @@ test("Ranked details verify owner-scoped server lifetime response, no client-sup
     "lifetime response must be parsed",
   );
   has(ranked, /response\.status === 401/, "signed-out state must be explicit");
-  has(ranked, /<RankedHistory \/>/, "recent history must remain separate");
+  assert.doesNotMatch(ranked, /<RankedHistory/);
+  has(ranked, /\/coaching#ranked-history-title/, "Ranked history belongs in Coaching");
   has(ranked, /Intermediate/, "only supported ladder is Intermediate");
   assert.ok(!/\.update\(|\.insert\(|\.upsert\(|\+\d+ XP|\+\d+ RP/.test(ranked));
 });
@@ -72,15 +75,12 @@ test("Practice details use existing owner-scoped tracked totals and retained gam
   assert.ok(!/\.update\(|\.insert\(|\.upsert\(/.test(practice));
 });
 
-test("Practice difficulty filter leaves stored results unchanged and links to Coaching", () => {
-  has(practice, /useState<DifficultyFilter>\("All"\)/, "default filter missing");
-  has(practice, /game\.difficulty === filter/, "filter logic missing");
-  has(practice, /id="practice-detail-filter"/, "filter selector missing");
-  has(
-    practice,
-    /\?source=practice&gameId=\$\{encodeURIComponent\(game\.id\)\}/,
-    "Coaching handoff missing",
-  );
+test("Practice details show aggregate statistics while Coaching owns game review", () => {
+  assert.doesNotMatch(practice, /profile-detail-match-list|practice-detail-filter/);
+  has(practice, /\/coaching#coach-history-title/, "Coaching handoff missing");
+  const coaching = file("components/coach/coach-console.tsx");
+  has(coaching, /Recent Practice Matches/, "Practice history missing in Coaching");
+  has(coaching, /openGame\(game.id\)/, "Practice review handoff missing");
 });
 
 test("Practice result includes a compact, read-only level progress component", () => {
