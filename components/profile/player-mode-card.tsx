@@ -105,15 +105,17 @@ export function PlayerModeCard({
                 ? "Retained Practice history at tracking activation plus subsequent account uploads; not server-verified or guaranteed complete before activation."
                 : "Saved Practice records only; browser and account retention limits apply."}
         </p>
-        <Link className="player-mode-link" href={historyHref}>
-          View recent {label.toLowerCase()} matches
-        </Link>
-        <Link
-          className="player-mode-full-link"
-          href={ranked ? "/profile/ranked" : "/profile/practice"}
-        >
-          Full {label} statistics
-        </Link>
+        <div className="player-mode-actions">
+          <Link className="player-mode-link" href={historyHref}>
+            View recent {label.toLowerCase()} matches
+          </Link>
+          <Link
+            className="player-mode-full-link"
+            href={ranked ? "/profile/ranked" : "/profile/practice"}
+          >
+            Full {label} statistics
+          </Link>
+        </div>
       </div>
     </section>
   );

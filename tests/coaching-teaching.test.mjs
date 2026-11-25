@@ -174,6 +174,12 @@ test("replay controls use fixed square geometry, continuous range, icon controls
   assert.doesNotMatch(panel, /setZoom/);
   assert.match(css, /width: 36px/);
   assert.match(css, /height: 36px/);
-  assert.match(css, /transition-delay: 1.2s/);
+
+  assert.doesNotMatch(css, /transition-delay:\s*1\.2s/);
+  assert.match(
+    readFileSync("lib/ui/tooltip-position.ts", "utf8"),
+    /TOOLTIP_DELAY_MS = 200/,
+  );
+
   assert.match(settings, /<ReplayTooltipSetting/);
 });

@@ -200,47 +200,7 @@
   opacity: 0.45;
   cursor: default;
 }
-.coach-visual-layout [data-tip] {
-  position: relative;
-}
-.coach-visual-layout [data-tip]::after {
-  content: attr(data-tip);
-  position: absolute;
-  z-index: 10;
-  width: max-content;
-  max-width: 210px;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #292929;
-  border: 1px solid #666;
-  box-shadow: 0 5px 12px #0007;
-  border-radius: 6px;
-  padding: 8px 10px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.4;
-  text-align: center;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 120ms,
-    visibility 120ms;
-}
-@media (hover: hover) {
-  .coach-visual-layout [data-tip]:hover::after {
-    opacity: 1;
-    visibility: visible;
-    transition-delay: 1.2s;
-  }
-}
-.coach-visual-layout [data-tip]:focus-visible::after {
-  opacity: 1;
-  visibility: visible;
-  transition-delay: 1.2s;
-}
+/* Replay tips are rendered by the shared SiteTooltip. */
 .coach-proof-steps {
   margin: 16px 0 4px;
   padding: 14px 16px;
@@ -326,10 +286,5 @@
   .coach-visual-layout .verified-move-nav label {
     flex-basis: 100%;
     order: -1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .coach-visual-layout [data-tip]::after {
-    transition: visibility 0s;
   }
 }
