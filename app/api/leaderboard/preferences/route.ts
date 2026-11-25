@@ -1,13 +1,42 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/sever";
-import { PUBLIC_USERNAME_PATTERN } from "@/lib/leaderboard/public-standings";
 import { readBoundedJson } from "@/lib/http/request-security";
+import {
+  usernameContentProblem,
+  USERNAME_CONTENT_ERROR,
+} from "@/lib/account/username-moderation";
+import { nextUsernameChangeAt, parseIdentityMutation } from "@/lib/account/username";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "private, no-store" };
+const columns = "username,is_anonymous,rating,games,wins,losses,username_changed_at";
 
-/** Account owner only. Never fall back to a user's e-mail as a public name. */
+type Profile = {
+  username: string;
+  is_anonymous: boolean;
+  rating: number;
+  games: number;
+  wins: number;
+  losses: number;
+  username_changed_at: string | null;
+};
+function response(data: Profile) {
+  return Response.json(
+    {
+      username: data.username,
+      isAnonymous: data.is_anonymous,
+      rating: data.rating,
+      games: data.games,
+      wins: data.wins,
+      losses: data.losses,
+      nextChangeAt: nextUsernameChangeAt(data.username_changed_at),
+    },
+    { headers },
+  );
+}
+
+/** Account owner only. The database profile, not mutable Auth metadata, is canonical. */
 export async function GET() {
   try {
     const auth = await createClient();
@@ -20,35 +49,20 @@ export async function GET() {
     const admin = createAdminClient();
     const { data, error: readError } = await admin
       .from("ranked_leaderboard_profiles")
-      .select("username,is_anonymous,rating,games,wins,losses")
+      .select(columns)
       .eq("user_id", user.id)
-      .maybeSingle();
-    if (readError) throw readError;
-    const preferred = user.user_metadata?.username;
-    return Response.json(
-      {
-        username:
-          data?.username ??
-          (typeof preferred === "string" && PUBLIC_USERNAME_PATTERN.test(preferred)
-            ? preferred
-            : ""),
-        isAnonymous: data?.is_anonymous ?? false,
-        rating: data?.rating ?? 1000,
-        games: data?.games ?? 0,
-        wins: data?.wins ?? 0,
-        losses: data?.losses ?? 0,
-      },
-      { status: 200, headers },
-    );
+      .single();
+    if (readError || !data) throw new Error("Profile unavailable");
+    return response(data);
   } catch {
     return Response.json(
-      { error: "Could not load leaderboard settings." },
+      { error: "Could not load account identity. Refresh to retry." },
       { status: 503, headers },
     );
   }
 }
 
-/** Save only owner-controlled display name and privacy choice. Not Elo or XP. */
+/** Update exactly one account-owned field. Database uniqueness and cooldown are authoritative. */
 export async function PUT(request: Request) {
   try {
     const parsed = await readBoundedJson(request, 2048, true);
@@ -60,54 +74,45 @@ export async function PUT(request: Request) {
     } = await auth.auth.getUser();
     if (error || !user)
       return Response.json({ error: "Sign in first." }, { status: 401, headers });
-    const value = parsed.value;
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-      return Response.json({ error: "Invalid settings." }, { status: 400, headers });
-    }
-    const payload = value as Record<string, unknown>;
-    if (
-      typeof payload.isAnonymous !== "boolean" ||
-      typeof payload.username !== "string" ||
-      Object.keys(payload).some((key) => key !== "isAnonymous" && key !== "username")
-    ) {
-      return Response.json({ error: "Invalid settings." }, { status: 400, headers });
-    }
-    const username = payload.username.trim();
-    if (username !== "" && !PUBLIC_USERNAME_PATTERN.test(username)) {
+    const payload = parseIdentityMutation(parsed.value);
+    if (!payload)
       return Response.json(
-        { error: "Use 3–20 letters, digits, or underscores for your username." },
+        {
+          error:
+            "Use 3–20 letters, numbers or underscores for your username, or change visibility separately. Refresh older settings pages.",
+        },
         { status: 400, headers },
       );
-    }
-    if (!payload.isAnonymous && username.length === 0) {
-      return Response.json(
-        { error: "Choose a username before joining the leaderboard." },
-        { status: 400, headers },
-      );
-    }
     const admin = createAdminClient();
-    const { error: writeError } = await admin.from("ranked_leaderboard_profiles").upsert(
-      {
-        user_id: user.id,
-        username: username || null,
-        is_anonymous: payload.isAnonymous,
-      },
-      { onConflict: "user_id" },
-    );
-    if (writeError?.code === "23505") {
+    if ("username" in payload && usernameContentProblem(payload.username))
+      return Response.json({ error: USERNAME_CONTENT_ERROR }, { status: 400, headers });
+    const patch =
+      "username" in payload
+        ? { username: payload.username }
+        : { is_anonymous: payload.isAnonymous };
+    const { data, error: writeError } = await admin
+      .from("ranked_leaderboard_profiles")
+      .update(patch)
+      .eq("user_id", user.id)
+      .select(columns)
+      .single();
+    if (writeError?.code === "PT422")
+      return Response.json({ error: USERNAME_CONTENT_ERROR }, { status: 400, headers });
+    if (writeError?.code === "23505")
       return Response.json(
-        { error: "That public username is already taken." },
+        { error: "That username is unavailable." },
         { status: 409, headers },
       );
-    }
-    if (writeError) throw writeError;
-    return Response.json(
-      { username, isAnonymous: payload.isAnonymous },
-      { status: 200, headers },
-    );
+    if (writeError?.code === "PT409")
+      return Response.json(
+        { error: "You can change your username once every 30 days." },
+        { status: 409, headers },
+      );
+    if (writeError || !data) throw new Error("Profile update unavailable");
+    return response(data);
   } catch {
     return Response.json(
-      { error: "Could not save leaderboard settings." },
+      { error: "Could not save account settings. Refresh and try again." },
       { status: 503, headers },
     );
   }

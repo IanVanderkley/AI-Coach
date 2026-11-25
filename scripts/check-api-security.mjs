@@ -112,7 +112,7 @@ export const cases = [
     method: "PUT",
     headers: json,
     sameOrigin: true,
-    body: JSON.stringify({ username: "local_test", isAnonymous: true }),
+    body: JSON.stringify({ isAnonymous: true }),
     status: 401,
   },
   {
