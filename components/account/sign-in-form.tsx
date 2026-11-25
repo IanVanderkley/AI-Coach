@@ -65,7 +65,7 @@ export function SignInForm() {
         const response =
           mode === "recover"
             ? await client.auth.resetPasswordForEmail(address, {
-                redirectTo: callback + "?kind=recovery",
+                redirectTo: window.location.origin + "/reset-password",
               })
             : await client.auth.resend({
                 type: "signup",

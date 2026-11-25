@@ -1,12 +1,17 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { authError, validEmail } from "@/lib/account/validation";
+import {
+  EMAIL_UNAVAILABLE_MESSAGE,
+  isEmailUnavailable,
+} from "@/lib/account/email-change-feedback";
 export function AccountManagement({ deletionEnabled }: { deletionEnabled: boolean }) {
   const router = useRouter();
+  const emailDialog = useRef<HTMLDialogElement>(null);
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -68,9 +73,13 @@ export function AccountManagement({ deletionEnabled }: { deletionEnabled: boolea
         { email },
         { emailRedirectTo: window.location.origin + "/auth/callback?kind=email" },
       );
+      if (isEmailUnavailable(error)) {
+        if (!emailDialog.current?.open) emailDialog.current?.showModal();
+        return EMAIL_UNAVAILABLE_MESSAGE;
+      }
       return error
         ? authError(error)
-        : "Check your email addresses for confirmation instructions. Your current email stays active until the change is confirmed.";
+        : "Check both your current and new email addresses for confirmation instructions. Your current email stays active until both confirmations are complete.";
     });
   }
   function resetPassword() {
@@ -78,7 +87,7 @@ export function AccountManagement({ deletionEnabled }: { deletionEnabled: boolea
       const client = getSupabaseBrowserClient();
       if (!client || !user?.email) throw Error();
       const { error } = await client.auth.resetPasswordForEmail(user.email, {
-        redirectTo: window.location.origin + "/auth/callback?kind=recovery",
+        redirectTo: window.location.origin + "/reset-password",
       });
       return error ? authError(error) : "Check your inbox for the password reset link.";
     });
@@ -218,6 +227,34 @@ export function AccountManagement({ deletionEnabled }: { deletionEnabled: boolea
         </>
       )}
       {message && <p role="status">{message}</p>}
+      <dialog
+        ref={emailDialog}
+        aria-labelledby="email-unavailable-title"
+        aria-describedby="email-unavailable-description"
+        className="backdrop:bg-black/70"
+        style={{
+          margin: "auto",
+          width: "min(420px, calc(100% - 32px))",
+          padding: 24,
+          borderRadius: 10,
+          border: "1px solid #713038",
+          background: "#171717",
+          color: "#f5f5f5",
+        }}
+      >
+        <h2 id="email-unavailable-title" style={{ fontSize: 24, marginBottom: 12 }}>
+          Email unavailable
+        </h2>
+        <p id="email-unavailable-description">{EMAIL_UNAVAILABLE_MESSAGE}</p>
+        <button
+          className="settings-button settings-button-primary"
+          type="button"
+          style={{ marginTop: 20, width: "100%" }}
+          onClick={() => emailDialog.current?.close()}
+        >
+          Try another email
+        </button>
+      </dialog>
     </section>
   );
 }
