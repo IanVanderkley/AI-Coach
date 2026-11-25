@@ -1,5 +1,10 @@
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { parseAccountTotalXp } from "./progression";
+import {
+  isRankedXpReward,
+  parsePracticeXpReceipt,
+  type PracticeXpReceipt,
+} from "./rewards";
 
 export type PlayerLevelLookup = { state: "guest" } | { state: "ready"; totalXp: number };
 
@@ -86,10 +91,33 @@ export async function loadRankedMatchXpReceipt(
   // Never fabricate reward amounts; reject unknown row shapes instead.
   if (
     (data.outcome !== "won" && data.outcome !== "lost") ||
-    (data.outcome === "won" && data.amount !== 125) ||
-    (data.outcome === "lost" && data.amount !== 10)
+    !isRankedXpReward(data.outcome, data.amount)
   ) {
     throw new Error("The database returned an unexpected XP receipt.");
   }
   return { state: "earned", outcome: data.outcome, amount: data.amount };
+}
+
+/** Owner-readable receipt for a completed, account-recorded Practice game. */
+export async function loadPracticeXpReceipt(
+  recordId: string,
+): Promise<PracticeXpReceipt | null> {
+  if (!recordId || recordId.length > 128)
+    throw new Error("Invalid Practice recording ID.");
+  const client = getSupabaseBrowserClient();
+  if (!client) return null;
+  const { data: auth, error: authError } = await client.auth.getUser();
+  if (authError?.name === "AuthSessionMissingError") return null;
+  if (authError) throw new Error("Unable to verify account.");
+  if (!auth.user) return null;
+  const { data, error } = await client
+    .from("player_practice_xp_receipts")
+    .select("difficulty,outcome,amount,reason")
+    .eq("user_id", auth.user.id)
+    .eq("client_record_id", recordId)
+    .maybeSingle();
+  // Compatible frontend can be released before enabling the new database economy.
+  if (error?.code === "PGRST205" || error?.code === "42P01") return null;
+  if (error) throw new Error("Practice XP receipt unavailable.");
+  return data ? parsePracticeXpReceipt(data) : null;
 }

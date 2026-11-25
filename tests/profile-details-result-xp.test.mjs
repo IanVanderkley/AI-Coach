@@ -97,7 +97,8 @@ test("Practice result includes a compact, read-only level progress component", (
 });
 
 test("Practice result never claims an XP reward that the server does not grant", () => {
-  has(xp, /Practice currently grants no verified account XP/, "no-award notice missing");
+  has(xp, /loadPracticeXpReceipt\(recordId\)/, "owner receipt missing");
+  has(xp, /No saved Practice XP receipt/, "missing receipt notice missing");
   has(xp, /kind: "guest"/, "guest state missing");
   has(xp, /kind: "error"/, "unavailable state missing");
   assert.ok(!/\+125 XP|\+10 XP|\+\d+ XP/.test(xp));
