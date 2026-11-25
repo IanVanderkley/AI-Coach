@@ -129,7 +129,7 @@ test("settings API checks owner and accepts only username/privacy, not score cha
   const route = read("app/api/leaderboard/preferences/route.ts");
   assert.match(route, /auth\.getUser\(\)/);
   assert.match(route, /\.eq\("user_id", user\.id\)/);
-  assert.match(route, /key !== "isAnonymous" && key !== "username"/);
+  assert.match(route, /parseIdentityMutation\(parsed\.value\)/);
   assert.match(route, /"Cache-Control": "private, no-store"/);
   assert.doesNotMatch(route, /\.update\(\{\s*rating|rating:\s*payload/);
 });

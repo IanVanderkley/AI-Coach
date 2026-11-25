@@ -36,7 +36,7 @@ const categories = [
     id: "account",
     title: "Account",
     icon: UserRound,
-    description: "Email, password and sessions",
+    description: "Username, email and security",
   },
 ] as const;
 

@@ -125,7 +125,7 @@ test("new accounts default public in SQL but existing saved privacy is untouched
   );
   const api = read("app/api/leaderboard/preferences/route.ts");
   const privacy = read("components/leaderboard/leaderboard-privacy.tsx");
-  assert.match(api, /data\?\.is_anonymous \?\? false/);
+  assert.match(api, /isAnonymous: data\.is_anonymous/);
   assert.match(privacy, /useState\(false\)/);
   assert.match(privacy, /checked=\{isAnonymous\}/);
   assert.match(privacy, /method: "PUT"/);

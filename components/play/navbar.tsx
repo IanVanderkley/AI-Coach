@@ -10,6 +10,7 @@ import { Gamepad2, MessageSquare, Settings2, Trophy, UserRound } from "lucide-re
 import { MineLogo } from "./mine-logo";
 import { NavPlayerLevel } from "./nav-player-level"; // AI_COACH_NAV_LEVEL_BADGE_V1
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { validUsername } from "@/lib/account/validation";
 
 const navigationItems = [
   { label: "Play", icon: Gamepad2, route: "/" },
@@ -88,8 +89,49 @@ export function Navbar() {
     }
   }
 
-  const username =
-    user?.user_metadata?.username || user?.email?.split("@")[0] || "Profile";
+  const userId = user?.id;
+  const [identity, setIdentity] = useState<{ userId: string; username: string } | null>(
+    null,
+  );
+  useEffect(() => {
+    const client = getSupabaseBrowserClient();
+    if (!client || !userId) {
+      setIdentity(null);
+      return;
+    }
+    const accountId = userId;
+    const database = client;
+    let active = true;
+    let revision = 0;
+    async function refresh() {
+      const current = ++revision;
+      try {
+        const { data, error } = await database
+          .from("ranked_leaderboard_profiles")
+          .select("username")
+          .eq("user_id", accountId)
+          .maybeSingle();
+        if (!active || current !== revision) return;
+        setIdentity(
+          !error && typeof data?.username === "string" && validUsername(data.username)
+            ? { userId: accountId, username: data.username }
+            : null,
+        );
+      } catch {
+        if (active && current === revision) setIdentity(null);
+      }
+    }
+    void refresh();
+    window.addEventListener("ai-coach:username-updated", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      active = false;
+      revision++;
+      window.removeEventListener("ai-coach:username-updated", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [userId, pathname]);
+  const username = identity && identity.userId === userId ? identity.username : "Profile";
 
   return (
     <header className="site-header">
