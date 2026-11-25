@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
 import { readRankedMoveJson } from "@/lib/ranked/http-security";
 
 export const runtime = "nodejs";
@@ -82,6 +83,8 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient();
+    const rateLimited = await guardRankedRateLimit(admin, verifiedUserId, "move");
+    if (rateLimited) return rateLimited;
 
     // AI_COACH_RANKED_FAST_REVEAL_HINT_V1: the browser only supplies a routing hint.
     // SQL RPCs independently verify ownership, active status, and first-move state.

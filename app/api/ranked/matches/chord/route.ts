@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
 import { readRankedMoveJson } from "@/lib/ranked/http-security";
 
 export const runtime = "nodejs";
@@ -81,6 +82,8 @@ export async function POST(request: Request) {
     // Step 2: Call the server-controlled chording function.
     // Supabase checks ownership, flags, and game rules.
     const admin = createAdminClient();
+    const rateLimited = await guardRankedRateLimit(admin, verifiedUserId, "move");
+    if (rateLimited) return rateLimited;
 
     const { data, error: chordError } = await admin.rpc("chord_ranked_cell", {
       p_match_id: matchId,

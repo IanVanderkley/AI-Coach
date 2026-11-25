@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
 import { readRankedMoveJson } from "@/lib/ranked/http-security";
 
 export const runtime = "nodejs";
@@ -82,6 +83,8 @@ export async function POST(request: Request) {
     // The SQL function verifies match ownership,
     // checks the board rules, and records the move.
     const admin = createAdminClient();
+    const rateLimited = await guardRankedRateLimit(admin, verifiedUserId, "move");
+    if (rateLimited) return rateLimited;
 
     const { data, error: flagError } = await admin.rpc("toggle_ranked_flag", {
       p_match_id: matchId,
