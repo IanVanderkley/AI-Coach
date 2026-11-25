@@ -83,7 +83,11 @@ export default function Home() {
       </a>
       <Navbar />
 
-      <main className="page-shell" id="main-content">
+      <main
+        className="page-shell practice-page"
+        data-difficulty={difficulty}
+        id="main-content"
+      >
         <div className="page-heading">
           <div>
             <p className="eyebrow">PLAY. LEARN. IMPROVE.</p>
@@ -110,34 +114,43 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="difficulty-row" role="group" aria-label="Choose board difficulty">
-          <label htmlFor="difficulty-select">Difficulty</label>
-          <select
-            id="difficulty-select"
-            className="difficulty-select"
-            value={difficulty}
-            onChange={(event) => {
-              const next = event.target.value as Difficulty;
-              setDifficulty(next);
-              try {
-                savePracticeDifficulty(window.localStorage, next);
-              } catch {
-                /* Storage blocked */
-              }
-              setLastGame(null);
-            }}
-          >
-            <option value="beginner">Beginner — 9 × 9, 10 mines</option>
-            <option value="intermediate">Intermediate — 16 × 16, 40 mines</option>
-            <option value="expert">Expert — 16 × 30, 99 mines</option>
-          </select>
-        </div>
-
-        {/* Keep this existing component for the separate, future game-mode feature. */}
         <div className="mode-row">
           <ModeSelector />
-          <span className="preview-note">Playable game</span>
         </div>
+
+        <fieldset className="practice-difficulty-picker">
+          <legend>Board difficulty</legend>
+          <div className="practice-difficulty-options">
+            {(["beginner", "intermediate", "expert"] as const).map((next) => {
+              const option = DIFFICULTY_SETTINGS[next];
+              return (
+                <label className="practice-difficulty-option" key={next}>
+                  <input
+                    type="radio"
+                    name="practice-difficulty"
+                    value={next}
+                    checked={difficulty === next}
+                    onChange={() => {
+                      setDifficulty(next);
+                      try {
+                        savePracticeDifficulty(window.localStorage, next);
+                      } catch {
+                        /* Storage blocked */
+                      }
+                      setLastGame(null);
+                    }}
+                  />
+                  <span>
+                    <strong>{option.label}</strong>
+                    <small>
+                      {option.rows} × {option.columns} · {option.mines} mines
+                    </small>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
 
         <div className="play-layout">
           <MinesweeperBoard

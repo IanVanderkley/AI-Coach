@@ -8,6 +8,7 @@ import {
   MousePointer2,
   Pause,
   Play,
+  RotateCcw,
   Trophy,
 } from "lucide-react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
@@ -728,43 +729,71 @@ export function MinesweeperBoard({
       <GameStats
         minesRemaining={mines - flaggedCount}
         totalMines={mines}
+        flaggedCount={flaggedCount}
         elapsedTime={formatTime(elapsedSeconds)}
-        onNewGame={requestNewGame}
+        difficulty={settings.label}
+        status={
+          !recoveryReady
+            ? "loading"
+            : pendingRecovery
+              ? "saved"
+              : paused && !gameOver
+                ? "paused"
+                : status
+        }
       />
 
-      <div className="game-controls" role="group" aria-label="Board controls">
-        <button
-          type="button"
-          className={inputMode === "reveal" ? "mode-button active" : "mode-button"}
-          aria-pressed={inputMode === "reveal"}
-          onClick={() => setInputMode("reveal")}
-          disabled={gameOver || paused || !recoveryReady || pendingRecovery !== null}
-        >
-          <MousePointer2 size={15} aria-hidden="true" /> Reveal
-        </button>
-        <button
-          type="button"
-          className={inputMode === "flag" ? "mode-button active" : "mode-button"}
-          aria-pressed={inputMode === "flag"}
-          onClick={() => setInputMode("flag")}
-          disabled={gameOver || paused || !recoveryReady || pendingRecovery !== null}
-        >
-          <FlagTriangleRight size={15} aria-hidden="true" /> Flag
-        </button>
-        <button
-          type="button"
-          className="mode-button pause-button"
-          aria-pressed={paused}
-          onClick={togglePause}
-          disabled={gameOver || !clockStarted}
-        >
-          {paused ? (
-            <Play size={15} aria-hidden="true" />
-          ) : (
-            <Pause size={15} aria-hidden="true" />
-          )}
-          {paused ? "Resume" : "Pause"}
-        </button>
+      <div className="practice-controls">
+        <div className="game-controls" role="group" aria-label="Board controls">
+          <button
+            type="button"
+            className={inputMode === "reveal" ? "mode-button active" : "mode-button"}
+            aria-pressed={inputMode === "reveal"}
+            onClick={() => setInputMode("reveal")}
+            disabled={gameOver || paused || !recoveryReady || pendingRecovery !== null}
+          >
+            <MousePointer2 size={15} aria-hidden="true" /> Reveal
+          </button>
+          <button
+            type="button"
+            className={inputMode === "flag" ? "mode-button active" : "mode-button"}
+            aria-pressed={inputMode === "flag"}
+            onClick={() => setInputMode("flag")}
+            disabled={gameOver || paused || !recoveryReady || pendingRecovery !== null}
+          >
+            <FlagTriangleRight size={15} aria-hidden="true" /> Flag
+          </button>
+        </div>
+        <div className="practice-actions">
+          <button
+            type="button"
+            className="mode-button pause-button"
+            aria-pressed={paused}
+            onClick={togglePause}
+            disabled={
+              gameOver ||
+              !clockStarted ||
+              !recoveryReady ||
+              pendingRecovery !== null ||
+              replaceOpen
+            }
+          >
+            {paused ? (
+              <Play size={15} aria-hidden="true" />
+            ) : (
+              <Pause size={15} aria-hidden="true" />
+            )}
+            {paused ? "Resume" : "Pause"}
+          </button>
+          <button
+            type="button"
+            className="new-game"
+            onClick={requestNewGame}
+            disabled={!recoveryReady || pendingRecovery !== null || replaceOpen}
+          >
+            <RotateCcw size={15} aria-hidden="true" /> New Game
+          </button>
+        </div>
       </div>
 
       {gameOver && (
@@ -805,95 +834,93 @@ export function MinesweeperBoard({
           a cell according to the selected action mode. On a revealed number, Enter or
           Space chords when the flags around it match.
         </p>
-        {columns > 9 && (
-          <p className="board-scroll-hint">
-            Swipe or scroll the board to see all columns.
-          </p>
-        )}
-        <div
-          className="minesweeper-board"
-          style={boardStyle}
-          role="grid"
-          aria-label={`${settings.label}: ${rows} by ${columns}, ${mines} mines`}
-          aria-describedby="board-keyboard-instructions"
-          onContextMenu={(event) => event.preventDefault()}
-        >
-          {board.map((line, row) =>
-            line.map((cell, col) => {
-              const isExploded =
-                status === "lost" &&
-                explodedCell !== null &&
-                explodedCell[0] === row &&
-                explodedCell[1] === col;
-              const classes = [
-                "cell",
-                cell.revealed ? "revealed" : "unrevealed",
-                cell.flagged ? "flagged" : "",
-                cell.revealed && cell.adjacentMines > 0
-                  ? (numberClasses[cell.adjacentMines] ?? "")
-                  : "",
-                isExploded ? "mine-exploded" : "",
-              ]
-                .filter(Boolean)
-                .join(" ");
+        <p className="board-scroll-hint">Swipe or scroll the board to see all columns.</p>
+        <div className="practice-board-scroll" data-paused={paused && !gameOver}>
+          <div
+            className="minesweeper-board"
+            style={boardStyle}
+            role="grid"
+            aria-label={`${settings.label}: ${rows} by ${columns}, ${mines} mines`}
+            aria-describedby="board-keyboard-instructions"
+            onContextMenu={(event) => event.preventDefault()}
+          >
+            {board.map((line, row) =>
+              line.map((cell, col) => {
+                const isExploded =
+                  status === "lost" &&
+                  explodedCell !== null &&
+                  explodedCell[0] === row &&
+                  explodedCell[1] === col;
+                const classes = [
+                  "cell",
+                  cell.revealed ? "revealed" : "unrevealed",
+                  cell.flagged ? "flagged" : "",
+                  cell.revealed && cell.adjacentMines > 0
+                    ? (numberClasses[cell.adjacentMines] ?? "")
+                    : "",
+                  isExploded ? "mine-exploded" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
 
-              return (
-                <button
-                  key={`${row}-${col}`}
-                  ref={(element) => {
-                    cellRefs.current[row * columns + col] = element;
-                  }}
-                  type="button"
-                  className={classes}
-                  role="gridcell"
-                  aria-rowindex={row + 1}
-                  aria-colindex={col + 1}
-                  tabIndex={row === focusedCell.row && col === focusedCell.col ? 0 : -1}
-                  aria-label={
-                    cell.flagged
-                      ? `Row ${row + 1}, column ${col + 1}, flagged`
-                      : cell.revealed
-                        ? `Row ${row + 1}, column ${col + 1}, ${
-                            cell.mine
-                              ? isExploded
-                                ? "mine, this ended the game"
-                                : "mine"
-                              : cell.adjacentMines
-                                ? `${cell.adjacentMines} neighboring mines`
-                                : "empty"
-                          }`
-                        : `Row ${row + 1}, column ${col + 1}, covered`
-                  }
-                  onMouseDown={(event) => handleMouseDown(event, row, col)}
-                  onFocus={() => setFocusedCell({ row, col })}
-                  onKeyDown={(event) => handleCellKeyDown(event, row, col)}
-                  onClick={() => {
-                    if (gameOver || paused) return;
-                    if (cell.revealed) {
-                      // Tapping or keyboard-activating a number chords it,
-                      // which also gives touch players a chord gesture.
-                      if (inputMode === "reveal") chordCell(row, col);
-                      return;
+                return (
+                  <button
+                    key={`${row}-${col}`}
+                    ref={(element) => {
+                      cellRefs.current[row * columns + col] = element;
+                    }}
+                    type="button"
+                    className={classes}
+                    role="gridcell"
+                    aria-rowindex={row + 1}
+                    aria-colindex={col + 1}
+                    tabIndex={row === focusedCell.row && col === focusedCell.col ? 0 : -1}
+                    aria-label={
+                      cell.flagged
+                        ? `Row ${row + 1}, column ${col + 1}, flagged`
+                        : cell.revealed
+                          ? `Row ${row + 1}, column ${col + 1}, ${
+                              cell.mine
+                                ? isExploded
+                                  ? "mine, this ended the game"
+                                  : "mine"
+                                : cell.adjacentMines
+                                  ? `${cell.adjacentMines} neighboring mines`
+                                  : "empty"
+                            }`
+                          : `Row ${row + 1}, column ${col + 1}, covered`
                     }
-                    if (inputMode === "flag") toggleFlag(row, col);
-                    else revealCell(row, col);
-                  }}
-                  onContextMenu={(event) => handleContextMenu(event, row, col)}
-                  disabled={
-                    gameOver || paused || !recoveryReady || pendingRecovery !== null
-                  }
-                >
-                  {cell.flagged ? (
-                    <Flag className="cell-flag" fill="currentColor" strokeWidth={1.5} />
-                  ) : cell.revealed && cell.mine ? (
-                    <Bomb size={16} aria-label="Mine" />
-                  ) : cell.revealed && cell.adjacentMines > 0 ? (
-                    cell.adjacentMines
-                  ) : null}
-                </button>
-              );
-            }),
-          )}
+                    onMouseDown={(event) => handleMouseDown(event, row, col)}
+                    onFocus={() => setFocusedCell({ row, col })}
+                    onKeyDown={(event) => handleCellKeyDown(event, row, col)}
+                    onClick={() => {
+                      if (gameOver || paused) return;
+                      if (cell.revealed) {
+                        // Tapping or keyboard-activating a number chords it,
+                        // which also gives touch players a chord gesture.
+                        if (inputMode === "reveal") chordCell(row, col);
+                        return;
+                      }
+                      if (inputMode === "flag") toggleFlag(row, col);
+                      else revealCell(row, col);
+                    }}
+                    onContextMenu={(event) => handleContextMenu(event, row, col)}
+                    disabled={
+                      gameOver || paused || !recoveryReady || pendingRecovery !== null
+                    }
+                  >
+                    {cell.flagged ? (
+                      <Flag className="cell-flag" fill="currentColor" strokeWidth={1.5} />
+                    ) : cell.revealed && cell.mine ? (
+                      <Bomb size={16} aria-label="Mine" />
+                    ) : cell.revealed && cell.adjacentMines > 0 ? (
+                      cell.adjacentMines
+                    ) : null}
+                  </button>
+                );
+              }),
+            )}
+          </div>
         </div>
       </div>
 

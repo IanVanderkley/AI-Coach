@@ -14,6 +14,7 @@ import "../styles/account.css";
 import "../styles/profile.css";
 import "../styles/responsive.css";
 import "../styles/ui-consistency.css";
+import "../styles/practice-layout.css";
 import { SiteTooltip } from "@/components/ui/site-tooltip";
 
 // These paths are relative to this file, not the browser URL.
