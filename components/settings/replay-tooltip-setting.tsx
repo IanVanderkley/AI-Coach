@@ -50,8 +50,8 @@ export function ReplayTooltipSetting() {
         <span>
           <strong>Replay tooltips</strong>
           <span>
-            Show helpful descriptions after hovering over Coaching replay controls. Saved
-            automatically in this browser.
+            Show helpful descriptions after a short hover or keyboard focus on Coaching
+            replay controls and board cells. Saved automatically in this browser.
           </span>
         </span>
       </label>

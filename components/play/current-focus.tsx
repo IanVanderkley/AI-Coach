@@ -4,13 +4,10 @@ import { ChevronDown, Crosshair } from "lucide-react";
 export function CurrentFocus() {
   return (
     <details className="focus-panel">
-      <summary className="focus-toggle" title="General Practice tip">
+      <summary className="focus-toggle" data-tip="General Practice tip">
         <Crosshair size={19} aria-hidden="true" />
         <span>Practice tip</span>
         <ChevronDown className="focus-chevron" size={17} aria-hidden="true" />
-        <span className="focus-tooltip" aria-hidden="true">
-          General tip
-        </span>
       </summary>
       <div className="focus-content">
         <span className="subtle-label">General strategy — not personalized feedback</span>

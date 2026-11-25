@@ -135,7 +135,7 @@ function BoardView({
                     .filter(Boolean)
                     .join(" ")}
                   data-decision={selected ? decision : undefined}
-                  title={
+                  data-tip={
                     tooltips
                       ? `${cellLabel(index, columns)}: ${fact}${proof ? `, ${proof}` : ""}${sources.has(index) ? ", supporting clue" : ""}`
                       : undefined
