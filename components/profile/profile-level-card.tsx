@@ -116,7 +116,7 @@ export function ProfileLevelCard({ compact = false }: { compact?: boolean } = {}
           </div>
         </div>
         <span className="profile-level-verified">
-          <ShieldCheck size={15} aria-hidden="true" /> Verified XP only
+          <ShieldCheck size={15} aria-hidden="true" /> Saved account XP
         </span>
       </div>
 
@@ -143,8 +143,8 @@ export function ProfileLevelCard({ compact = false }: { compact?: boolean } = {}
           <div>
             <strong>Sign in to start earning account XP.</strong>
             <p>
-              Every 1,000 XP earns a level. Verified Ranked wins award XP; guest Practice
-              games do not.
+              Every 1,000 XP earns a level. Ranked and eligible account-recorded Practice
+              games award XP. Guest games must be synced to earn eligible rewards.
             </p>
             <Link href="/sign-in" className="profile-level-sign-in">
               Sign in
@@ -189,13 +189,13 @@ export function ProfileLevelCard({ compact = false }: { compact?: boolean } = {}
           <p className="profile-level-caption">
             {progress.xpToNextLevel.toLocaleString()} XP until Level{" "}
             {(progress.level + 1).toLocaleString()}
-            <span aria-hidden="true"> · </span> 125 XP per verified Ranked win
+            <span aria-hidden="true"> · </span> Ranked and Practice rewards
           </p>
         </div>
       )}
       <p className="profile-level-disclaimer">
-        Account levels are separate from competitive Ranked RP. Browser-only Practice wins
-        cannot grant verified account XP.
+        Account levels are separate from competitive Ranked RP. Practice XP is capped and
+        separate from competitive rating.
       </p>
     </section>
   );

@@ -47,12 +47,21 @@ export default function Home() {
       setLastGame(session);
       saveLastGame(session);
       setPracticeSaveState("saving");
-      void practiceRepository
+      return practiceRepository
         .save(session)
-        .then(async () => {
-          setPracticeSaveState(await practiceRepository.getStorageMode());
+        .then(async (saved) => {
+          const mode = await practiceRepository.getStorageMode();
+          setPracticeSaveState(mode);
+          if (mode === "account") {
+            window.dispatchEvent(new Event("ai-coach:xp-updated"));
+            return saved.id;
+          }
+          return null;
         })
-        .catch(() => setPracticeSaveState("error"));
+        .catch(() => {
+          setPracticeSaveState("error");
+          return null;
+        });
     },
     [practiceRepository],
   );

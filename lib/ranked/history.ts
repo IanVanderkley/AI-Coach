@@ -1,4 +1,6 @@
 /** Server-confirmed personal Ranked history, never a client-submitted result. */
+import { isRankedXpReward } from "../levels/rewards.ts";
+
 export const RANKED_HISTORY_LIMIT = 10;
 
 export type RankedHistoryEntry = {
@@ -68,7 +70,7 @@ export function serializeRankedHistory(
       !UUID.test(value.match_id) ||
       (value.outcome !== "won" && value.outcome !== "lost") ||
       !safeInt(value.amount, 0) ||
-      value.amount !== (value.outcome === "won" ? 125 : 10) ||
+      !isRankedXpReward(value.outcome, value.amount) ||
       receiptMap.has(value.match_id)
     ) {
       throw new Error("Invalid Ranked XP receipt.");

@@ -39,7 +39,7 @@ type Position = [number, number];
 type MinesweeperBoardProps = {
   settings: DifficultySettings;
   /** Called once when a game ends, with everything the coach needs to replay it. */
-  onGameComplete?: (session: PracticeSession) => void;
+  onGameComplete?: (session: PracticeSession) => Promise<string | null>;
   /** Called when a fresh game starts, so the previous report can be cleared. */
   onGameStart?: () => void;
 };
@@ -423,7 +423,9 @@ export function MinesweeperBoard({
     } catch {
       /* Storage unavailable */
     }
+    const xpSave = onGameComplete?.(session);
     setResultSummary({
+      xpSave,
       outcome: session.outcome,
       difficulty: settings.label,
       durationSeconds: finalSeconds,
@@ -432,8 +434,6 @@ export function MinesweeperBoard({
       personalBest,
       reviewId,
     });
-    // Parent saves through the repository; analysis receives the same recording.
-    onGameComplete?.(session);
   }, [
     activeElapsedMs,
     status,
