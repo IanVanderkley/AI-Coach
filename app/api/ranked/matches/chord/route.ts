@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       p_column: column,
     });
     if (chordError) {
-      console.error("Ranked chord failed:", chordError);
+      console.error("Ranked chord failed:");
 
       const rejected = chordError.code === "P0001";
 
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     // Return the verified move result.
     return Response.json(data, { status: 200, headers });
   } catch (error) {
-    console.error("Ranked chord API error:", error);
+    console.error("Ranked chord API error:");
 
     return Response.json(
       { error: "Ranked service is temporarily unavailable." },

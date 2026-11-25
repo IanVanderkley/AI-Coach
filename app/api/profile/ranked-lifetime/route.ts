@@ -65,7 +65,7 @@ export async function GET() {
       { status: 200, headers },
     );
   } catch (error) {
-    console.error("Ranked lifetime statistics lookup failed:", error);
+    console.error("Ranked lifetime statistics lookup failed:");
     return Response.json(
       { error: "Ranked lifetime statistics are temporarily unavailable." },
       { status: 503, headers },

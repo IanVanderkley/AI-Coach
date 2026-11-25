@@ -82,7 +82,7 @@ export async function GET(request: Request) {
       .maybeSingle();
 
     if (matchError) {
-      console.error("Ranked match lookup failed:", matchError);
+      console.error("Ranked match lookup failed:");
 
       return Response.json(
         { error: "Could not load Ranked match." },
@@ -105,7 +105,7 @@ export async function GET(request: Request) {
       p_user_id: verifiedUserId,
     });
     if (boardError) {
-      console.error("Ranked board recovery failed:", boardError);
+      console.error("Ranked board recovery failed:");
 
       return Response.json(
         { error: "Could not restore Ranked board." },
@@ -123,7 +123,7 @@ export async function GET(request: Request) {
     // Step 4: Return only the visible board information.
     return Response.json(data, { status: 200, headers });
   } catch (error) {
-    console.error("Ranked recovery API error:", error);
+    console.error("Ranked recovery API error:");
 
     return Response.json(
       { error: "Ranked service is temporarily unavailable." },

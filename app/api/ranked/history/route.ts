@@ -67,7 +67,7 @@ export async function GET() {
     // Omit account IDs, hidden mines, flags, and internal match UUIDs.
     return Response.json({ matches: history }, { status: 200, headers });
   } catch (error) {
-    console.error("Ranked history lookup failed:", error);
+    console.error("Ranked history lookup failed:");
     return Response.json(
       { error: "Ranked history is temporarily unavailable." },
       { status: 503, headers },

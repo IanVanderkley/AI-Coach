@@ -55,7 +55,7 @@ export async function GET(request: Request): Promise<Response> {
       { status: 200, headers },
     );
   } catch (error) {
-    console.error("Verified Ranked leaderboard unavailable:", error);
+    console.error("Verified Ranked leaderboard unavailable:");
     return unavailable();
   }
 }

@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 
       // Preserve the original error precedence and HTTP statuses.
       if (matchError) {
-        console.error("Ranked match lookup failed:", matchError);
+        console.error("Ranked match lookup failed:");
 
         return Response.json(
           { error: "Could not load Ranked match." },
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
       }
 
       if (stateError || !state) {
-        console.error("Ranked state lookup failed:", stateError);
+        console.error("Ranked state lookup failed:");
 
         return Response.json(
           { error: "Could not load Ranked board." },
@@ -153,7 +153,7 @@ export async function POST(request: Request) {
     });
 
     if (revealError) {
-      console.error("Ranked reveal failed:", revealError);
+      console.error("Ranked reveal failed:");
 
       const rejected = revealError.code === "P0001";
 
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
     // Return the verified move result.
     return Response.json(data, { status: 200, headers });
   } catch (error) {
-    console.error("Ranked reveal API error:", error);
+    console.error("Ranked reveal API error:");
 
     return Response.json(
       { error: "Ranked service is temporarily unavailable." },

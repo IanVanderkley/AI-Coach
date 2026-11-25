@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       p_column: column,
     });
     if (flagError) {
-      console.error("Ranked flag failed:", flagError);
+      console.error("Ranked flag failed:");
 
       const rejected = flagError.code === "P0001";
 
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     // Return only the result of the flag action.
     return Response.json(data, { status: 200, headers });
   } catch (error) {
-    console.error("Ranked flag API error:", error);
+    console.error("Ranked flag API error:");
 
     return Response.json(
       { error: "Ranked service is temporarily unavailable." },
