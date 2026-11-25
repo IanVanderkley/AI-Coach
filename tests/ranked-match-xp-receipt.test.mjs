@@ -18,8 +18,7 @@ test("per-match XP is fetched from signed-in RLS-protected database rows", () =>
 });
 
 test("only known exact database reward amounts are accepted", () => {
-  assert.match(repo, /data\.outcome === "won" && data\.amount !== 125/);
-  assert.match(repo, /data\.outcome === "lost" && data\.amount !== 10/);
+  assert.match(repo, /isRankedXpReward\(data\.outcome, data\.amount\)/);
   assert.match(repo, /return \{ state: "missing" \}/);
   assert.match(component, /result\.outcome === expectedOutcome/);
 });

@@ -27,6 +27,7 @@ export type PracticeResultSummary = {
   flagsOnBoard: number;
   personalBest: PracticeBestUpdate | null;
   reviewId: string | null;
+  xpSave?: Promise<string | null>;
 };
 
 type PracticeResultDialogProps = {
@@ -203,6 +204,9 @@ export function PracticeResultDialog({
               ` · Browser best: ${formatTime(result.personalBest.bestSeconds)}`}
           </p>
           <MatchXpBar
+            saveResult={result.xpSave}
+            expectedOutcome={result.outcome}
+            expectedDifficulty={result.difficulty}
             key={
               result.reviewId ??
               result.difficulty + ":" + result.durationSeconds + ":" + result.moveCount

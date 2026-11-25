@@ -86,8 +86,8 @@ DECLARE
   a uuid := 'ee728f65-c438-493c-b2cf-57ef5a6f0021';
 BEGIN
   IF (SELECT count(*) FROM public.ranked_elo_events WHERE user_id = a AND outcome = 'lost') <> 1 THEN RAISE EXCEPTION 'Expected exactly one Elo loss event'; END IF;
-  IF (SELECT count(*) FROM public.player_xp_match_receipts WHERE user_id = a AND outcome = 'lost' AND amount = 10) <> 1 THEN RAISE EXCEPTION 'Expected exactly one 10 XP receipt'; END IF;
-  IF (SELECT total_xp FROM public.player_xp_profiles WHERE user_id = a) IS DISTINCT FROM 10::bigint THEN RAISE EXCEPTION 'Wrong XP balance'; END IF;
+  IF (SELECT count(*) FROM public.player_xp_match_receipts WHERE user_id = a AND outcome = 'lost' AND amount = 17) <> 1 THEN RAISE EXCEPTION 'Expected exactly one 17 XP receipt'; END IF;
+  IF (SELECT total_xp FROM public.player_xp_profiles WHERE user_id = a) IS DISTINCT FROM 17::bigint THEN RAISE EXCEPTION 'Wrong XP balance'; END IF;
 END;
 $rewards$;
 ROLLBACK;

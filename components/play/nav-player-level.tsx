@@ -7,7 +7,7 @@ import { loadPlayerLevel } from "@/lib/levels/repository";
 
 type LoadedLevel = { userId: string; progress: LevelProgress };
 
-/** Read-only verified account progression; never estimates or awards XP. */
+/** Read-only saved account progression; never estimates or awards XP. */
 export function NavPlayerLevel({
   userId,
   pathname,
