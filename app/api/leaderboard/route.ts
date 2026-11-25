@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { admitPublicRead } from "@/lib/http/public-read-limit";
 import { projectPublicStandings } from "@/lib/leaderboard/public-standings";
 
 export const runtime = "nodejs";
@@ -12,6 +13,8 @@ export async function GET() {
   }
   try {
     const admin = createAdminClient();
+    const denied = await admitPublicRead(admin, "leaderboard");
+    if (denied) return denied;
     const [elo, speed] = await Promise.all([
       admin
         .from("ranked_public_elo")

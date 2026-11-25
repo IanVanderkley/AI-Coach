@@ -1,9 +1,10 @@
 -- Batch 7B: account-recorded Practice outcomes, retained across history pruning.
--- Install using a NEW Supabase CLI-generated migration. This SQL intentionally has
--- no BEGIN/COMMIT so it can also be tested inside an outer ROLLBACK transaction.
+-- Replay compatibility: one atomic DO statement keeps the baseline lock held
+-- through trigger installation, without committing an outer test transaction.
+-- Historical migration already applied remotely; do not replay it there.
 -- First-seen outcome is immutable for accounting purposes; Practice is not verified.
 
-DO $guard$
+DO $migration$
 BEGIN
   IF to_regclass('public.practice_games') IS NULL
      OR to_regclass('public.practice_game_moves') IS NULL
@@ -15,8 +16,6 @@ BEGIN
   THEN
     RAISE EXCEPTION 'Practice account tracking is already installed; refusing duplicate migration';
   END IF;
-END;
-$guard$;
 
 CREATE SCHEMA IF NOT EXISTS practice_stats_internal;
 REVOKE ALL ON SCHEMA practice_stats_internal FROM PUBLIC, anon, authenticated;
@@ -173,3 +172,5 @@ REVOKE ALL ON FUNCTION practice_stats_internal.record_complete_practice_game() F
 CREATE TRIGGER record_complete_practice_game_after_move
 AFTER INSERT OR UPDATE ON public.practice_game_moves
 FOR EACH ROW EXECUTE FUNCTION practice_stats_internal.record_complete_practice_game();
+END;
+$migration$;
