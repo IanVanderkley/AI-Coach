@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readVerifiedRankedSessionId } from "@/lib/ranked/session-claims";
 import { combinedMoveResponse } from "@/lib/ranked/combined-move-response";
 import { createRankedMoveTiming } from "@/lib/ranked/move-timing";
 import { readRankedMoveJson } from "@/lib/ranked/http-security";
@@ -62,10 +63,13 @@ export async function POST(request: Request) {
       (process.env.NODE_ENV === "development" &&
         process.env.RANKED_AUTH_PROBE === "claims");
     let verifiedUserId: string | undefined;
+    let verifiedSessionId: string | undefined;
     let authError: unknown = null;
     if (useClaimsProbe) {
       const { data, error } = await supabase.auth.getClaims();
       authError = error;
+      verifiedSessionId = readVerifiedRankedSessionId(data?.claims);
+      if (!verifiedSessionId) authError = new Error("Invalid Ranked session claims");
       verifiedUserId =
         typeof data?.claims?.sub === "string" && data.claims.sub.length > 0
           ? data.claims.sub
@@ -100,6 +104,7 @@ export async function POST(request: Request) {
     timing.startDatabase();
     const { data, error } = await admin.rpc("execute_ranked_move", {
       p_user_id: verifiedUserId,
+      ...(useClaimsProbe ? { p_session_id: verifiedSessionId } : {}),
       p_match_id: matchId,
       p_action: "flag",
       p_row: row,

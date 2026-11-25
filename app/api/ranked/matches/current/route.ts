@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readVerifiedRankedSessionId } from "@/lib/ranked/session-claims";
 import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
 
 export const runtime = "nodejs";
@@ -23,10 +24,13 @@ export async function GET(request: Request) {
       (process.env.NODE_ENV === "development" &&
         process.env.RANKED_AUTH_PROBE === "claims");
     let verifiedUserId: string | undefined;
+    let verifiedSessionId: string | undefined;
     let authError: unknown = null;
     if (useClaimsProbe) {
       const { data, error } = await supabase.auth.getClaims();
       authError = error;
+      verifiedSessionId = readVerifiedRankedSessionId(data?.claims);
+      if (!verifiedSessionId) authError = new Error("Invalid Ranked session claims");
       verifiedUserId =
         typeof data?.claims?.sub === "string" && data.claims.sub.length > 0
           ? data.claims.sub
@@ -48,6 +52,27 @@ export async function GET(request: Request) {
     const admin = createAdminClient();
     const rateLimited = await guardRankedRateLimit(admin, verifiedUserId, "read");
     if (rateLimited) return rateLimited;
+    if (useClaimsProbe) {
+      const { data: active, error: sessionError } = await admin.rpc(
+        "ranked_session_is_active",
+        {
+          p_user_id: verifiedUserId,
+          p_session_id: verifiedSessionId,
+        },
+      );
+      if (sessionError) {
+        return Response.json(
+          { error: "Ranked service is temporarily unavailable." },
+          { status: 503, headers },
+        );
+      }
+      if (active !== true) {
+        return Response.json(
+          { error: "You must sign in to play Ranked." },
+          { status: 401, headers },
+        );
+      }
+    }
 
     // AI_COACH_RANKED_CACHED_RECOVERY_V1: an optional opaque hint, never a source of identity.
     // The existing SQL function checks BOTH user ownership and active match state.
