@@ -1,0 +1,7 @@
+# Ranked responsiveness
+
+The first move is still sent immediately. While a request is in flight, up to three distinct additional squares can be queued. A dashed outline indicates an unsent intent; the existing pending indicator and flag preview still apply to the single dispatched request. The queue runs FIFO only after the server-confirmed revision has rendered. Each intent is checked again against visible state, without changing its action. Invalid or duplicate inputs are skipped; the player may cancel unsent moves. A terminal match, board recovery, navigation, or hidden tab discards remaining inputs. A failed or uncertain transaction is never retried automatically. The move RPC, rate limit, authenticated identity, revision check and reward logic are unchanged.
+
+Successful and handled RPC responses now include `Server-Timing` with `app`, `auth` and `db` elapsed milliseconds. `app` begins inside the route (not at the browser or Vercel edge); `auth` includes server client creation and verification; `db` includes the database HTTP round trip and response construction, not just SQL execution. No tokens, IDs or private data are included. Timing is informational, not an authorization mechanism.
+
+Validate rapid reveal/flag/chord input, queue capacity and cancellation, invalidated queued moves, first reveal, terminal results, refresh/recovery, and tab backgrounding locally. Then compare a fresh hosted benchmark after deployment, including the Server-Timing breakdown. No database migration or new dependency is required.

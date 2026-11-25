@@ -20,6 +20,11 @@ export function combinedMoveResponse(data: unknown, failed: boolean): Response {
         return unavailable();
       }
       return Response.json(envelope.result, { status: 200, headers });
+    case "unauthorized":
+      return Response.json(
+        { error: "You must sign in to play Ranked." },
+        { status: 401, headers },
+      );
     case "rate_limited":
       return Response.json(
         { error: "Too many Ranked requests. Please try again shortly." },

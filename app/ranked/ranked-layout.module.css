@@ -181,3 +181,40 @@
     animation: none;
   }
 }
+
+/* Queued intent is distinct from a server-confirmed flag/reveal. */
+.queuedCell.queuedCell:not(:focus-visible) {
+  outline: 2px dashed #f5ce83;
+  outline-offset: -3px;
+}
+.moveQueueStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-height: 36px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 8px;
+  color: #b9bfca;
+  font-size: 12px;
+}
+.moveQueueStatus > span {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cancelQueue {
+  color: #f5ce83;
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  text-decoration: underline;
+}
+.cancelQueue:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}

@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readVerifiedRankedSessionId } from "@/lib/ranked/session-claims";
 import { combinedMoveResponse } from "@/lib/ranked/combined-move-response";
+import { createRankedMoveTiming } from "@/lib/ranked/move-timing";
 import { readRankedMoveJson } from "@/lib/ranked/http-security";
 import { isRankedMoveRevision } from "@/lib/ranked/move-revision";
 
@@ -14,6 +16,7 @@ const headers = {
 // POST /api/ranked/matches/reveal
 // Handles both the first reveal and subsequent reveals.
 export async function POST(request: Request) {
+  const timing = createRankedMoveTiming();
   // Block requests from other website origins.
   const parsed = await readRankedMoveJson(request);
   if (!parsed.ok) return parsed.response;
@@ -49,6 +52,7 @@ export async function POST(request: Request) {
 
   try {
     // Step 1: Verify the signed-in player.
+    timing.startAuth();
     const supabase = await createClient();
 
     // AI_COACH_RANKED_DEV_CLAIMS_PROBE_V1: compare verified JWT claims with getUser in development.
@@ -59,6 +63,7 @@ export async function POST(request: Request) {
       (process.env.NODE_ENV === "development" &&
         process.env.RANKED_AUTH_PROBE === "claims");
     let verifiedUserId: string | undefined;
+    let verifiedSessionId: string | undefined;
     let authError: unknown = null;
 
     if (useClaimsProbe) {
@@ -66,6 +71,8 @@ export async function POST(request: Request) {
       // locally after JWKS caching; symmetric keys fall back to online auth.
       const { data, error } = await supabase.auth.getClaims();
       authError = error;
+      verifiedSessionId = readVerifiedRankedSessionId(data?.claims);
+      if (!verifiedSessionId) authError = new Error("Invalid Ranked session claims");
       verifiedUserId =
         typeof data?.claims?.sub === "string" && data.claims.sub.length > 0
           ? data.claims.sub
@@ -76,6 +83,7 @@ export async function POST(request: Request) {
       verifiedUserId = data.user?.id;
     }
 
+    timing.finishAuth();
     if (authError || !verifiedUserId) {
       return Response.json(
         { error: "You must sign in to play Ranked." },
@@ -93,8 +101,10 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
     // A single database request reserves quota and executes the revision-checked move.
+    timing.startDatabase();
     const { data, error } = await admin.rpc("execute_ranked_move", {
       p_user_id: verifiedUserId,
+      ...(useClaimsProbe ? { p_session_id: verifiedSessionId } : {}),
       p_match_id: matchId,
       p_action: "reveal",
       p_row: row,
@@ -102,7 +112,7 @@ export async function POST(request: Request) {
       p_expected_move_count: expectedMoveCount,
     });
     if (error) console.error("Ranked reveal RPC unavailable");
-    return combinedMoveResponse(data, Boolean(error));
+    return timing.attach(combinedMoveResponse(data, Boolean(error)));
   } catch (error) {
     console.error("Ranked reveal API error:");
 
