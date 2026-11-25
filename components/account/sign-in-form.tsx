@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { usernameContentProblem } from "@/lib/account/username-moderation";
 import {
   authError,
   validEmail,
@@ -95,7 +96,8 @@ export function SignInForm() {
       if (mode === "create") {
         const problem = !validUsername(username)
           ? "Use 3–20 letters, numbers or underscores for your username."
-          : passwordProblem(password, String(form.get("confirm") ?? ""));
+          : (usernameContentProblem(username) ??
+            passwordProblem(password, String(form.get("confirm") ?? "")));
         if (problem) {
           setMessage(problem);
           setIsError(true);
@@ -194,6 +196,11 @@ export function SignInForm() {
                   required
                 />
               </span>
+              <small>
+                Choose a name without profanity, slurs or hateful language. Your name is
+                reserved when your email is confirmed. If it is taken, you receive a
+                unique temporary username that you can change in Account settings.
+              </small>
             </label>
           )}
           <label className="field-group">

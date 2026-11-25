@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { authError, validEmail } from "@/lib/account/validation";
 import { AccountDeletionForm } from "./account-deletion-form";
+import { UsernameSetting } from "./username-setting";
 import {
   EMAIL_UNAVAILABLE_MESSAGE,
   isEmailUnavailable,
@@ -119,6 +120,7 @@ export function AccountManagement({ deletionEnabled }: { deletionEnabled: boolea
             Signed in as <strong>{user.email}</strong> ·{" "}
             {user.email_confirmed_at ? "Email verified" : "Email not verified"}
           </p>
+          <UsernameSetting key={user.id} />
           <details>
             <summary>Change email address</summary>
             <form onSubmit={changeEmail}>
