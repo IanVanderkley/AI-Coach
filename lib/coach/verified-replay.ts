@@ -13,10 +13,32 @@ export type VisibleCell = {
   exploded: boolean;
 };
 
+export type TeachingGroup = {
+  clue: number | null;
+  originalCount: number;
+  remainingMines: number;
+  cells: number[];
+  knownMines: number[];
+  knownSafe: number[];
+};
+export type ProofVisual = {
+  groups: TeachingGroup[];
+  result: number[];
+  mineCount: number;
+};
+export type ProofDerivation = {
+  title: string;
+  text: string;
+  dependencies: number[];
+  clues: number[];
+  visual?: ProofVisual;
+};
+
 export type Proof = {
   index: number;
   reason: string;
   supportingCells: number[];
+  derivation?: ProofDerivation;
 };
 
 export type Deductions = {
@@ -60,7 +82,12 @@ export type ReplayResult = {
   finalBoard: VisibleCell[];
 };
 
-type Constraint = { cells: number[]; count: number; source: number[] };
+type Constraint = {
+  cells: number[];
+  count: number;
+  source: number[];
+  teaching?: { description: string; dependencies: number[]; group: TeachingGroup };
+};
 
 function around(index: number, rows: number, columns: number): number[] {
   const row = Math.floor(index / columns);
@@ -100,6 +127,7 @@ export function deduceVisibleBoard(
   columns: number,
   mineCount: number,
   cells: readonly VisibleCell[],
+  explain = false,
 ): Deductions {
   const total = rows * columns;
   if (
@@ -123,12 +151,35 @@ export function deduceVisibleBoard(
     index: number,
     reason: string,
     source: number[],
+    derivation?: ProofDerivation,
   ): boolean {
     if (safe.has(index) || mines.has(index) || cells[index].revealed) return false;
-    target.set(index, { index, reason, supportingCells: [...source] });
+    target.set(index, {
+      index,
+      reason,
+      supportingCells: [...source],
+      ...(derivation ? { derivation } : {}),
+    });
     return true;
   }
 
+  function coordinates(indices: readonly number[]) {
+    if (indices.length === 0) return "none";
+    const shown = indices
+      .slice(0, 12)
+      .map((index) => `R${Math.floor(index / columns) + 1}C${(index % columns) + 1}`);
+    return (
+      shown.join(", ") + (indices.length > 12 ? ` and ${indices.length - 12} more` : "")
+    );
+  }
+  function constraintText(c: Constraint) {
+    return c.teaching?.description ?? "";
+  }
+  function conclusion(count: number, indices: number[]) {
+    return count === 0
+      ? `There are 0 mines among these ${indices.length} remaining squares, so all are safe: ${coordinates(indices)}.`
+      : `There are ${count} mines in exactly ${indices.length} remaining squares, so every one is a mine: ${coordinates(indices)}.`;
+  }
   for (let pass = 0; pass < total * 2 + 2; pass += 1) {
     let changed = false;
     const constraints: Constraint[] = [];
@@ -149,7 +200,28 @@ export function deduceVisibleBoard(
         return { safe: [], mines: [] };
       }
       if (unknown.length > 0) {
-        constraints.push({ cells: unknown, count: remaining, source: [index] });
+        const constraint: Constraint = {
+          cells: unknown,
+          count: remaining,
+          source: [index],
+        };
+        if (explain) {
+          const knownMines = neighbours.filter((near) => mines.has(near));
+          const knownSafe = neighbours.filter((near) => safe.has(near));
+          constraint.teaching = {
+            dependencies: [...knownMines, ...knownSafe],
+            group: {
+              clue: index,
+              originalCount: cell.adjacentMines,
+              remainingMines: remaining,
+              cells: unknown,
+              knownMines,
+              knownSafe,
+            },
+            description: `Clue ${coordinates([index])} shows ${cell.adjacentMines}: exactly that many touching squares contain mines. Earlier deductions account for ${knownMines.length} mines (${coordinates(knownMines)}) and ${knownSafe.length} covered safe squares (${coordinates(knownSafe)}). Subtract the known mines: ${cell.adjacentMines} - ${knownMines.length} = ${remaining} mines among ${unknown.length} unresolved neighbors (${coordinates(unknown)}).`,
+          };
+        }
+        constraints.push(constraint);
       }
     }
 
@@ -165,7 +237,26 @@ export function deduceVisibleBoard(
       return { safe: [], mines: [] };
     }
     if (unknownGlobally.length > 0) {
-      constraints.push({ cells: unknownGlobally, count: minesRemaining, source: [] });
+      const constraint: Constraint = {
+        cells: unknownGlobally,
+        count: minesRemaining,
+        source: [],
+      };
+      if (explain) {
+        constraint.teaching = {
+          dependencies: [...mines.keys(), ...safe.keys()],
+          group: {
+            clue: null,
+            originalCount: mineCount,
+            remainingMines: minesRemaining,
+            cells: unknownGlobally,
+            knownMines: [...mines.keys()],
+            knownSafe: [...safe.keys()],
+          },
+          description: `The board contains ${mineCount} mines in total. Earlier deductions proved ${mines.size} mines and ${safe.size} covered safe squares. Revealed squares are already safe. That leaves ${mineCount} - ${mines.size} = ${minesRemaining} mines among ${unknownGlobally.length} unresolved covered squares (${coordinates(unknownGlobally)}).`,
+        };
+      }
+      constraints.push(constraint);
     }
 
     // If a constraint has no remaining mines, all of its unknown cells are safe.
@@ -179,8 +270,28 @@ export function deduceVisibleBoard(
         constraint.source.length === 0
           ? `Total mine count proves this cell is ${kind}.`
           : `Visible number at ${label(constraint.source[0], columns)} proves this cell is ${kind}.`;
+      const derivation: ProofDerivation | undefined = explain
+        ? {
+            title:
+              constraint.source.length === 0
+                ? "Total mine count"
+                : constraint.count === 0
+                  ? "Remaining squares are safe"
+                  : "All remaining squares are mines",
+            text: `${constraintText(constraint)} ${conclusion(constraint.count, constraint.cells)}`,
+            dependencies: constraint.teaching?.dependencies ?? [],
+            clues: constraint.source,
+            visual: constraint.teaching
+              ? {
+                  groups: [constraint.teaching.group],
+                  result: constraint.cells,
+                  mineCount: constraint.count,
+                }
+              : undefined,
+          }
+        : undefined;
       for (const index of constraint.cells) {
-        changed = add(target, index, reason, constraint.source) || changed;
+        changed = add(target, index, reason, constraint.source, derivation) || changed;
       }
     }
     if (changed) continue; // Simplify constraints with fresh proofs first.
@@ -199,8 +310,29 @@ export function deduceVisibleBoard(
         const kind = remaining === 0 ? "safe" : "a mine";
         const evidence = [...new Set([...a.source, ...b.source])];
         const reason = `Comparing visible number constraints proves this cell is ${kind}.`;
+        const derivation: ProofDerivation | undefined = explain
+          ? {
+              title: "Overlapping clues — subset subtraction",
+              text: `Group A: ${constraintText(a)} Group B: ${constraintText(b)} Every unresolved square in A also belongs to B. Subtract A from B: ${b.count} - ${a.count} = ${remaining} mines in the ${difference.length} extra squares (${coordinates(difference)}). ${conclusion(remaining, difference)}`,
+              dependencies: [
+                ...new Set([
+                  ...(a.teaching?.dependencies ?? []),
+                  ...(b.teaching?.dependencies ?? []),
+                ]),
+              ],
+              clues: evidence,
+              visual:
+                a.teaching && b.teaching
+                  ? {
+                      groups: [a.teaching.group, b.teaching.group],
+                      result: difference,
+                      mineCount: remaining,
+                    }
+                  : undefined,
+            }
+          : undefined;
         for (const index of difference) {
-          changed = add(target, index, reason, evidence) || changed;
+          changed = add(target, index, reason, evidence, derivation) || changed;
         }
       }
     }

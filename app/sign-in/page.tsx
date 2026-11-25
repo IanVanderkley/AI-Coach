@@ -28,9 +28,8 @@ export default function SignInPage() {
               <span className="title-period">.</span>
             </h2>
             <p className="auth-copy-text">
-              Your account will eventually connect your Ranked record, game history,
-              Current Focus, and conversations with the AI coach. For now, this page is
-              the visual shell for that system.
+              Your account connects saved Practice history, Ranked results, and coaching
+              preferences across devices.
             </p>
 
             <div className="auth-benefits">
@@ -44,8 +43,9 @@ export default function SignInPage() {
               <div>
                 <ShieldCheck size={19} aria-hidden="true" />
                 <span>
-                  <strong>Private by default</strong>
-                  Coaching history and conversations stay tied to your account.
+                  <strong>Account-scoped data</strong>
+                  Saved game history and coaching preferences are account-scoped.
+                  Leaderboard visibility is controlled in Settings.
                 </span>
               </div>
             </div>

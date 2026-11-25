@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/play/navbar";
-import { SettingsPanel } from "@/components/settings/settings-panel";
-import { LeaderboardPrivacy } from "@/components/leaderboard/leaderboard-privacy";
+import { SettingsWorkspace } from "@/components/settings/settings-workspace";
+
+export const dynamic = "force-dynamic";
 
 export default function SettingsPage() {
   return (
@@ -13,16 +14,19 @@ export default function SettingsPage() {
       <main className="page-shell settings-page" id="main-content" tabIndex={-1}>
         <div className="page-heading settings-heading">
           <div>
-            <p className="eyebrow">MAKE COACHING YOURS</p>
+            <p className="eyebrow">MAKE AI-COACH YOURS</p>
             <h1>
               Settings<span className="title-period">.</span>
             </h1>
-            <p className="page-subtitle">Choose how your coach communicates with you.</p>
+            <p className="page-subtitle">
+              Manage your account, coaching preferences, replay and privacy.
+            </p>
           </div>
         </div>
 
-        <SettingsPanel />
-        <LeaderboardPrivacy />
+        <SettingsWorkspace
+          deletionEnabled={process.env.ACCOUNT_DELETION_ENABLED === "true"}
+        />
       </main>
     </>
   );

@@ -75,7 +75,7 @@ export function Navbar() {
     }
 
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut({ scope: "local" });
       if (error) {
         setSignOutError("Could not sign out. Please try again.");
         return;
