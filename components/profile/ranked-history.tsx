@@ -16,8 +16,10 @@ type HistoryState =
 // AI_COACH_PLAYER_DASHBOARD_V1: share only the same already-validated recent rows with the overview.
 export function RankedHistory({
   onRecentMatches,
+  summaryOnly = false,
 }: {
   onRecentMatches?: (matches: RankedHistoryEntry[] | null) => void;
+  summaryOnly?: boolean;
 }) {
   const [state, setState] = useState<HistoryState>({ kind: "loading" });
   const [revision, setRevision] = useState(0);
@@ -67,6 +69,8 @@ export function RankedHistory({
   useEffect(() => {
     onRecentMatches?.(state.kind === "ready" ? state.matches : null);
   }, [state, onRecentMatches]);
+
+  if (summaryOnly) return null;
 
   const matches = state.kind === "ready" ? state.matches : [];
   const wins = matches.filter((game) => game.outcome === "won").length;

@@ -29,6 +29,8 @@ export function RankedMatchXpReceipt({
         const result = await loadRankedMatchXpReceipt(matchId);
         if (!active) return;
         if (result.state === "earned") {
+          if (result.outcome === expectedOutcome)
+            window.dispatchEvent(new Event("ai-coach:xp-updated"));
           // Refuse to display any receipt that disagrees with the verified game result.
           setState(
             result.outcome === expectedOutcome

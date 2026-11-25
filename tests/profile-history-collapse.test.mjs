@@ -1,29 +1,24 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-const practice = readFileSync("components/profile/practice-profile.tsx", "utf8");
-const ranked = readFileSync("components/profile/ranked-history.tsx", "utf8");
-const page = readFileSync("app/profile/page.tsx", "utf8");
-const css = readFileSync("styles/profile-history-controls.css", "utf8");
+const read = (path) => readFileSync(path, "utf8");
+const practice = read("components/profile/practice-profile.tsx");
+const ranked = read("components/profile/ranked-history.tsx");
+const coaching = read("components/coach/coach-console.tsx");
+const coachPage = read("app/coaching/page.tsx");
+const css = read("styles/profile-history-controls.css");
 
-test("Practice section has the requested explicit history title and recent count", () => {
-  assert.match(practice, /Recent Practice Matches/);
-  assert.doesNotMatch(practice, /<h2>Recent Games<\/h2>/);
-  assert.match(practice, /String\(summary\.total\) \+ " matches"/);
-  assert.match(practice, /Recent completed Practice games/);
+test("Practice match history appears in Coaching, not the statistics dashboard", () => {
+  assert.doesNotMatch(practice, /Recent Practice Matches|practice-history-body/);
+  assert.match(coaching, /Recent Practice Matches/);
+  assert.match(coaching, /className="coach-history-list"/);
 });
-
-test("Practice expansion is independent, initially open and reversible", () => {
-  assert.match(
-    practice,
-    /const \[practiceExpanded, setPracticeExpanded\] = useState\(true\)/,
-  );
-  assert.match(practice, /setPracticeExpanded\(\(current\) => !current\)/);
-  assert.match(practice, /aria-expanded=\{practiceExpanded\}/);
-  assert.match(practice, /aria-controls="practice-history-body"/);
-  assert.match(practice, /id="practice-history-body"\s+hidden=\{!practiceExpanded\}/);
+test("Ranked match history is visible only on the Coaching history screen", () => {
+  assert.match(coaching, /<RankedHistory \/>/);
+  assert.match(coaching, /Replay\s+coaching\s+currently\s+supports\s+Practice\s+only/);
+  assert.match(practice, /summaryOnly/);
+  assert.match(ranked, /if \(summaryOnly\) return null/);
 });
-
 test("Ranked expansion is independent, initially open and reversible", () => {
   assert.match(ranked, /Recent Ranked Matches/);
   assert.match(ranked, /const \[rankedExpanded, setRankedExpanded\] = useState\(true\)/);
@@ -32,31 +27,25 @@ test("Ranked expansion is independent, initially open and reversible", () => {
   assert.match(ranked, /aria-controls="ranked-history-body"/);
   assert.match(ranked, /id="ranked-history-body"\s+hidden=\{!rankedExpanded\}/);
 });
-
-test("Collapsing hides history visually without deleting or refetching records", () => {
+test("History relocation does not remove stored games or review actions", () => {
   assert.match(practice, /repository\.listRecent\(\)/);
-  assert.match(practice, /games\.map\(\(game\) =>/);
-  assert.match(practice, /Review game/);
+  assert.match(coaching, /games\.map\(\(game\) =>/);
+  assert.match(coaching, /Review game/);
   assert.match(ranked, /fetch\("\/api\/ranked\/history"/);
   assert.match(ranked, /matches\.map\(\(game, index\) =>/);
   assert.match(ranked, /ranked-history-summary/);
-  // The collapse button only toggles visibility; it never clears game records.
   assert.match(
-    practice,
-    /onClick=\{\(\) => setPracticeExpanded\(\(current\) => !current\)\}/,
+    ranked,
+    /onRecentMatches\?\.\(state\.kind === "ready" \? state\.matches : null\)/,
   );
 });
-
-test("Both toggles are keyboard-accessible native buttons", () => {
-  for (const source of [practice, ranked]) {
-    assert.match(source, /type="button"[\s\S]*?aria-expanded=\{/);
-    assert.match(source, /className="profile-history-toggle"/);
-    assert.match(source, /<ChevronDown/);
-  }
+test("Ranked history toggle remains a keyboard-accessible native button", () => {
+  assert.match(ranked, /type="button"[\s\S]*?aria-expanded=\{/);
+  assert.match(ranked, /className="profile-history-toggle"/);
+  assert.match(ranked, /<ChevronDown/);
 });
-
-test("Profile styles show keyboard focus and honor reduced-motion preferences", () => {
-  assert.match(page, /profile-history-controls\.css/);
+test("Coaching loads history styles with keyboard focus and reduced motion", () => {
+  assert.match(coachPage, /profile-history-controls\.css/);
   assert.match(css, /focus-visible/);
   assert.match(css, /\[hidden\]/);
   assert.match(css, /prefers-reduced-motion: reduce/);

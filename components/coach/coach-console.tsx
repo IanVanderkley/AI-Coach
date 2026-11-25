@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { RankedHistory } from "@/components/profile/ranked-history";
 import { ArrowLeft, Clock3, History, Loader2, Play, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CoachReportView } from "@/components/coach/coach-report-view";
@@ -390,6 +391,13 @@ export function CoachConsole() {
               </p>
             </>
           )}
+          <div className="coach-ranked-history">
+            <p className="verified-note">
+              Ranked match history is available here. Replay coaching currently supports
+              Practice only.
+            </p>
+            <RankedHistory />
+          </div>
           <details className="coach-demo-tests">
             <summary>More tools and sample reports</summary>
             <p className="verified-note">

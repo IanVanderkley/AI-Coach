@@ -1,18 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import {
-  CalendarDays,
-  ChevronDown,
-  Clock3,
-  Gamepad2,
-  Play,
-  ShieldCheck,
-} from "lucide-react";
+import { Gamepad2, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { RankedHistory } from "@/components/profile/ranked-history"; // AI_COACH_RANKED_HISTORY_V1
 import { PlayerModeCard } from "@/components/profile/player-mode-card";
+import { ProfileLevelCard } from "@/components/profile/profile-level-card";
 import { PracticeDifficultyStats } from "@/components/profile/practice-difficulty-stats";
 import {
   parseRankedLifetimeResponse,
@@ -33,28 +27,12 @@ import {
 import type { SavedPracticeSession } from "@/lib/practice/history";
 import { createPracticeRepository } from "@/lib/practice/repository";
 
-function formatTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  return `${String(minutes).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 // The revised MVP intentionally does not pretend to have permanent player
 // rankings, lifetime statistics, improvement trends or verified mistake rates.
 export function PracticeProfile() {
   const [games, setGames] = useState<SavedPracticeSession[] | null>(null);
   const [storageMode, setStorageMode] = useState<"local" | "account">("local");
   const [loadError, setLoadError] = useState(false);
-  // AI_COACH_COLLAPSIBLE_HISTORY_V1
-  const [practiceExpanded, setPracticeExpanded] = useState(true);
   // AI_COACH_PLAYER_DASHBOARD_V1: these stats describe available recent records, never all-time results.
   const [rankedMatches, setRankedMatches] = useState<RankedHistoryEntry[] | null>(null);
   // AI_COACH_LIFETIME_RANKED_V1: the lifetime total comes only from an authenticated server endpoint.
@@ -126,15 +104,6 @@ export function PracticeProfile() {
     };
   }, [storageMode, games, loadError]);
 
-  const summary = useMemo(() => {
-    const current = games ?? [];
-    return {
-      wins: current.filter((game) => game.outcome === "win").length,
-      losses: current.filter((game) => game.outcome === "loss").length,
-      total: current.length,
-    };
-  }, [games]);
-
   const practiceStats = useMemo(() => {
     if (games === null || loadError) return null;
     return summarizeRecentOutcomes(games.map((game) => game.outcome));
@@ -169,18 +138,21 @@ export function PracticeProfile() {
             Player Dashboard<span className="title-period">.</span>
           </h1>
           <p className="page-subtitle">
-            Your recent results, mode performance, and match history in one place.
+            Your account progression, results and mode performance in one place.
           </p>
         </div>
-        <div className="profile-actions">
-          <span className="preview-badge">
-            {storageMode === "account"
-              ? "Practice synced to your account"
-              : "Practice history on this device"}
-          </span>
-          <Link className="profile-play-link" href="/">
-            <Gamepad2 size={17} aria-hidden="true" /> Back to Play
-          </Link>
+        <div className="profile-heading-side">
+          <ProfileLevelCard compact />
+          <div className="profile-actions">
+            <span className="preview-badge">
+              {storageMode === "account"
+                ? "Practice synced to your account"
+                : "Practice history on this device"}
+            </span>
+            <Link className="profile-play-link" href="/">
+              <Gamepad2 size={17} aria-hidden="true" /> Back to Play
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -247,99 +219,7 @@ export function PracticeProfile() {
         scope={accountPracticeTracking ? "tracked" : "recent"}
       />
 
-      <div className="player-dashboard-history-heading">
-        <h2>Recent matches</h2>
-        <p>Expand each mode's history for recorded games. These lists remain separate.</p>
-      </div>
-      <RankedHistory onRecentMatches={setRankedMatches} />
-
-      <section
-        className="profile-panel practice-session-card"
-        aria-labelledby="practice-history-title"
-      >
-        <div className="panel-heading-row">
-          <div>
-            <span className="profile-label">
-              RECORDED PRACTICE GAMES · Recent completed Practice games
-            </span>
-            <h2 id="practice-history-title">
-              <button
-                type="button"
-                className="profile-history-toggle"
-                aria-expanded={practiceExpanded}
-                aria-controls="practice-history-body"
-                onClick={() => setPracticeExpanded((current) => !current)}
-              >
-                Recent Practice Matches
-                <ChevronDown
-                  size={18}
-                  aria-hidden="true"
-                  className={
-                    practiceExpanded
-                      ? "profile-history-chevron"
-                      : "profile-history-chevron is-collapsed"
-                  }
-                />
-              </button>
-            </h2>
-            <p className="profile-history-match-count">
-              {games === null ? "Loading matches…" : String(summary.total) + " matches"}
-            </p>
-          </div>
-          <CalendarDays size={24} aria-hidden="true" />
-        </div>
-
-        <div
-          id="practice-history-body"
-          hidden={!practiceExpanded}
-          className="profile-history-body"
-        >
-          {loadError ? (
-            <div className="practice-empty-history" role="alert">
-              <p>
-                Could not load Practice history. Check your connection and refresh this
-                page.
-              </p>
-            </div>
-          ) : games && games.length > 0 ? (
-            <div className="recent-games">
-              {games.map((game) => (
-                <div className="recent-game practice-recent-game" key={game.id}>
-                  <span className={`result-dot ${game.outcome}`} aria-hidden="true" />
-                  <div className="recent-result">
-                    <strong>{game.outcome === "win" ? "Win" : "Loss"}</strong>
-                    <span>
-                      {game.difficulty} · {game.rows} × {game.columns} ·{" "}
-                      {formatDate(game.completedAt)}
-                    </span>
-                  </div>
-                  <span className="recent-detail">
-                    <Clock3 size={14} aria-hidden="true" />{" "}
-                    {formatTime(game.durationSeconds)}
-                  </span>
-                  <span className="recent-detail">{game.moves.length} actions</span>
-                  {/* Verified replay supports both square and rectangular Practice boards. */}
-                  <a
-                    className="practice-review-link"
-                    href={
-                      "/coaching?source=practice&gameId=" + encodeURIComponent(game.id)
-                    }
-                  >
-                    <Play size={14} aria-hidden="true" /> Review game
-                  </a>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="practice-empty-history">
-              <p>Finish a Practice game and it will appear here.</p>
-              <Link className="profile-play-link" href="/">
-                <Gamepad2 size={16} aria-hidden="true" /> Start a Practice Game
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
+      <RankedHistory onRecentMatches={setRankedMatches} summaryOnly />
 
       <p className="profile-disclaimer">
         {storageMode === "account"

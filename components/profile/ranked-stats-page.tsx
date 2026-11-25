@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { RankedHistory } from "@/components/profile/ranked-history";
 import { showRecentCount, showRecentWinRate } from "@/lib/profile/player-dashboard";
 import {
   parseRankedLifetimeResponse,
@@ -130,11 +129,9 @@ export function RankedStatsPage() {
           </p>
         </>
       )}
-      <div className="profile-detail-section-title">
-        <h2>Recent Ranked matches</h2>
-        <p>Your latest completed games appear below, separately from lifetime totals.</p>
-      </div>
-      <RankedHistory />
+      <Link href="/coaching#ranked-history-title" className="profile-detail-play-link">
+        View match history in Coaching
+      </Link>
     </main>
   );
 }
