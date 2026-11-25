@@ -3,11 +3,8 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const marker = "AI_COACH_RANKED_ACTION_CLAIMS_PROBE_V1";
-const routes = [
-  ["flag", "toggle_ranked_flag"],
-  ["chord", "chord_ranked_cell"],
-];
-for (const [action, rpc] of routes) {
+const routes = ["flag", "chord"];
+for (const action of routes) {
   test(`${action} claims mode requires opt-in and default still calls getUser`, () => {
     const source = readFileSync(`app/api/ranked/matches/${action}/route.ts`, "utf8");
     assert.ok(source.includes(marker));
@@ -18,7 +15,8 @@ for (const [action, rpc] of routes) {
     assert.ok(source.includes("supabase.auth.getUser()"));
     assert.ok(source.includes('typeof data?.claims?.sub === "string"'));
     assert.ok(source.includes("if (authError || !verifiedUserId)"));
-    assert.ok(source.includes(`admin.rpc("${rpc}"`));
+    assert.ok(source.includes('admin.rpc("execute_ranked_move",'));
+    assert.ok(source.includes(`p_action: "${action}"`));
     assert.ok(source.includes("p_user_id: verifiedUserId"));
     assert.ok(!source.includes("[Ranked timing]"));
     assert.ok(!source.includes("performance.now()"));

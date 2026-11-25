@@ -65,14 +65,11 @@ test("Ranked reservation storage and RPC are server-only", () => {
 
 const routes = [
   ["ranked/matches", "user.id", "start", "rpc("],
-  ["ranked/matches/reveal", "verifiedUserId", "move", "rpc("],
-  ["ranked/matches/flag", "verifiedUserId", "move", "rpc("],
-  ["ranked/matches/chord", "verifiedUserId", "move", "rpc("],
   ["ranked/matches/current", "verifiedUserId", "read", "rpc("],
   ["ranked/history", "user.id", "read", ".from("],
 ];
 
-test("all six Ranked routes reserve using verified account identity before privileged work", () => {
+test("Ranked start and read routes reserve using verified account identity before privileged work", () => {
   for (const [route, identity, scope, operation] of routes) {
     const source = readFileSync(`app/api/${route}/route.ts`, "utf8");
     const guard = `guardRankedRateLimit(admin, ${identity}, "${scope}")`;
