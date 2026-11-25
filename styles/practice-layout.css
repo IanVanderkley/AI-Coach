@@ -1,0 +1,339 @@
+/* Batch 22F — Practice-only presentation. Ranked and game rules are untouched. */
+.practice-page .mode-row {
+  margin-bottom: 14px;
+}
+.practice-page .practice-difficulty-picker {
+  border: 0;
+  padding: 0;
+  margin: 0 0 20px;
+  min-width: 0;
+}
+.practice-difficulty-picker legend {
+  margin-bottom: 9px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 650;
+}
+.practice-difficulty-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  max-width: 640px;
+}
+.practice-difficulty-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  min-height: 68px;
+  padding: 11px 13px;
+  border: 1px solid var(--ui-secondary-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--surface);
+  cursor: pointer;
+}
+.practice-difficulty-option:has(input:checked) {
+  background: #2a1b1e;
+  border-color: #b62634;
+}
+.practice-difficulty-option:hover {
+  border-color: #ae6269;
+}
+.practice-difficulty-option:has(input:focus-visible) {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+.practice-difficulty-option input {
+  flex: 0 0 auto;
+  accent-color: #e83b45;
+}
+.practice-difficulty-option span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.practice-difficulty-option strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+.practice-difficulty-option small {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.practice-page .play-layout {
+  gap: clamp(14px, 2vw, 24px);
+}
+.practice-page[data-difficulty="expert"] .play-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+.practice-page[data-difficulty="expert"] .coach-sidebar {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.practice-page .game-panel {
+  padding: clamp(12px, 2vw, 22px);
+  border-radius: var(--ui-card-radius);
+}
+.practice-dashboard,
+.practice-controls {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+}
+.practice-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.practice-match-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 650;
+  color: #a9e3bf;
+}
+.practice-match-status > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.practice-match-status[data-status="ready"],
+.practice-match-status[data-status="loading"],
+.practice-match-status[data-status="saved"] {
+  color: var(--text-secondary);
+}
+.practice-match-status[data-status="paused"] {
+  color: #f1c578;
+}
+.practice-match-status[data-status="lost"] {
+  color: #ffb0b6;
+}
+.practice-page .play-layout .game-stats.practice-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  padding: 0;
+  margin: 0 0 12px;
+  min-height: 0;
+  border: 0;
+  align-items: stretch;
+}
+.practice-metrics .stat {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  padding: 13px;
+  background: #202023;
+  border: 1px solid #38383d;
+  border-radius: var(--ui-control-radius);
+}
+.practice-metrics .stat > svg {
+  display: block;
+  color: var(--text-secondary);
+}
+.practice-metrics .stat-label {
+  order: 2;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.practice-metrics .stat-value {
+  margin: 0;
+  font-family: var(--heading-font);
+  font-size: clamp(20px, 2.5vw, 30px);
+  font-weight: 700;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+.practice-metrics .stat-total {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.practice-page .play-layout .game-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 4px;
+  gap: 4px;
+  background: #202023;
+  border: 1px solid #38383d;
+  border-radius: var(--ui-control-radius);
+}
+.practice-page .play-layout .game-controls .mode-button {
+  min-width: 0;
+  min-height: var(--ui-control-height);
+  padding: 6px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+}
+.practice-page .play-layout .game-controls .mode-button.active {
+  background: var(--button-primary-bg);
+  color: white;
+}
+.practice-page .play-layout .game-controls .mode-button.active:hover:not(:disabled) {
+  background: var(--button-primary-hover);
+}
+.practice-page
+  .play-layout
+  .game-controls
+  .mode-button:not(.active):hover:not(:disabled) {
+  background: var(--ui-secondary-hover);
+}
+.practice-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 9px;
+}
+.practice-actions :is(.mode-button, .new-game) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  width: 100%;
+  min-height: var(--ui-control-height);
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-secondary-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-secondary-bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+}
+.practice-actions :is(.mode-button, .new-game):hover:not(:disabled) {
+  background: var(--ui-secondary-hover);
+}
+.practice-actions .pause-button[aria-pressed="true"] {
+  background: var(--button-primary-bg);
+  border-color: var(--button-primary-bg);
+  color: white;
+}
+.practice-actions .pause-button[aria-pressed="true"]:hover:not(:disabled) {
+  background: var(--button-primary-hover);
+}
+.practice-page :is(.game-controls, .practice-actions) button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.practice-page :is(.game-controls, .practice-actions) button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+/* Keep the pause cover outside the scrolling surface so wide boards cannot peek out. */
+.practice-page .play-layout .board-area {
+  container: practice-board / inline-size;
+  position: relative;
+  min-width: 0;
+  overflow: visible;
+  padding: 16px 0 12px;
+}
+.practice-board-scroll {
+  min-width: 0;
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 4px;
+}
+.practice-page .play-layout .minesweeper-board {
+  width: max(
+    calc(var(--board-min-width) + 2px),
+    min(100%, calc(var(--board-columns) * 37px))
+  );
+  max-width: none;
+  margin-inline: auto;
+  padding: 3px;
+  gap: 2px;
+  grid-template-columns: repeat(var(--board-columns), minmax(32px, 1fr));
+}
+.practice-page .practice-board-scroll[data-paused="true"] .minesweeper-board {
+  visibility: hidden;
+}
+.practice-page .practice-board-paused {
+  z-index: 3;
+  inset: 16px 4px 12px;
+  padding: 16px;
+}
+.practice-page .board-scroll-hint {
+  display: none;
+  margin: 0 4px 6px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+@container practice-board (max-width: 320px) {
+  .practice-page[data-difficulty="beginner"] .board-scroll-hint {
+    display: block;
+  }
+}
+@container practice-board (max-width: 558px) {
+  .practice-page[data-difficulty="intermediate"] .board-scroll-hint {
+    display: block;
+  }
+}
+@container practice-board (max-width: 1034px) {
+  .practice-page[data-difficulty="expert"] .board-scroll-hint {
+    display: block;
+  }
+}
+.practice-page .play-layout .board-footer {
+  max-width: 640px;
+  margin-inline: auto;
+  padding: 0;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+.practice-page .board-instructions {
+  flex-wrap: wrap;
+  justify-content: center;
+  line-height: 1.5;
+}
+@media (max-width: 1050px) {
+  .practice-page .play-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .practice-page .coach-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+@media (max-width: 600px) {
+  .practice-page .practice-difficulty-options {
+    gap: 5px;
+  }
+  .practice-difficulty-option {
+    align-items: flex-start;
+    gap: 5px;
+    padding: 9px 6px;
+    min-height: 80px;
+    flex-direction: column;
+  }
+  .practice-difficulty-option strong {
+    font-size: 12px;
+  }
+  .practice-difficulty-option small {
+    font-size: 11px;
+  }
+  .practice-page .play-layout .game-stats.practice-metrics {
+    gap: 5px;
+  }
+  .practice-metrics .stat {
+    padding: 8px 6px;
+  }
+  .practice-metrics .stat-value {
+    font-size: 20px;
+  }
+  .practice-page .coach-sidebar,
+  .practice-page[data-difficulty="expert"] .coach-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
