@@ -14,8 +14,11 @@ export const COACH_SYSTEM_PROMPT = [
   "- Stay strictly inside the given facts. Never invent moves, patterns or positions.",
   "- Keep every number exactly as given; do not round or recalculate.",
   "- Be concrete: name the move number and the square when the brief points to one.",
+  "- For every improvement, explain WHY the move was wrong, not just what happened.",
+  "- Use the supplied clue arithmetic to justify the mistake, and name the safer square when one is given.",
+  "- If the brief calls a guess forced, do not blame the player for it.",
   "- Sound like a calm human coach, not a robot. No emojis. No markdown.",
-  "- Plain English. One sentence per bullet.",
+  "- Plain English.",
   "Answer with JSON only, using exactly these keys:",
   '{"headline": string, "summary": string, "strengths": string[], "improvements": string[], "nextSteps": string[]}',
   "headline: at most 8 words. summary: at most 2 sentences.",
@@ -29,10 +32,12 @@ const TONE_LINES: Record<CoachPreferences["coachingStyle"], string> = {
 };
 
 const DETAIL_LINES: Record<CoachPreferences["explanationDetail"], string> = {
-  brief: "Keep it brief: at most 2 short bullets per section, one sentence each.",
-  standard: "Standard detail: 2 to 4 bullets per section, one sentence each.",
+  brief:
+    "Keep it brief: at most 2 short bullets per section. Each improvement is one sentence.",
+  standard:
+    "Standard detail: 2 to 4 bullets per section. Each improvement says what went wrong and why it was wrong (one or two sentences).",
   detailed:
-    "Detailed: up to 4 bullets per section and explain why each point matters in one extra sentence.",
+    "Detailed: up to 4 bullets per section. Each improvement gives what happened, the clue arithmetic that proved a better move, and the consequence (up to three sentences).",
 };
 
 const EXPERIENCE_LINES: Record<CoachPreferences["experienceLevel"], string> = {
@@ -89,6 +94,11 @@ function bullets(items: string[]): string {
   return items.length > 0 ? items.map((item) => `- ${item}`).join("\n") : "- (none)";
 }
 
+/** Keep one verbose proof from crowding the provider's input budget. */
+function shorten(text: string, max = 420): string {
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
 /** The user message: the game facts plus the rule engine's findings. */
 export function buildCoachPrompt(
   session: GameplaySession,
@@ -142,6 +152,23 @@ export function buildCoachPrompt(
       "",
       `KEY MOMENT: move ${analysis.keyMoment.moveNumber} at row ${analysis.keyMoment.row + 1}, column ${analysis.keyMoment.col + 1} — ${analysis.keyMoment.description}`,
     );
+    if (analysis.keyMoment.why) {
+      lines.push(`WHY: ${analysis.keyMoment.why}`);
+    }
+  }
+
+  if (analysis.mistakes.length > 0) {
+    lines.push("", "MISTAKES TO EXPLAIN (one improvement each, in plain language)");
+    for (const mistake of analysis.mistakes.slice(0, 8)) {
+      lines.push(
+        `- Move ${mistake.moveNumber} at row ${mistake.row + 1}, column ${mistake.col + 1} (${mistake.title})`,
+        `  Why: ${shorten(mistake.why)}`,
+        `  Better: ${shorten(mistake.fix)}`,
+        mistake.betterMove
+          ? `  Safe alternative: row ${mistake.betterMove.row + 1}, column ${mistake.betterMove.col + 1}`
+          : "  Safe alternative: none was proven",
+      );
+    }
   }
 
   lines.push("", "Rewrite the draft above as your JSON answer.");

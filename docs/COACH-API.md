@@ -88,9 +88,23 @@ Response — a `CoachResult`:
       "moveNumber": 9,
       "row": 4,
       "col": 0,
-      "description": "This click hit a mine while 12 provably safe squares were still on the board."
+      "description": "This click hit a mine while 12 provably safe squares were still on the board.",
+      "why": "The 2 at row 5, column 3 already has all 2 mines it needs touching it, so row 5, column 2 cannot be a mine."
     },
     "nextSteps": ["..."],
+    "mistakes": [
+      {
+        "moveNumber": 9,
+        "row": 4,
+        "col": 0,
+        "kind": "fatal-guess",
+        "title": "This guess ended the game",
+        "why": "You revealed row 5, column 1, but nothing on the board proved that square safe. The 2 at row 5, column 3 already has all 2 mines it needs touching it, so row 5, column 2 cannot be a mine. That means row 5, column 2 could have been opened without any risk instead. The click hit a mine, so the risk cost you the game.",
+        "fix": "Open the proven square at row 5, column 2 first, then re-read the numbers around the newly opened area before deciding again.",
+        "betterMove": { "row": 4, "col": 1 },
+        "clues": [{ "row": 4, "col": 2 }]
+      }
+    ],
     "metrics": {
       "totalMoves": 9,
       "reveals": 3,
@@ -150,6 +164,33 @@ differ.
   player had no choice. These do not count against the score.
 
 `avoidableGuesses + forcedGuesses === guesses`.
+
+### Mistake explanations
+
+`report.mistakes` is the move-by-move answer to "why was that wrong?". Each item
+contains:
+
+| Field        | Meaning                                                                                  |
+| ------------ | ---------------------------------------------------------------------------------------- |
+| `moveNumber` | The one-based move in the recorded order.                                                |
+| `row`, `col` | The zero-based square the player acted on.                                               |
+| `kind`       | `avoidable-guess`, `fatal-guess`, `proven-mine` or `wrong-flag`.                         |
+| `title`      | A short label for the report.                                                            |
+| `why`        | What happened and the visible clue arithmetic that proves the move was wrong.            |
+| `fix`        | The concrete habit or move that would have avoided it.                                   |
+| `betterMove` | The provably safe square that was available instead, or `null`.                          |
+| `clues`      | Numbered squares whose arithmetic supports the explanation (empty when no proof exists). |
+
+The explanations come from the deterministic solver, not the model. They only
+use the board visible before the move; the recorded mine layout is used to know
+the outcome, never to claim the player could have seen it. A guess with no
+provable alternative is **not** listed as a mistake, even if it hit a mine. The
+same arithmetic is passed to a configured AI provider and must be reflected in
+its rewritten `improvements`.
+
+The rule coach keeps at most 12 mistake items per report, and the player's
+`explanationDetail` preference controls how many the UI shows (`brief` 2,
+`standard` 5, `detailed` all retained items).
 
 ## Errors and limits
 

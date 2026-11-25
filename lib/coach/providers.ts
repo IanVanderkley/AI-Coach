@@ -8,7 +8,9 @@ import {
 export type { ConfiguredProvider, ProviderId } from "./provider-policy";
 
 // Server-owned hard caps. Provider billing limits are still required separately.
-const MAX_OUTPUT_TOKENS = 512;
+// Detailed mistake explanations need more room than the earlier one-sentence
+// bullets; the prompt still limits the number of items.
+const MAX_OUTPUT_TOKENS = 900;
 const MAX_INPUT_CHARS = 14_000;
 
 // Only an explicitly selected provider and its approved model may run.

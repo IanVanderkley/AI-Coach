@@ -98,6 +98,39 @@ export type CoachKeyMoment = {
   row: number;
   col: number;
   description: string;
+  /**
+   * The board arithmetic behind the moment, when the visible numbers proved
+   * something about the square. Null when only the recorded outcome is known.
+   */
+  why?: string | null;
+};
+
+/** Why a single recorded move was a mistake, in terms the board can prove. */
+export type CoachMistakeKind =
+  | "avoidable-guess"
+  | "fatal-guess"
+  | "proven-mine"
+  | "wrong-flag";
+
+/** A zero-based board square. */
+export type CoachMoveRef = { row: number; col: number };
+
+export type CoachMistake = {
+  moveNumber: number;
+  /** Zero-based square the player acted on. */
+  row: number;
+  col: number;
+  kind: CoachMistakeKind;
+  /** Short label for the mistake, e.g. "A guess while a safe move was available". */
+  title: string;
+  /** What happened, which clues proved it, and why the decision was wrong. */
+  why: string;
+  /** The concrete habit or move that would have avoided the mistake. */
+  fix: string;
+  /** The provably safe square that was available instead, when there was one. */
+  betterMove: CoachMoveRef | null;
+  /** Numbered squares whose arithmetic supports this explanation. */
+  clues: CoachMoveRef[];
 };
 
 /** The report the client renders. Both the rule coach and the AI coach fill it. */
@@ -110,6 +143,8 @@ export type CoachReport = {
   improvements: string[];
   keyMoment: CoachKeyMoment | null;
   nextSteps: string[];
+  /** Move-by-move mistake explanations. Empty when no mistake was provable. */
+  mistakes: CoachMistake[];
   metrics: CoachMetrics | null;
   source: CoachSource;
   /** Provider model name when an AI provider wrote the narrative; null for rules. */
@@ -132,6 +167,7 @@ export type CoachAnalysis = {
   improvements: string[];
   keyMoment: CoachKeyMoment | null;
   nextSteps: string[];
+  mistakes: CoachMistake[];
   /**
    * Plain-language notes about how the analysis was made, e.g. whether the
    * mine layout was available. Shown to the user so the coach is honest about

@@ -177,16 +177,34 @@ export function shapeReportForPreferences<
     strengths: string[];
     improvements: string[];
     nextSteps: string[];
+    mistakes?: unknown[];
   },
 >(report: T, preferences: CoachPreferences): T {
   const maxBullets = preferences.explanationDetail === "brief" ? 2 : Infinity;
+  const maxMistakes =
+    preferences.explanationDetail === "brief"
+      ? 2
+      : preferences.explanationDetail === "detailed"
+        ? Infinity
+        : 5;
   const strengths = report.strengths.slice(0, maxBullets);
   const improvements = report.improvements.slice(0, maxBullets);
   const nextSteps = report.nextSteps.slice(0, maxBullets);
+  const mistakes = Array.isArray(report.mistakes)
+    ? report.mistakes.slice(0, maxMistakes)
+    : undefined;
+
+  const shaped = {
+    ...report,
+    strengths,
+    improvements,
+    nextSteps,
+    ...(mistakes ? { mistakes } : {}),
+  };
 
   // Balanced preserves the rule engine's neutral wording.
   if (preferences.coachingStyle === "balanced") {
-    return { ...report, strengths, improvements, nextSteps };
+    return shaped;
   }
 
   // Prefix only the first bullet in each section: noticeably different tone,
@@ -196,7 +214,7 @@ export function shapeReportForPreferences<
 
   if (preferences.coachingStyle === "encouraging") {
     return {
-      ...report,
+      ...shaped,
       summary: `${report.summary} You have useful feedback to build on in your next game.`,
       strengths: lead(strengths, "Keep building on this: "),
       improvements: lead(improvements, "An opportunity to improve: "),
@@ -206,7 +224,7 @@ export function shapeReportForPreferences<
 
   // Direct delivers the same evidence with concise, action-oriented framing.
   return {
-    ...report,
+    ...shaped,
     summary: `Bottom line: ${report.summary}`,
     strengths,
     improvements: lead(improvements, "Focus on this: "),

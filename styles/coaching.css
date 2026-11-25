@@ -529,6 +529,73 @@
   line-height: 1.6;
 }
 
+/* Move-by-move "why" explanations. */
+.coach-keymoment-why {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.coach-mistakes {
+  margin-top: 26px;
+}
+.coach-mistakes > h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.coach-mistake-list {
+  display: grid;
+  gap: 10px;
+}
+.coach-mistake {
+  padding: 14px 16px;
+  background: #14100e;
+  border-left: 3px solid #6b3a20;
+  border-radius: 0 6px 6px 0;
+}
+.coach-mistake-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.coach-mistake-head strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.coach-mistake-move {
+  padding: 2px 7px;
+  background: #2a1b14;
+  border: 1px solid #4a2a1c;
+  border-radius: 4px;
+  color: #ffb27a;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.coach-mistake p {
+  margin: 0 0 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.coach-mistake .coach-mistake-fix {
+  color: var(--text-primary);
+}
+.coach-mistake-fix span {
+  color: #8fdf9f;
+  font-weight: 600;
+}
+.coach-mistake .coach-coords + .coach-coords {
+  margin-top: 2px;
+}
+
 /* Report rendered under the board as soon as a real game ends. */
 .game-coach-report {
   display: grid;
