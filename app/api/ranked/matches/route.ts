@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
 import { validateRankedStartRequest } from "@/lib/ranked/http-security";
 
 export const runtime = "nodejs";
@@ -36,6 +37,8 @@ export async function POST(request: Request) {
     // The user ID comes from verified authentication,
     // never from a value submitted by the browser.
     const admin = createAdminClient();
+    const rateLimited = await guardRankedRateLimit(admin, user.id, "start");
+    if (rateLimited) return rateLimited;
 
     const { data: matchId, error: databaseError } = await admin.rpc(
       "start_ranked_match",
@@ -45,7 +48,7 @@ export async function POST(request: Request) {
     );
 
     if (databaseError) {
-      console.error("Ranked match creation failed:", databaseError);
+      console.error("Ranked match creation failed:");
 
       return Response.json(
         { error: "Could not start Ranked match." },
@@ -70,7 +73,7 @@ export async function POST(request: Request) {
       { status: 200, headers },
     );
   } catch (error) {
-    console.error("Ranked match API error:", error);
+    console.error("Ranked match API error:");
 
     return Response.json(
       { error: "Ranked service is temporarily unavailable." },

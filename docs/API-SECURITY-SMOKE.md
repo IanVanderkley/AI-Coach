@@ -1,0 +1,5 @@
+# Local API security smoke checks
+
+Start the local application with `node scripts/run-local.mjs`. From a second terminal run `node scripts/check-api-security.mjs`. Use localhost, not a hosted deployment. The runner accepts only the two literal loopback URLs on port 3000, sends no credentials, follows no redirects, and prints statuses rather than response bodies. It makes a small number of requests, not a load test. Public successful reads consume their normal admission counters.
+
+The checks exercise actual HTTP routing, anonymous access boundaries, cross-origin request rejection, request parsing and size restrictions, no-store headers, and exact public response fields. The Node unit tests use fake responses to verify the runner itself. They do not replace the live smoke run. SQL rollback tests and authenticated browser checks separately cover rate-limit exhaustion, ownership, stale move rejection, privacy settings, and reward integrity. Hosting, performance, edge protection, authenticated multi-user testing, and production readiness remain separate verification tasks.

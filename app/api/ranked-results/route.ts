@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { admitPublicRead } from "@/lib/http/public-read-limit";
 import { createClient } from "@/lib/supabase/sever";
 import {
   parseRankedBoardQuery,
@@ -32,6 +33,8 @@ export async function GET(request: Request): Promise<Response> {
 
   try {
     const admin = createAdminClient();
+    const denied = await admitPublicRead(admin, "verified_results");
+    if (denied) return denied;
     const { data, error } = await admin
       .from("ranked_public_fastest")
       .select("duration_ms, finished_at")
@@ -55,7 +58,7 @@ export async function GET(request: Request): Promise<Response> {
       { status: 200, headers },
     );
   } catch (error) {
-    console.error("Verified Ranked leaderboard unavailable:", error);
+    console.error("Verified Ranked leaderboard unavailable:");
     return unavailable();
   }
 }

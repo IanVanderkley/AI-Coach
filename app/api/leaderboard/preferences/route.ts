@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/sever";
 import { PUBLIC_USERNAME_PATTERN } from "@/lib/leaderboard/public-standings";
+import { readBoundedJson } from "@/lib/http/request-security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,21 +51,8 @@ export async function GET() {
 /** Save only owner-controlled display name and privacy choice. Not Elo or XP. */
 export async function PUT(request: Request) {
   try {
-    const origin = request.headers.get("origin");
-    if (origin && origin !== new URL(request.url).origin) {
-      return Response.json(
-        { error: "Invalid request origin." },
-        { status: 403, headers },
-      );
-    }
-    if (
-      request.headers.get("content-type")?.split(";")[0].trim() !== "application/json"
-    ) {
-      return Response.json({ error: "Expected JSON." }, { status: 415, headers });
-    }
-    if (Number(request.headers.get("content-length") ?? 0) > 2048) {
-      return Response.json({ error: "Request too large." }, { status: 413, headers });
-    }
+    const parsed = await readBoundedJson(request, 2048, true);
+    if (!parsed.ok) return parsed.response;
     const auth = await createClient();
     const {
       data: { user },
@@ -72,30 +60,7 @@ export async function PUT(request: Request) {
     } = await auth.auth.getUser();
     if (error || !user)
       return Response.json({ error: "Sign in first." }, { status: 401, headers });
-    // Enforce the size limit while reading, even when Content-Length is absent.
-    const reader = request.body?.getReader();
-    if (!reader)
-      return Response.json({ error: "Missing body." }, { status: 400, headers });
-    const decoder = new TextDecoder();
-    let body = "";
-    let bodyBytes = 0;
-    while (true) {
-      const chunk = await reader.read();
-      if (chunk.done) break;
-      bodyBytes += chunk.value.byteLength;
-      if (bodyBytes > 2048) {
-        await reader.cancel();
-        return Response.json({ error: "Request too large." }, { status: 413, headers });
-      }
-      body += decoder.decode(chunk.value, { stream: true });
-    }
-    body += decoder.decode();
-    let value: unknown;
-    try {
-      value = JSON.parse(body);
-    } catch {
-      return Response.json({ error: "Invalid JSON." }, { status: 400, headers });
-    }
+    const value = parsed.value;
     if (!value || typeof value !== "object" || Array.isArray(value)) {
       return Response.json({ error: "Invalid settings." }, { status: 400, headers });
     }

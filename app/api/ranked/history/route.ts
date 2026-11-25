@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
 import { createClient } from "@/lib/supabase/sever";
 import { RANKED_HISTORY_LIMIT, serializeRankedHistory } from "@/lib/ranked/history";
 
@@ -23,6 +24,8 @@ export async function GET() {
     }
 
     const admin = createAdminClient();
+    const rateLimited = await guardRankedRateLimit(admin, user.id, "read");
+    if (rateLimited) return rateLimited;
     const { data: matches, error: matchesError } = await admin
       .from("ranked_matches")
       .select(
@@ -64,7 +67,7 @@ export async function GET() {
     // Omit account IDs, hidden mines, flags, and internal match UUIDs.
     return Response.json({ matches: history }, { status: 200, headers });
   } catch (error) {
-    console.error("Ranked history lookup failed:", error);
+    console.error("Ranked history lookup failed:");
     return Response.json(
       { error: "Ranked history is temporarily unavailable." },
       { status: 503, headers },
