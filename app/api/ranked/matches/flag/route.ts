@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
 import { readRankedMoveJson } from "@/lib/ranked/http-security";
+import { isRankedMoveRevision } from "@/lib/ranked/move-revision";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   const payload = body as Record<string, unknown>;
-  const { matchId, row, column } = payload;
+  const { matchId, row, column, expectedMoveCount } = payload;
 
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -82,6 +83,14 @@ export async function POST(request: Request) {
     // Step 2: Ask the database to toggle the flag.
     // The SQL function verifies match ownership,
     // checks the board rules, and records the move.
+    // The browser supplies the revision it actually observed, not authority to move.
+    if (!isRankedMoveRevision(expectedMoveCount)) {
+      return Response.json(
+        { error: "Refresh Ranked before sending another move." },
+        { status: 400, headers },
+      );
+    }
+
     const admin = createAdminClient();
     const rateLimited = await guardRankedRateLimit(admin, verifiedUserId, "move");
     if (rateLimited) return rateLimited;
@@ -91,8 +100,16 @@ export async function POST(request: Request) {
       p_user_id: verifiedUserId,
       p_row: row,
       p_column: column,
+      p_expected_move_count: expectedMoveCount,
     });
     if (flagError) {
+      if (flagError.code === "PT409") {
+        return Response.json(
+          { error: "The Ranked board changed. Reloading the current match." },
+          { status: 409, headers },
+        );
+      }
+
       console.error("Ranked flag failed:");
 
       const rejected = flagError.code === "P0001";

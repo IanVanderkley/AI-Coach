@@ -120,7 +120,7 @@ export default function RankedPage() {
         rememberMatchId(null);
         setBoard(null);
         setNoMatch(true);
-        return;
+        return true;
       }
 
       if (response.status === 401) {
@@ -128,7 +128,7 @@ export default function RankedPage() {
         setBoard(null);
         setNoMatch(false);
         setError("Sign in to play Ranked.");
-        return;
+        return false;
       }
 
       if (!response.ok) {
@@ -140,8 +140,12 @@ export default function RankedPage() {
 
       setBoard(data);
       setNoMatch(false);
+      return true;
     } catch {
+      setBoard(null);
+      setNoMatch(false);
       setError("Could not connect to Ranked. Please try again.");
+      return false;
     } finally {
       setLoading(false);
     }
@@ -198,6 +202,7 @@ export default function RankedPage() {
         },
         body: JSON.stringify({
           matchId: board.matchId,
+          expectedMoveCount: board.moveCount,
           row,
           column,
           firstMoveDone: board.firstMoveDone,
@@ -214,7 +219,9 @@ export default function RankedPage() {
 
       if (
         verifiedResult.matchId !== board.matchId ||
-        !Array.isArray(verifiedResult.revealedCells)
+        !Array.isArray(verifiedResult.revealedCells) ||
+        verifiedResult.moveCount !== board.moveCount + 1 ||
+        !["active", "won", "lost"].includes(verifiedResult.status)
       ) {
         throw new Error("Invalid response from the Ranked server.");
       }
@@ -246,9 +253,16 @@ export default function RankedPage() {
         };
       });
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Could not process your Ranked move.",
-      );
+      // A failed response does not prove the transaction failed. Never replay it.
+      const recovered = await loadBoard();
+      if (recovered) {
+        setError(
+          (error instanceof Error
+            ? error.message
+            : "Could not process your Ranked move.") +
+            " Board refreshed. If the match ended, check Ranked history.",
+        );
+      }
     } finally {
       setPendingCell(null);
       moveInFlight.current = false;
@@ -286,6 +300,7 @@ export default function RankedPage() {
         },
         body: JSON.stringify({
           matchId: board.matchId,
+          expectedMoveCount: board.moveCount,
           row,
           column,
         }),
@@ -303,7 +318,7 @@ export default function RankedPage() {
         result.column !== column ||
         typeof result.flagged !== "boolean" ||
         typeof result.flagCount !== "number" ||
-        typeof result.moveCount !== "number"
+        result.moveCount !== board.moveCount + 1
       ) {
         throw new Error("Invalid response from the Ranked server.");
       }
@@ -328,9 +343,16 @@ export default function RankedPage() {
         };
       });
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Could not process your Ranked flag.",
-      );
+      // A failed response does not prove the transaction failed. Never replay it.
+      const recovered = await loadBoard();
+      if (recovered) {
+        setError(
+          (error instanceof Error
+            ? error.message
+            : "Could not process your Ranked flag.") +
+            " Board refreshed. If the match ended, check Ranked history.",
+        );
+      }
     } finally {
       setPendingCell(null);
       moveInFlight.current = false;
@@ -397,7 +419,12 @@ export default function RankedPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ matchId: board.matchId, row, column }),
+        body: JSON.stringify({
+          matchId: board.matchId,
+          expectedMoveCount: board.moveCount,
+          row,
+          column,
+        }),
       });
 
       const result = await response.json();
@@ -411,7 +438,7 @@ export default function RankedPage() {
       if (
         verifiedResult.matchId !== board.matchId ||
         !Array.isArray(verifiedResult.revealedCells) ||
-        typeof verifiedResult.moveCount !== "number" ||
+        verifiedResult.moveCount !== board.moveCount + 1 ||
         !["active", "won", "lost"].includes(verifiedResult.status)
       ) {
         throw new Error("Invalid response from the Ranked server.");
@@ -442,9 +469,16 @@ export default function RankedPage() {
         };
       });
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Could not process your Ranked chord.",
-      );
+      // A failed response does not prove the transaction failed. Never replay it.
+      const recovered = await loadBoard();
+      if (recovered) {
+        setError(
+          (error instanceof Error
+            ? error.message
+            : "Could not process your Ranked chord.") +
+            " Board refreshed. If the match ended, check Ranked history.",
+        );
+      }
     } finally {
       setPendingCell(null);
       moveInFlight.current = false;
@@ -488,7 +522,19 @@ export default function RankedPage() {
 
         {loading && <p role="status">Loading your Ranked match...</p>}
 
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <div>
+            <p role="alert">{error}</p>
+            <button
+              type="button"
+              className="mode-button"
+              disabled={loading || starting || submittingMove}
+              onClick={() => void loadBoard()}
+            >
+              Refresh Ranked board
+            </button>
+          </div>
+        )}
 
         {noMatch && !loading && (
           <section className="game-panel">

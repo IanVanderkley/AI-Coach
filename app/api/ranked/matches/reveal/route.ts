@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
 import { readRankedMoveJson } from "@/lib/ranked/http-security";
+import { isRankedMoveRevision } from "@/lib/ranked/move-revision";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   const payload = body as Record<string, unknown>;
-  const { matchId, row, column, firstMoveDone } = payload;
+  const { matchId, row, column, expectedMoveCount, firstMoveDone } = payload;
 
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -79,6 +80,14 @@ export async function POST(request: Request) {
       return Response.json(
         { error: "You must sign in to play Ranked." },
         { status: 401, headers },
+      );
+    }
+
+    // The browser supplies the revision it actually observed, not authority to move.
+    if (!isRankedMoveRevision(expectedMoveCount)) {
+      return Response.json(
+        { error: "Refresh Ranked before sending another move." },
+        { status: 400, headers },
       );
     }
 
@@ -150,9 +159,17 @@ export async function POST(request: Request) {
       p_user_id: verifiedUserId,
       p_row: row,
       p_column: column,
+      p_expected_move_count: expectedMoveCount,
     });
 
     if (revealError) {
+      if (revealError.code === "PT409") {
+        return Response.json(
+          { error: "The Ranked board changed. Reloading the current match." },
+          { status: 409, headers },
+        );
+      }
+
       console.error("Ranked reveal failed:");
 
       const rejected = revealError.code === "P0001";
