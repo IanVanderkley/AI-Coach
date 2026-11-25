@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { authError, validEmail } from "@/lib/account/validation";
+import { AccountDeletionForm } from "./account-deletion-form";
 import {
   EMAIL_UNAVAILABLE_MESSAGE,
   isEmailUnavailable,
@@ -103,32 +104,6 @@ export function AccountManagement({ deletionEnabled }: { deletionEnabled: boolea
       return "Signed out of all devices.";
     });
   }
-  function deleteAccount(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!deletionEnabled) return;
-    const form = new FormData(event.currentTarget);
-    const password = String(form.get("password") ?? "");
-    const confirmation = String(form.get("confirmation") ?? "");
-    if (confirmation !== "DELETE" || !password) {
-      setMessage("Enter your current password and type DELETE.");
-      return;
-    }
-    void run(async () => {
-      const response = await fetch("/api/account/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, confirmation }),
-      });
-      const result = await response.json();
-      if (!response.ok || result.deleted !== true)
-        return result.error ?? "Could not delete account.";
-      const client = getSupabaseBrowserClient();
-      await client?.auth.signOut({ scope: "local" }).catch(() => {});
-      router.replace("/sign-in?accountDeleted=1");
-      router.refresh();
-      return "Account deleted.";
-    });
-  }
   return (
     <section className="account-management" aria-labelledby="account-management-title">
       <h2 id="account-management-title">Account management</h2>
@@ -194,29 +169,10 @@ export function AccountManagement({ deletionEnabled }: { deletionEnabled: boolea
               be undone.
             </p>
             {deletionEnabled ? (
-              <form onSubmit={deleteAccount}>
-                <label>
-                  Current password
-                  <input
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                  />
-                </label>
-                <label>
-                  Type DELETE to confirm
-                  <input
-                    name="confirmation"
-                    autoComplete="off"
-                    required
-                    pattern="DELETE"
-                  />
-                </label>
-                <button className="auth-submit" disabled={busy}>
-                  Permanently delete account
-                </button>
-              </form>
+              <AccountDeletionForm
+                key={`${user.id}:${user.email}`}
+                email={user.email ?? ""}
+              />
             ) : (
               <p>
                 Self-service deletion is not enabled until staging verification is
