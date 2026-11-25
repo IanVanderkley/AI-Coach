@@ -53,7 +53,7 @@ export function NavPlayerLevel({
       href="/profile"
       className="nav-player-level nav-level-ring"
       aria-label={description}
-      title={description}
+      data-tip={description}
     >
       <svg
         viewBox="0 0 52 52"

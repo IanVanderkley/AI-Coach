@@ -1,0 +1,391 @@
+/* Batch 22E — shared UI surfaces. Loaded last by RootLayout. Do not style board cells globally. */
+:root {
+  --ui-card-radius: 12px;
+  --ui-control-radius: 8px;
+  --ui-card-padding: clamp(16px, 2.5vw, 24px);
+  --ui-grid-gap: 12px;
+  --ui-control-height: 44px;
+  --ui-secondary-bg: #222222;
+  --ui-secondary-hover: #303030;
+  --ui-secondary-border: #414141;
+}
+.site-tooltip {
+  position: fixed;
+  z-index: 1000;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  padding: 8px 12px;
+  border: 1px solid #5b5053;
+  border-radius: var(--ui-control-radius);
+  background: #242124;
+  color: #fff;
+  box-shadow: 0 6px 18px #0008;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  pointer-events: auto;
+}
+.site-tooltip[hidden] {
+  display: none;
+}
+
+/* Equal-height sibling cards, with action rows aligned even when text wraps. */
+.player-dashboard-mode-grid {
+  align-items: stretch;
+  gap: 16px;
+}
+.player-dashboard-mode-grid:has(.player-mode-body[hidden]) {
+  align-items: start;
+}
+.player-mode-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.player-mode-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.player-mode-header {
+  align-items: center;
+  min-height: 48px;
+}
+.player-mode-label {
+  min-width: 0;
+}
+.player-mode-icon,
+.player-mode-toggle {
+  flex-shrink: 0;
+}
+.player-mode-eyebrow {
+  overflow-wrap: anywhere;
+}
+.player-mode-secondary {
+  gap: 8px;
+}
+.player-mode-secondary > div {
+  min-width: 0;
+  align-content: start;
+}
+.player-mode-context {
+  flex: 1;
+  min-height: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.player-mode-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+.player-mode-actions .player-mode-link,
+.player-mode-actions .player-mode-full-link {
+  flex: 1 1 150px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: var(--ui-control-height);
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #70414a;
+  border-radius: var(--ui-control-radius);
+  color: #ffd0d6;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-decoration: none;
+}
+.player-mode-actions a:hover {
+  background: #433035;
+  color: #fff;
+}
+
+/* Keep mode colours and semantic status accents; standardize the geometry. */
+:is(
+  .player-dashboard-overview,
+  .player-mode-card,
+  .profile-detail-panel,
+  .practice-difficulty-panel,
+  .profile-panel,
+  .profile-level-card,
+  .coach-controls,
+  .coach-report-panel,
+  .focus-panel,
+  .coach-panel,
+  .auth-card,
+  .leaderboard-hero
+),
+.leaderboard-page > .verified-board,
+.settings-workspace
+  :is(
+    .settings-section,
+    .coach-tooltip-settings,
+    .account-management,
+    .leaderboard-privacy
+  ) {
+  border-radius: var(--ui-card-radius);
+  min-width: 0;
+}
+:is(
+  .player-dashboard-overview,
+  .player-mode-card,
+  .profile-detail-panel,
+  .practice-difficulty-panel,
+  .profile-panel,
+  .coach-report-panel
+),
+.leaderboard-page > .verified-board {
+  padding: var(--ui-card-padding);
+}
+:is(
+  .player-dashboard-metrics,
+  .profile-detail-metrics,
+  .practice-difficulty-grid,
+  .coach-metrics,
+  .verified-totals
+) {
+  gap: var(--ui-grid-gap);
+  align-items: stretch;
+}
+:is(
+  .player-dashboard-metric,
+  .profile-detail-metrics > div,
+  .practice-difficulty-card,
+  .coach-metric,
+  .verified-totals > div
+) {
+  min-width: 0;
+  align-content: start;
+  border-radius: var(--ui-control-radius);
+}
+:is(
+    .player-dashboard-metric,
+    .profile-detail-metrics > div,
+    .player-mode-secondary > div,
+    .coach-metric
+  )
+  strong {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+:is(
+    .profile-detail-panel-heading,
+    .practice-difficulty-header,
+    .verified-board-heading,
+    .player-dashboard-heading
+  )
+  > div {
+  min-width: 0;
+}
+:is(
+  .profile-detail-panel-heading h2,
+  .practice-difficulty-header h2,
+  .verified-board-heading h2,
+  .player-dashboard-heading h2,
+  .coach-controls h2,
+  .coach-report-top h3,
+  .profile-panel h2
+) {
+  font-family: var(--heading-font);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+/* Only identified application actions, never board cells or icon-only controls. */
+:is(
+  .auth-submit,
+  .settings-button-primary,
+  .coach-btn:not(.secondary),
+  .practice-result-primary,
+  .evidence-ai-button,
+  .follow-up-submit,
+  .profile-play-link,
+  .practice-review-link
+) {
+  background-color: var(--button-primary-bg);
+  color: #fff;
+  border-radius: var(--ui-control-radius);
+  min-height: var(--ui-control-height);
+  font-weight: 650;
+}
+:is(
+    .auth-submit,
+    .settings-button-primary,
+    .coach-btn:not(.secondary),
+    .practice-result-primary,
+    .evidence-ai-button,
+    .follow-up-submit,
+    .profile-play-link,
+    .practice-review-link
+  ):hover:not(:disabled) {
+  background-color: var(--button-primary-hover);
+  color: #fff;
+}
+:is(
+  .settings-button:not(.settings-button-primary),
+  .coach-btn.secondary,
+  .verified-board-refresh,
+  .verified-board-message button,
+  .ranked-match-xp-refresh,
+  .sign-out-button
+) {
+  border: 1px solid var(--ui-secondary-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-secondary-bg);
+  color: var(--text);
+  min-height: var(--ui-control-height);
+}
+:is(
+    .settings-button:not(.settings-button-primary),
+    .coach-btn.secondary,
+    .verified-board-refresh,
+    .verified-board-message button,
+    .ranked-match-xp-refresh,
+    .sign-out-button
+  ):hover:not(:disabled) {
+  background: var(--ui-secondary-hover);
+  border-color: #656565;
+}
+:is(
+  .settings-button,
+  .auth-submit,
+  .coach-btn,
+  .verified-board-refresh,
+  .ranked-match-xp-refresh,
+  .evidence-ai-button,
+  .follow-up-submit
+):disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+:is(
+    .settings-workspace,
+    .auth-card,
+    .leaderboard-page,
+    .player-dashboard-page,
+    .profile-detail-page
+  )
+  :is(button, a, input, select, summary):focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+/* Existing feedback text retains its content and live-region semantics. */
+:is(
+  .coach-error,
+  .auth-message,
+  .leaderboard-privacy-error,
+  .leaderboard-privacy-saved,
+  .profile-detail-message
+) {
+  border-radius: var(--ui-control-radius);
+  padding: 12px 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+:is(.coach-error, .leaderboard-privacy-error, .auth-message[role="alert"]) {
+  border: 1px solid #67404a;
+  background: #2a1c20;
+  color: #ffb0b6;
+}
+.leaderboard-privacy-saved {
+  border: 1px solid #315640;
+  background: #172820;
+  color: #a9e3bf;
+}
+:is(.coach-placeholder, .verified-board-message) {
+  border-radius: var(--ui-card-radius);
+}
+.nav-account {
+  min-width: 0;
+}
+.nav-account .sign-in {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.nav-account .sign-out-button {
+  white-space: nowrap;
+}
+.verified-board-overflow {
+  overflow-x: auto;
+}
+@media (min-width: 601px) and (max-width: 980px) {
+  .nav-shell {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 16px;
+  }
+  .nav-shell .main-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    height: 54px;
+    max-width: none;
+  }
+  .nav-shell .nav-account {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .nav-shell .brand {
+    min-height: 72px;
+  }
+}
+@media (max-width: 600px) {
+  .nav-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 8px;
+  }
+  .nav-shell .nav-account {
+    grid-column: 2;
+    grid-row: 1;
+    gap: 6px;
+    padding-block: 8px;
+  }
+  .nav-account .sign-in,
+  .nav-account .sign-out-button {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .nav-account .nav-level-ring {
+    width: 40px;
+    height: 40px;
+  }
+  .nav-shell .main-nav {
+    min-width: 0;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .nav-shell .nav-item {
+    flex-shrink: 0;
+  }
+  .player-mode-actions a {
+    flex-basis: 100%;
+  }
+  :is(
+    .player-dashboard-metrics,
+    .profile-detail-metrics,
+    .practice-difficulty-grid,
+    .coach-metrics,
+    .verified-totals
+  ) {
+    gap: 8px;
+  }
+}
+@media (max-width: 400px) {
+  .nav-shell .brand {
+    gap: 6px;
+    font-size: 20px;
+  }
+  .nav-shell .brand-mine {
+    width: 28px;
+    height: 28px;
+  }
+}
