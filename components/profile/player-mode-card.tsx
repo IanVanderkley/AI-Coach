@@ -31,7 +31,9 @@ export function PlayerModeCard({
   const trackedPractice = !ranked && scope === "tracked";
   const label = ranked ? "Ranked" : "Practice";
   const bodyId = `player-${mode}-summary-body`;
-  const historyHref = ranked ? "#ranked-history-title" : "#practice-history-title";
+  const historyHref = ranked
+    ? "/coaching#ranked-history-title"
+    : "/coaching#coach-history-title";
 
   return (
     <section

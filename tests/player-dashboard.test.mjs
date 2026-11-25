@@ -55,7 +55,7 @@ test("missing or failed mode history must not turn into a misleading zero", () =
   assert.equal(showRecentWinRate(0), "0.0%");
 });
 
-test("the profile overview is above both mode cards and the two existing history sections", () => {
+test("the profile overview keeps mode totals and removes individual match lists", () => {
   assert.match(practice, /Player Dashboard/);
   assert.match(practice, /combineRecentStats\(practiceStats, rankedStats\)/);
   assert.match(practice, /mode="ranked"[\s\S]*?stats=\{rankedLifetime\}/);
@@ -63,21 +63,18 @@ test("the profile overview is above both mode cards and the two existing history
     practice,
     /stats=\{accountPracticeTracking\?\.overall \?\? practiceStats\}/,
   );
-  assert.match(practice, /<RankedHistory onRecentMatches=\{setRankedMatches\}/);
+  assert.match(
+    practice,
+    /<RankedHistory onRecentMatches=\{setRankedMatches\} summaryOnly/,
+  );
   assert.ok(
     practice.indexOf("player-dashboard-overview") < practice.indexOf("<PlayerModeCard"),
   );
-  assert.ok(
-    practice.indexOf("<PlayerModeCard") <
-      practice.indexOf("<RankedHistory onRecentMatches"),
+  assert.match(practice, /<ProfileLevelCard compact/);
+  assert.doesNotMatch(
+    practice,
+    /Recent Practice Matches|practice-session-card|practice-history-body/,
   );
-  assert.ok(
-    practice.indexOf("<RankedHistory onRecentMatches") <
-      practice.indexOf("practice-session-card"),
-  );
-  assert.doesNotMatch(practice, /<ProfileLevelCard/);
-  assert.match(practice, /Recent Practice Matches/);
-  assert.match(practice, /Recent completed Practice games/);
   assert.match(practice, /not lifetime statistics/);
 });
 
@@ -95,16 +92,16 @@ test("both mode summary cards collapse independently and preserve history links"
   assert.match(modeCard, /const \[expanded, setExpanded\] = useState\(true\)/);
   assert.match(modeCard, /aria-expanded=\{expanded\}/);
   assert.match(modeCard, /hidden=\{!expanded\}/);
-  assert.match(modeCard, /#ranked-history-title/);
-  assert.match(modeCard, /#practice-history-title/);
+  assert.match(modeCard, /\/coaching#ranked-history-title/);
+  assert.match(modeCard, /\/coaching#coach-history-title/);
   assert.match(dashboardStyles, /\.player-mode-body\[hidden\]/);
 });
 
 test("the navbar displays only verified account level, not RP or fabricated totals", () => {
   assert.match(navbar, /NavPlayerLevel userId=\{user\.id\} pathname=\{pathname\}/);
-  assert.match(navBadge, /loadPlayerLevel\(\)/);
+  assert.match(navBadge, /loadPlayerLevel\(userId\)/);
   assert.match(navBadge, /result\.state !== "ready"/);
-  assert.match(navBadge, /calculateLevelProgress\(result\.totalXp\)\.level/);
+  assert.match(navBadge, /calculateLevelProgress\(result\.totalXp\)/);
   assert.match(navBadge, /loaded\.userId !== userId/);
   assert.doesNotMatch(navBadge, /\.from\(|\.rpc\(|\.update\(|\.insert\(/);
   assert.match(globalStyles, /player-dashboard\.css/);

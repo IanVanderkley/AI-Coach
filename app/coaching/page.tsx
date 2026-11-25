@@ -2,6 +2,7 @@ import { Bot, Sparkles } from "lucide-react";
 
 import { CoachConsole } from "@/components/coach/coach-console";
 import { Navbar } from "@/components/play/navbar";
+import "@/styles/profile-history-controls.css";
 
 export const metadata = {
   title: "AI-Coach | Coaching",

@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Flag, Loader2, RefreshCw } from "lucide-react";
+import {
+  Flag,
+  Loader2,
+  RefreshCw,
+  Play,
+  MousePointer2,
+  Bomb,
+  History,
+} from "lucide-react";
+import styles from "./ranked-layout.module.css";
 import { FeedbackNotice, type FeedbackTone } from "@/components/ui/feedback-notice";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
@@ -90,7 +99,7 @@ const RECOVERED_NOTICE: RankedNotice = {
   tone: "success",
   title: "Board refreshed",
   description:
-    "Your board has been synchronized. Check whether your move was applied before continuing. If the match ended, see Ranked history.",
+    "Your board has been synchronized. Check whether your move was applied before continuing. If the match ended, see your match history in Coaching.",
 };
 
 export default function RankedPage() {
@@ -106,6 +115,7 @@ export default function RankedPage() {
   } | null>(null);
   const [inputMode, setInputMode] = useState<"reveal" | "flag">("reveal");
   const [noMatch, setNoMatch] = useState(false);
+  const [resumeRequired, setResumeRequired] = useState(true);
   const [notice, setNotice] = useState<RankedNotice | null>(null);
   const [dismissedResultMatchId, setDismissedResultMatchId] = useState<string | null>(
     null,
@@ -198,6 +208,7 @@ export default function RankedPage() {
       setBoard(null);
       rememberMatchId(null);
       setInputMode("reveal");
+      setResumeRequired(false);
       await loadBoard();
     } catch {
       setNotice({
@@ -567,58 +578,100 @@ export default function RankedPage() {
         )}
 
         {noMatch && !loading && (
-          <section aria-label="Ranked match setup">
-            <FeedbackNotice
-              tone={starting ? "loading" : "info"}
-              title={starting ? "Starting Ranked match" : "Ready to play?"}
-              description="Start an Intermediate Ranked match to compete for verified results."
-              action={
-                <button
-                  type="button"
-                  data-primary="true"
-                  onClick={startMatch}
-                  disabled={starting}
-                >
-                  {starting ? "Starting..." : "Start Ranked"}
-                </button>
-              }
-            />
+          <section className={styles.launch} aria-label="Ranked match setup">
+            <button
+              type="button"
+              className={styles.playButton}
+              onClick={startMatch}
+              disabled={starting}
+            >
+              {starting ? (
+                <Loader2 className={styles.spinner} size={24} aria-hidden="true" />
+              ) : (
+                <Play size={24} aria-hidden="true" />
+              )}
+              <span>
+                <strong>{starting ? "STARTING MATCH…" : "PLAY INTERMEDIATE"}</strong>
+                <small>Ranked · 16 × 16 · 40 mines</small>
+              </span>
+            </button>
           </section>
         )}
 
-        {board && !loading && (
-          <section className="game-panel">
-            {/* Display the current game information. */}
-            <div
-              className="game-controls"
-              style={{
-                display: "flex",
-                gap: "1rem",
-                flexWrap: "wrap",
+        {board?.status === "active" && !loading && resumeRequired && (
+          <section className={styles.launch} aria-label="Resume Ranked match">
+            <FeedbackNotice
+              tone="info"
+              title="Unfinished Ranked match"
+              description="Your progress has been saved."
+            />
+            <button
+              type="button"
+              className={styles.playButton}
+              disabled={starting || submittingMove}
+              onClick={async () => {
+                if (await loadBoard()) setResumeRequired(false);
               }}
             >
-              <span>Status: {board.status}</span>
-              <span>Moves: {board.moveCount}</span>
+              <History size={24} aria-hidden="true" />
               <span>
-                Flags: {board.flagCount} / {board.mineCount}
+                <strong>RESUME MATCH</strong>
+                <small>Ranked · Intermediate</small>
               </span>
+            </button>
+          </section>
+        )}
+
+        {board && !loading && (!resumeRequired || board.status !== "active") && (
+          <section className="game-panel">
+            <div className={styles.dashboard}>
+              <div className={styles.statusRow}>
+                <span className={styles.matchStatus} data-status={board.status}>
+                  <span aria-hidden="true" />
+                  {board.status === "active"
+                    ? "Match in progress"
+                    : board.status === "won"
+                      ? "Victory"
+                      : "Match completed"}
+                </span>
+                <span className={styles.difficulty}>Ranked · Intermediate</span>
+              </div>
+              <dl className={styles.stats}>
+                <div>
+                  <MousePointer2 size={17} aria-hidden="true" />
+                  <dt>Moves</dt>
+                  <dd>{board.moveCount}</dd>
+                </div>
+                <div>
+                  <Flag size={17} aria-hidden="true" />
+                  <dt>Flags placed</dt>
+                  <dd>
+                    {board.flagCount} <small>/ {board.mineCount}</small>
+                  </dd>
+                </div>
+                <div>
+                  <Bomb size={17} aria-hidden="true" />
+                  <dt>Mines left</dt>
+                  <dd>{Math.max(0, board.mineCount - board.flagCount)}</dd>
+                </div>
+              </dl>
             </div>
 
             {/* Choose what a left-click does. Right-click always toggles a flag. */}
-            <div className="game-controls" role="group" aria-label="Ranked cell action">
+            <div className={styles.controls} role="group" aria-label="Ranked cell action">
               <button
                 type="button"
-                className={inputMode === "reveal" ? "mode-button active" : "mode-button"}
+                className={styles.modeButton}
                 aria-pressed={inputMode === "reveal"}
                 onClick={() => setInputMode("reveal")}
                 disabled={board.status !== "active"}
               >
-                Reveal
+                <MousePointer2 size={17} aria-hidden="true" /> Reveal
               </button>
 
               <button
                 type="button"
-                className={inputMode === "flag" ? "mode-button active" : "mode-button"}
+                className={styles.modeButton}
                 aria-pressed={inputMode === "flag"}
                 onClick={() => setInputMode("flag")}
                 disabled={board.status !== "active" || !board.firstMoveDone}

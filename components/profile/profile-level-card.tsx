@@ -14,7 +14,7 @@ type LevelState =
   | { kind: "ready"; totalXp: number }
   | { kind: "unavailable" };
 
-export function ProfileLevelCard() {
+export function ProfileLevelCard({ compact = false }: { compact?: boolean } = {}) {
   const [state, setState] = useState<LevelState>({ kind: "loading" });
 
   useEffect(() => {
@@ -40,17 +40,32 @@ export function ProfileLevelCard() {
     void refresh();
 
     const client = getSupabaseBrowserClient();
-    const subscription = client?.auth.onAuthStateChange(() => {
-      // Defer Auth API calls outside the callback to avoid Supabase auth lock
-      // contention and ensure the current signed-in user is rechecked.
-      queueMicrotask(() => {
+    let authTimer: ReturnType<typeof setTimeout> | undefined;
+    const subscription = client?.auth.onAuthStateChange((event) => {
+      if (
+        event !== "SIGNED_IN" &&
+        event !== "SIGNED_OUT" &&
+        event !== "USER_UPDATED" &&
+        event !== "INITIAL_SESSION"
+      )
+        return;
+      // Invalidate old account reads immediately; defer new Auth calls outside its callback.
+      revision++;
+      setState({ kind: "loading" });
+      clearTimeout(authTimer);
+      authTimer = setTimeout(() => {
         if (live) void refresh();
-      });
+      }, 0);
     });
+    window.addEventListener("focus", refresh);
+    window.addEventListener("ai-coach:xp-updated", refresh);
     return () => {
       live = false;
       revision++;
+      clearTimeout(authTimer);
       subscription?.data.subscription.unsubscribe();
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("ai-coach:xp-updated", refresh);
     };
   }, []);
 
@@ -58,6 +73,35 @@ export function ProfileLevelCard() {
     () => (state.kind === "ready" ? calculateLevelProgress(state.totalXp) : null),
     [state],
   );
+
+  if (compact) {
+    if (!progress) return null;
+    return (
+      <section className="profile-level-compact" aria-label="Account level progress">
+        <div className="profile-level-compact-label">
+          <strong>LEVEL {progress.level.toLocaleString()}</strong>
+          <span>LEVEL {(progress.level + 1).toLocaleString()}</span>
+        </div>
+        <div
+          className="profile-level-progress-track"
+          role="progressbar"
+          aria-label="XP toward next player level"
+          aria-valuemin={0}
+          aria-valuemax={progress.xpPerLevel}
+          aria-valuenow={progress.xpIntoLevel}
+        >
+          <span style={{ width: `${progress.percent}%` }} />
+        </div>
+        <div className="profile-level-compact-label profile-level-compact-values">
+          <span>
+            {progress.xpIntoLevel.toLocaleString()} /{" "}
+            {progress.xpPerLevel.toLocaleString()} XP
+          </span>
+          <span>{progress.xpToNextLevel.toLocaleString()} XP remaining</span>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="profile-level-card" aria-labelledby="profile-level-title">

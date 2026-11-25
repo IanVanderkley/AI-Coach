@@ -114,7 +114,10 @@ test("Profile shows Ranked history and Ranked page shows honest ladder availabil
   const styles = readFileSync("app/globals.css", "utf8");
   const history = readFileSync("components/profile/ranked-history.tsx", "utf8");
   // AI_COACH_PLAYER_DASHBOARD_TEST_V1: histories supply the dashboard's verified rows.
-  assert.match(profile, /<RankedHistory onRecentMatches=\{setRankedMatches\} \/>/);
+  assert.match(
+    profile,
+    /<RankedHistory onRecentMatches=\{setRankedMatches\} summaryOnly/,
+  );
   assert.match(ranked, /<RankedLadderOverview \/>/);
   assert.match(styles, /ranked-progression\.css/);
   assert.match(history, /fetch\("\/api\/ranked\/history"/);
