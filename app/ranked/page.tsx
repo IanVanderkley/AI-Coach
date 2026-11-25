@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Flag } from "lucide-react";
+import { Flag, Loader2, RefreshCw } from "lucide-react";
+import { FeedbackNotice, type FeedbackTone } from "@/components/ui/feedback-notice";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
@@ -79,6 +80,19 @@ function rememberMatchId(value: string | null) {
   }
 }
 
+type RankedNotice = {
+  tone: FeedbackTone;
+  title: string;
+  description: string;
+  signIn?: boolean;
+};
+const RECOVERED_NOTICE: RankedNotice = {
+  tone: "success",
+  title: "Board refreshed",
+  description:
+    "Your board has been synchronized. Check whether your move was applied before continuing. If the match ended, see Ranked history.",
+};
+
 export default function RankedPage() {
   const [board, setBoard] = useState<RankedBoard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +106,7 @@ export default function RankedPage() {
   } | null>(null);
   const [inputMode, setInputMode] = useState<"reveal" | "flag">("reveal");
   const [noMatch, setNoMatch] = useState(false);
-  const [error, setError] = useState("");
+  const [notice, setNotice] = useState<RankedNotice | null>(null);
   const [dismissedResultMatchId, setDismissedResultMatchId] = useState<string | null>(
     null,
   );
@@ -105,7 +119,7 @@ export default function RankedPage() {
   // Restore the player's visible board from Supabase.
   const loadBoard = useCallback(async () => {
     setLoading(true);
-    setError("");
+    setNotice(null);
 
     try {
       const rememberedMatchId = readRememberedMatchId();
@@ -127,7 +141,12 @@ export default function RankedPage() {
         rememberMatchId(null);
         setBoard(null);
         setNoMatch(false);
-        setError("Sign in to play Ranked.");
+        setNotice({
+          tone: "info",
+          title: "Sign in to play Ranked",
+          description: "Sign in to save your match and earn Ranked rewards.",
+          signIn: true,
+        });
         return false;
       }
 
@@ -144,7 +163,11 @@ export default function RankedPage() {
     } catch {
       setBoard(null);
       setNoMatch(false);
-      setError("Could not connect to Ranked. Please try again.");
+      setNotice({
+        tone: "error",
+        title: "Ranked is unavailable",
+        description: "We could not load your match. Refresh the board to try again.",
+      });
       return false;
     } finally {
       setLoading(false);
@@ -161,7 +184,7 @@ export default function RankedPage() {
   // Create a new match or resume an active one.
   async function startMatch() {
     setStarting(true);
-    setError("");
+    setNotice(null);
 
     try {
       const response = await fetch("/api/ranked/matches", {
@@ -177,7 +200,12 @@ export default function RankedPage() {
       setInputMode("reveal");
       await loadBoard();
     } catch {
-      setError("Could not start Ranked. Please try again.");
+      setNotice({
+        tone: "error",
+        title: "Could not start match",
+        description:
+          "Try again in a moment or refresh your board to recover an active match.",
+      });
     } finally {
       setStarting(false);
     }
@@ -192,7 +220,7 @@ export default function RankedPage() {
     moveInFlight.current = true;
     setPendingCell({ row, column, action: "reveal" });
     setSubmittingMove(true);
-    setError("");
+    setNotice(null);
 
     try {
       const response = await fetch("/api/ranked/matches/reveal", {
@@ -252,16 +280,11 @@ export default function RankedPage() {
           firstMoveDone: true,
         };
       });
-    } catch (error) {
+    } catch {
       // A failed response does not prove the transaction failed. Never replay it.
       const recovered = await loadBoard();
       if (recovered) {
-        setError(
-          (error instanceof Error
-            ? error.message
-            : "Could not process your Ranked move.") +
-            " Board refreshed. If the match ended, check Ranked history.",
-        );
+        setNotice(RECOVERED_NOTICE);
       }
     } finally {
       setPendingCell(null);
@@ -278,7 +301,11 @@ export default function RankedPage() {
 
     // Ranked requires the first reveal before players can place flags.
     if (!board.firstMoveDone) {
-      setError("Reveal a square before placing flags.");
+      setNotice({
+        tone: "warning",
+        title: "Reveal a square first",
+        description: "Open your first square to unlock flagging.",
+      });
       return;
     }
 
@@ -290,7 +317,7 @@ export default function RankedPage() {
     moveInFlight.current = true;
     setPendingCell({ row, column, action: "flag" });
     setSubmittingMove(true);
-    setError("");
+    setNotice(null);
 
     try {
       const response = await fetch("/api/ranked/matches/flag", {
@@ -342,16 +369,11 @@ export default function RankedPage() {
           moveCount: result.moveCount,
         };
       });
-    } catch (error) {
+    } catch {
       // A failed response does not prove the transaction failed. Never replay it.
       const recovered = await loadBoard();
       if (recovered) {
-        setError(
-          (error instanceof Error
-            ? error.message
-            : "Could not process your Ranked flag.") +
-            " Board refreshed. If the match ended, check Ranked history.",
-        );
+        setNotice(RECOVERED_NOTICE);
       }
     } finally {
       setPendingCell(null);
@@ -411,7 +433,7 @@ export default function RankedPage() {
     moveInFlight.current = true;
     setPendingCell({ row, column, action: "chord" });
     setSubmittingMove(true);
-    setError("");
+    setNotice(null);
 
     try {
       const response = await fetch("/api/ranked/matches/chord", {
@@ -468,16 +490,11 @@ export default function RankedPage() {
           durationMs: verifiedResult.durationMs,
         };
       });
-    } catch (error) {
+    } catch {
       // A failed response does not prove the transaction failed. Never replay it.
       const recovered = await loadBoard();
       if (recovered) {
-        setError(
-          (error instanceof Error
-            ? error.message
-            : "Could not process your Ranked chord.") +
-            " Board refreshed. If the match ended, check Ranked history.",
-        );
+        setNotice(RECOVERED_NOTICE);
       }
     } finally {
       setPendingCell(null);
@@ -520,35 +537,52 @@ export default function RankedPage() {
 
         <RankedLadderOverview />
 
-        {loading && <p role="status">Loading your Ranked match...</p>}
+        {loading && (
+          <FeedbackNotice
+            tone="loading"
+            title="Loading Ranked match"
+            description="Retrieving your latest board from the server."
+          />
+        )}
 
-        {error && (
-          <div>
-            <p role="alert">{error}</p>
-            <button
-              type="button"
-              className="mode-button"
-              disabled={loading || starting || submittingMove}
-              onClick={() => void loadBoard()}
-            >
-              Refresh Ranked board
-            </button>
-          </div>
+        {notice && (
+          <FeedbackNotice
+            tone={notice.tone}
+            title={notice.title}
+            description={notice.description}
+            action={
+              notice.signIn ? (
+                <Link href="/sign-in">Sign in</Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled={loading || starting || submittingMove}
+                  onClick={() => void loadBoard()}
+                >
+                  <RefreshCw size={14} aria-hidden="true" /> Refresh Ranked board
+                </button>
+              )
+            }
+          />
         )}
 
         {noMatch && !loading && (
-          <section className="game-panel">
-            <h2>No active Ranked match</h2>
-            <p>Start a new match to begin playing.</p>
-
-            <button
-              type="button"
-              className="mode-button selected"
-              onClick={startMatch}
-              disabled={starting}
-            >
-              {starting ? "Starting..." : "Start Ranked"}
-            </button>
+          <section aria-label="Ranked match setup">
+            <FeedbackNotice
+              tone={starting ? "loading" : "info"}
+              title={starting ? "Starting Ranked match" : "Ready to play?"}
+              description="Start an Intermediate Ranked match to compete for verified results."
+              action={
+                <button
+                  type="button"
+                  data-primary="true"
+                  onClick={startMatch}
+                  disabled={starting}
+                >
+                  {starting ? "Starting..." : "Start Ranked"}
+                </button>
+              }
+            />
           </section>
         )}
 
@@ -594,8 +628,22 @@ export default function RankedPage() {
             </div>
 
             {/* Reserve space so the board does not jump while a move is processed. */}
-            <p role="status" style={{ minHeight: "1.5rem" }}>
-              {submittingMove ? "Processing move..." : " "}
+            <p
+              role="status"
+              style={{
+                minHeight: "1.5rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                color: "#b9bfca",
+                fontSize: "0.8rem",
+              }}
+            >
+              {submittingMove && (
+                <>
+                  <Loader2 size={14} aria-hidden="true" /> Syncing move…
+                </>
+              )}
             </p>
 
             {/* Server-controlled Minesweeper board. */}
@@ -684,22 +732,25 @@ export default function RankedPage() {
 
             {/* Display results after a win or loss. */}
             {board.status !== "active" && (
-              <div className="game-controls">
-                <p role="status">
-                  {board.status === "won"
-                    ? "You won your Ranked match!"
-                    : "Game over! You hit a mine."}
-                </p>
-
-                <button
-                  type="button"
-                  className="mode-button selected"
-                  onClick={startMatch}
-                  disabled={starting}
-                >
-                  {starting ? "Starting..." : "New Ranked Match"}
-                </button>
-              </div>
+              <FeedbackNotice
+                tone={board.status === "won" ? "success" : "warning"}
+                title={board.status === "won" ? "Ranked victory" : "Match completed"}
+                description={
+                  board.status === "won"
+                    ? "Your verified win has been recorded."
+                    : "You hit a mine. Start a new match when you are ready."
+                }
+                action={
+                  <button
+                    type="button"
+                    data-primary="true"
+                    onClick={startMatch}
+                    disabled={starting}
+                  >
+                    {starting ? "Starting..." : "New Ranked Match"}
+                  </button>
+                }
+              />
             )}
           </section>
         )}

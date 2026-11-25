@@ -1,0 +1,123 @@
+.notice {
+  --notice-accent: #a9c7f5;
+  --notice-bg: #191f29;
+  --notice-border: #35465e;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  margin-block: 0.85rem;
+  border: 1px solid var(--notice-border);
+  border-inline-start: 3px solid var(--notice-accent);
+  border-radius: 0.75rem;
+  background: var(--notice-bg);
+  color: #f4f4f5;
+}
+.info,
+.loading {
+  --notice-accent: #a9c7f5;
+}
+.success {
+  --notice-accent: #7bdfab;
+  --notice-bg: #172820;
+  --notice-border: #315640;
+}
+.warning {
+  --notice-accent: #f1c578;
+  --notice-bg: #2b2318;
+  --notice-border: #624c30;
+}
+.error {
+  --notice-accent: #ff9b9f;
+  --notice-bg: #2a1c20;
+  --notice-border: #67404a;
+}
+.icon {
+  flex: 0 0 auto;
+  margin-top: 0.12rem;
+  color: var(--notice-accent);
+}
+.content {
+  flex: 1;
+  min-width: 0;
+}
+.title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--notice-accent);
+}
+.description {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: #d1d1d6;
+  overflow-wrap: anywhere;
+}
+.action {
+  display: flex;
+  align-self: center;
+  flex-shrink: 0;
+}
+.action > :is(button, a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid var(--notice-border);
+  background: #18191d;
+  color: #f4f4f5;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.action > :is(button, a):hover:not(:disabled) {
+  border-color: var(--notice-accent);
+  background: #25262c;
+}
+.action > button[data-primary="true"] {
+  background: #b91c36;
+  border-color: #b91c36;
+  color: #fff;
+}
+.action > button[data-primary="true"]:hover:not(:disabled) {
+  background: #a51b30;
+  border-color: #e26b7d;
+}
+.action > :is(button, a):focus-visible {
+  outline: 2px solid var(--notice-accent);
+  outline-offset: 3px;
+}
+.action > button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.loading .icon {
+  animation: feedback-spin 1s linear infinite;
+}
+@keyframes feedback-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading .icon {
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  .notice {
+    flex-wrap: wrap;
+  }
+  .action {
+    flex-basis: 100%;
+    margin-inline-start: 1.95rem;
+  }
+  .action > :is(button, a) {
+    max-width: 100%;
+  }
+}
