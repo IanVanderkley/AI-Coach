@@ -1,0 +1,16 @@
+# Account deletion verification
+
+Keep `ACCOUNT_DELETION_ENABLED=false` until the staging migration and tests are reviewed. This code replaces password-only deletion; the old request shape is rejected.
+
+The signed-in user provides their current password and types DELETE to request a code. The server verifies the password against the same account, uses verified JWT claims to bind the request to its session, and sends a six-digit random code only to the verified account email. A server-keyed HMAC binds the code to the account, email, session and challenge. The database serializes issuance and consumption, enforces 10 minutes, five guesses, 60-second resend cooldown and five requests per rolling hour. A failed send attempts cancellation without undoing rate limits. The final card requires only the six-digit code and an explicit destructive button. Password and DELETE are checked only at issuance, and never retained in browser state. The server checks the live authenticated user and the verified token session again. Requesting a new code cancels the existing challenge and returns to password verification; issuance limits remain enforced. The server consumes the challenge before revoking all sessions and deleting the account. Cancellation invalidates a matching challenge; refreshing the page discards the browser's challenge ID and requires a new request after the cooldown. Codes are not returned to the browser by the API. The email provider necessarily receives the code for delivery. No secrets should be logged or committed.
+
+## Configuration (local staging only at first)
+
+- Apply the reviewed migration to the staging database, not production, only after validating the application patch. Check table and function grants and execute database integration tests first.
+- Use a restricted Resend sending key for `mindsweepercoach.com` in `RESEND_ACCOUNT_DELETION_API_KEY`. Supabase SMTP settings do not automatically configure this server-side API. Keep the key outside source control.
+- Generate a separate 32-byte HMAC key using `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"` and paste it directly into `ACCOUNT_DELETION_HMAC_KEY` in `.env.local`. Never paste the key into chat or commit it. Keep it stable across server instances; rotation invalidates outstanding codes.
+- Only enable the feature after configuration and verification. The sender is `noreply@mindsweepercoach.com`.
+
+## Staging acceptance
+
+Use a disposable account. Wrong password, wrong code, reused code, expired code, other session, cancelled request, five wrong codes, resend cooldown, and rolling limit must all fail safely. Test successful delivery and final deletion, then check all foreign-key dependent records and sign-in rejection. Recheck feature flag off after testing. Supabase access JWTs may remain cryptographically valid until expiry even after session revocation; password reauthentication is mandatory when issuing a challenge; the final action requires a verified current session and the bound unexpired challenge. Full immediate access revocation across all existing app endpoints is outside this patch. Email step-up is not account-wide MFA. This is not a public-release approval.
