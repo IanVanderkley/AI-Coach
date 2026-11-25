@@ -8,7 +8,7 @@ const css = readFileSync("styles/ranked-input-feedback.css", "utf8");
 test("Ranked input feedback is scoped to Ranked board and per-cell actions", () => {
   assert.match(source, /AI_COACH_RANKED_INPUT_FEEDBACK_V1/);
   assert.match(source, /ranked-server-board/);
-  assert.match(source, /aria-busy=\{isPending\}/);
+  assert.match(source, /aria-busy=\{isPending \|\| isQueued\}/);
   assert.match(css, /\.ranked-server-board \.cell\.ranked-input-pending/);
 });
 

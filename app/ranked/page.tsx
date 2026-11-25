@@ -14,6 +14,12 @@ import styles from "./ranked-layout.module.css";
 import { FeedbackNotice, type FeedbackTone } from "@/components/ui/feedback-notice";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import {
+  appendRankedIntent,
+  MAX_QUEUED_RANKED_MOVES,
+  takeRankedIntent,
+  type RankedMoveIntent,
+} from "@/lib/ranked/input-queue";
 
 import { Navbar } from "@/components/play/navbar";
 import { RankedResultDialog } from "@/components/ranked/ranked-result-dialog";
@@ -123,11 +129,24 @@ export default function RankedPage() {
 
   // Prevent multiple requests from being sent at the same time.
   const moveInFlight = useRef(false);
+  const [queuedMoves, setQueuedMoves] = useState<readonly RankedMoveIntent[]>([]);
+  const queueRef = useRef<readonly RankedMoveIntent[]>([]);
+  const activeMoveRef = useRef<RankedMoveIntent | null>(null);
+  const sentRevisionRef = useRef<{ matchId: string; revision: number } | null>(null);
+  const recoveringRef = useRef(false);
+  const clearQueuedMoves = useCallback(() => {
+    if (queueRef.current.length === 0) return;
+    queueRef.current = [];
+    setQueuedMoves([]);
+  }, []);
   // AI_COACH_RANKED_SINGLE_INITIAL_LOAD_V1: suppress React Strict Mode's duplicate mount effect.
   const initialRecoveryRequested = useRef(false);
 
   // Restore the player's visible board from Supabase.
   const loadBoard = useCallback(async () => {
+    recoveringRef.current = true;
+    clearQueuedMoves();
+    sentRevisionRef.current = null;
     setLoading(true);
     setNotice(null);
 
@@ -180,9 +199,10 @@ export default function RankedPage() {
       });
       return false;
     } finally {
+      recoveringRef.current = false;
       setLoading(false);
     }
-  }, []);
+  }, [clearQueuedMoves]);
 
   // Load the saved game when the page opens.
   useEffect(() => {
@@ -193,6 +213,8 @@ export default function RankedPage() {
 
   // Create a new match or resume an active one.
   async function startMatch() {
+    clearQueuedMoves();
+    sentRevisionRef.current = null;
     setStarting(true);
     setNotice(null);
 
@@ -229,6 +251,8 @@ export default function RankedPage() {
     }
 
     moveInFlight.current = true;
+    activeMoveRef.current = { matchId: board.matchId, row, column, action: "reveal" };
+    sentRevisionRef.current = { matchId: board.matchId, revision: board.moveCount };
     setPendingCell({ row, column, action: "reveal" });
     setSubmittingMove(true);
     setNotice(null);
@@ -299,6 +323,7 @@ export default function RankedPage() {
       }
     } finally {
       setPendingCell(null);
+      activeMoveRef.current = null;
       moveInFlight.current = false;
       setSubmittingMove(false);
     }
@@ -326,6 +351,8 @@ export default function RankedPage() {
     }
 
     moveInFlight.current = true;
+    activeMoveRef.current = { matchId: board.matchId, row, column, action: "flag" };
+    sentRevisionRef.current = { matchId: board.matchId, revision: board.moveCount };
     setPendingCell({ row, column, action: "flag" });
     setSubmittingMove(true);
     setNotice(null);
@@ -388,6 +415,7 @@ export default function RankedPage() {
       }
     } finally {
       setPendingCell(null);
+      activeMoveRef.current = null;
       moveInFlight.current = false;
       setSubmittingMove(false);
     }
@@ -442,6 +470,8 @@ export default function RankedPage() {
     if (flagCount !== selected.adjacentMines || !hasHiddenNeighbor) return;
 
     moveInFlight.current = true;
+    activeMoveRef.current = { matchId: board.matchId, row, column, action: "chord" };
+    sentRevisionRef.current = { matchId: board.matchId, revision: board.moveCount };
     setPendingCell({ row, column, action: "chord" });
     setSubmittingMove(true);
     setNotice(null);
@@ -509,10 +539,90 @@ export default function RankedPage() {
       }
     } finally {
       setPendingCell(null);
+      activeMoveRef.current = null;
       moveInFlight.current = false;
       setSubmittingMove(false);
     }
   }
+
+  // Do not dispatch a second move until the revision from the first response is rendered.
+  function revisionReady() {
+    const sent = sentRevisionRef.current;
+    return (
+      !!board &&
+      (!sent || sent.matchId !== board.matchId || board.moveCount > sent.revision)
+    );
+  }
+
+  function dispatchIntent(intent: RankedMoveIntent) {
+    if (intent.action === "flag") void toggleFlag(intent.row, intent.column);
+    else if (intent.action === "chord") void chordCell(intent.row, intent.column);
+    else void revealCell(intent.row, intent.column);
+  }
+
+  function queueMove(action: RankedMoveIntent["action"], row: number, column: number) {
+    if (
+      !board ||
+      board.status !== "active" ||
+      loading ||
+      starting ||
+      resumeRequired ||
+      recoveringRef.current
+    )
+      return;
+    const intent = { matchId: board.matchId, row, column, action };
+    // Fast path: the first click still starts its request immediately.
+    if (
+      !moveInFlight.current &&
+      !submittingMove &&
+      queueRef.current.length === 0 &&
+      revisionReady()
+    ) {
+      dispatchIntent(intent);
+      return;
+    }
+    const next = appendRankedIntent(queueRef.current, intent, activeMoveRef.current);
+    if (next !== queueRef.current) {
+      queueRef.current = next;
+      setQueuedMoves(next);
+    }
+  }
+
+  // Runs after the board update commits. The ref prevents duplicate dispatches,
+  // including when another render occurs before the pending indicator is painted.
+  useEffect(() => {
+    if (queueRef.current.length === 0) return;
+    if (
+      !board ||
+      board.status !== "active" ||
+      loading ||
+      starting ||
+      resumeRequired ||
+      recoveringRef.current
+    ) {
+      clearQueuedMoves();
+      return;
+    }
+    if (moveInFlight.current || submittingMove || !revisionReady()) return;
+    const { next, remaining } = takeRankedIntent(queueRef.current, board);
+    queueRef.current = remaining;
+    setQueuedMoves(remaining);
+    if (next) dispatchIntent(next);
+  });
+
+  // Drop unsent input on background/navigation; never abort a possibly committed move.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") clearQueuedMoves();
+    };
+    window.addEventListener("pagehide", clearQueuedMoves);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      queueRef.current = [];
+      window.removeEventListener("pagehide", clearQueuedMoves);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [clearQueuedMoves]);
 
   const rankedResult = buildRankedResult(board, dismissedResultMatchId);
 
@@ -680,24 +790,33 @@ export default function RankedPage() {
               </button>
             </div>
 
-            {/* Reserve space so the board does not jump while a move is processed. */}
-            <p
-              role="status"
-              style={{
-                minHeight: "1.5rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.4rem",
-                color: "#b9bfca",
-                fontSize: "0.8rem",
-              }}
-            >
-              {submittingMove && (
-                <>
-                  <Loader2 size={14} aria-hidden="true" /> Syncing move…
-                </>
+            {/* Fixed minimum height avoids jumping the board during input. */}
+            <div className={styles.moveQueueStatus}>
+              <span role="status" aria-live="polite">
+                {submittingMove && (
+                  <>
+                    <Loader2 size={14} aria-hidden="true" /> Syncing move…
+                  </>
+                )}
+                {board.status === "active" && queuedMoves.length > 0 && (
+                  <span>
+                    {queuedMoves.length === MAX_QUEUED_RANKED_MOVES
+                      ? "Queue full"
+                      : "Queued"}
+                    : {queuedMoves.length}
+                  </span>
+                )}
+              </span>
+              {board.status === "active" && queuedMoves.length > 0 && (
+                <button
+                  type="button"
+                  className={styles.cancelQueue}
+                  onClick={clearQueuedMoves}
+                >
+                  Cancel queued
+                </button>
               )}
-            </p>
+            </div>
 
             {/* Server-controlled Minesweeper board. */}
             <div className="board-area">
@@ -722,6 +841,14 @@ export default function RankedPage() {
                   const isFlagged = flags.has(key);
                   const isPending =
                     pendingCell?.row === row && pendingCell?.column === column;
+                  const isQueued =
+                    board.status === "active" &&
+                    queuedMoves.some(
+                      (move) =>
+                        move.matchId === board.matchId &&
+                        move.row === row &&
+                        move.column === column,
+                    );
                   // Preview flags only: the stored flag list changes after server confirmation.
                   const isVisuallyFlagged =
                     isPending && pendingCell?.action === "flag" ? !isFlagged : isFlagged;
@@ -732,6 +859,7 @@ export default function RankedPage() {
                     isRevealed ? "revealed" : "unrevealed",
                     isVisuallyFlagged ? "flagged" : "",
                     isPending ? "ranked-input-pending" : "",
+                    isQueued ? styles.queuedCell : "",
                     isRevealed && number > 0 ? numberClasses[number] : "",
                   ]
                     .filter(Boolean)
@@ -743,20 +871,20 @@ export default function RankedPage() {
                       type="button"
                       role="gridcell"
                       className={classes}
-                      aria-busy={isPending}
+                      aria-busy={isPending || isQueued}
                       onClick={() => {
                         // Clicking an opened number automatically attempts a chord.
                         if (isRevealed && number > 0) {
-                          void chordCell(row, column);
+                          queueMove("chord", row, column);
                         } else if (!isRevealed && inputMode === "flag") {
-                          void toggleFlag(row, column);
+                          queueMove("flag", row, column);
                         } else if (!isRevealed && !isFlagged) {
-                          void revealCell(row, column);
+                          queueMove("reveal", row, column);
                         }
                       }}
                       onContextMenu={(event) => {
                         event.preventDefault();
-                        void toggleFlag(row, column);
+                        queueMove("flag", row, column);
                       }}
                       aria-label={
                         isFlagged
