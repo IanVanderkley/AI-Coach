@@ -9,9 +9,9 @@ const sql = readFileSync(
   "utf8",
 );
 
-test("Ranked reveal sends an optional first-move routing hint", () => {
+test("Ranked reveal accepts the legacy optional first-move hint without trusting it", () => {
   assert.match(page, /firstMoveDone: board\.firstMoveDone/);
-  assert.match(route, /typeof firstMoveDone === "boolean"/);
+  assert.doesNotMatch(route, /p_first_move_done:/);
   assert.match(
     route,
     /firstMoveDone !== undefined && typeof firstMoveDone !== "boolean"/,
@@ -19,10 +19,9 @@ test("Ranked reveal sends an optional first-move routing hint", () => {
 });
 
 test("Ranked optimized reveal still uses the server-owned gameplay RPCs", () => {
-  assert.match(route, /AI_COACH_RANKED_FAST_REVEAL_HINT_V1/);
-  assert.match(route, /admin\.rpc\(functionName,/);
-  assert.match(route, /"reveal_ranked_cell" : "reveal_first_ranked_cell"/);
-  assert.match(route, /Promise\.all\(\[/); // Old clients have a validated fallback.
+  assert.match(route, /admin\.rpc\("execute_ranked_move",/);
+  assert.match(route, /p_action: "reveal"/);
+  assert.doesNotMatch(route, /admin\s*\.from\(/);
   assert.match(route, /supabase\.auth\.getUser\(\)/);
 });
 

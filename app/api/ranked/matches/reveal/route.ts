@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
+import { combinedMoveResponse } from "@/lib/ranked/combined-move-response";
 import { readRankedMoveJson } from "@/lib/ranked/http-security";
 import { isRankedMoveRevision } from "@/lib/ranked/move-revision";
 
@@ -92,107 +92,17 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient();
-    const rateLimited = await guardRankedRateLimit(admin, verifiedUserId, "move");
-    if (rateLimited) return rateLimited;
-
-    // AI_COACH_RANKED_FAST_REVEAL_HINT_V1: the browser only supplies a routing hint.
-    // SQL RPCs independently verify ownership, active status, and first-move state.
-    // Older clients without the hint retain the original guarded lookup path.
-    let functionName: "reveal_ranked_cell" | "reveal_first_ranked_cell";
-    if (typeof firstMoveDone === "boolean") {
-      functionName = firstMoveDone ? "reveal_ranked_cell" : "reveal_first_ranked_cell";
-    } else {
-      // AI_COACH_RANKED_PARALLEL_LOOKUPS_V1: overlap independent reads, keeping all existing checks.
-      // Both responses remain server-only; the move RPC rechecks ownership.
-      const [{ data: match, error: matchError }, { data: state, error: stateError }] =
-        await Promise.all([
-          admin
-            .from("ranked_matches")
-            .select("id")
-            .eq("id", matchId)
-            .eq("user_id", verifiedUserId)
-            .eq("status", "active")
-            .maybeSingle(),
-          admin
-            .from("ranked_match_state")
-            .select("first_move_done")
-            .eq("match_id", matchId)
-            .maybeSingle(),
-        ]);
-
-      // Preserve the original error precedence and HTTP statuses.
-      if (matchError) {
-        console.error("Ranked match lookup failed:");
-
-        return Response.json(
-          { error: "Could not load Ranked match." },
-          { status: 500, headers },
-        );
-      }
-
-      if (!match) {
-        return Response.json(
-          { error: "Active Ranked match not found." },
-          { status: 404, headers },
-        );
-      }
-
-      if (stateError || !state) {
-        console.error("Ranked state lookup failed:");
-
-        return Response.json(
-          { error: "Could not load Ranked board." },
-          { status: 500, headers },
-        );
-      }
-
-      // Step 4: Choose the appropriate database function.
-      functionName = state.first_move_done
-        ? "reveal_ranked_cell"
-        : "reveal_first_ranked_cell";
-    }
-
-    // Both database functions verify ownership again
-    // and lock the match before updating it.
-    const { data, error: revealError } = await admin.rpc(functionName, {
-      p_match_id: matchId,
+    // A single database request reserves quota and executes the revision-checked move.
+    const { data, error } = await admin.rpc("execute_ranked_move", {
       p_user_id: verifiedUserId,
+      p_match_id: matchId,
+      p_action: "reveal",
       p_row: row,
       p_column: column,
       p_expected_move_count: expectedMoveCount,
     });
-
-    if (revealError) {
-      if (revealError.code === "PT409") {
-        return Response.json(
-          { error: "The Ranked board changed. Reloading the current match." },
-          { status: 409, headers },
-        );
-      }
-
-      console.error("Ranked reveal failed:");
-
-      const rejected = revealError.code === "P0001";
-
-      return Response.json(
-        {
-          error: rejected
-            ? "This move cannot be completed."
-            : "Could not process the Ranked move.",
-        },
-        { status: rejected ? 409 : 500, headers },
-      );
-    }
-
-    if (!data) {
-      return Response.json(
-        { error: "No Ranked move result was returned." },
-        { status: 500, headers },
-      );
-    }
-
-    // Return the verified move result.
-    return Response.json(data, { status: 200, headers });
+    if (error) console.error("Ranked reveal RPC unavailable");
+    return combinedMoveResponse(data, Boolean(error));
   } catch (error) {
     console.error("Ranked reveal API error:");
 

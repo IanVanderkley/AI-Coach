@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/sever";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
+import { combinedMoveResponse } from "@/lib/ranked/combined-move-response";
 import { readRankedMoveJson } from "@/lib/ranked/http-security";
 import { isRankedMoveRevision } from "@/lib/ranked/move-revision";
 
@@ -91,47 +91,17 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient();
-    const rateLimited = await guardRankedRateLimit(admin, verifiedUserId, "move");
-    if (rateLimited) return rateLimited;
-
-    const { data, error: chordError } = await admin.rpc("chord_ranked_cell", {
-      p_match_id: matchId,
+    // A single database request reserves quota and executes the revision-checked move.
+    const { data, error } = await admin.rpc("execute_ranked_move", {
       p_user_id: verifiedUserId,
+      p_match_id: matchId,
+      p_action: "chord",
       p_row: row,
       p_column: column,
       p_expected_move_count: expectedMoveCount,
     });
-    if (chordError) {
-      if (chordError.code === "PT409") {
-        return Response.json(
-          { error: "The Ranked board changed. Reloading the current match." },
-          { status: 409, headers },
-        );
-      }
-
-      console.error("Ranked chord failed:");
-
-      const rejected = chordError.code === "P0001";
-
-      return Response.json(
-        {
-          error: rejected
-            ? "This chord action is not allowed."
-            : "Could not process the Ranked chord.",
-        },
-        { status: rejected ? 409 : 500, headers },
-      );
-    }
-
-    if (!data) {
-      return Response.json(
-        { error: "No chord result was returned." },
-        { status: 500, headers },
-      );
-    }
-
-    // Return the verified move result.
-    return Response.json(data, { status: 200, headers });
+    if (error) console.error("Ranked chord RPC unavailable");
+    return combinedMoveResponse(data, Boolean(error));
   } catch (error) {
     console.error("Ranked chord API error:");
 

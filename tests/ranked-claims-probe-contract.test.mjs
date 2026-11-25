@@ -20,6 +20,5 @@ test("claims require a verified nonempty subject, not browser-supplied identity"
   assert.match(route, /if \(authError \|\| !verifiedUserId\)/);
   assert.match(route, /p_user_id: verifiedUserId/);
   assert.doesNotMatch(route, /p_user_id: user\.id/);
-  assert.match(route, /AI_COACH_RANKED_FAST_REVEAL_HINT_V1/);
-  assert.match(route, /admin\.rpc\(functionName,/);
+  assert.match(route, /admin\.rpc\("execute_ranked_move",/);
 });

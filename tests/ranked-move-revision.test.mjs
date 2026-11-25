@@ -62,13 +62,11 @@ test("all move routes require a revision and keep the authenticated rate limiter
   for (const action of ["reveal", "flag", "chord"]) {
     const route = read(`app/api/ranked/matches/${action}/route.ts`);
     const validation = route.indexOf("if (!isRankedMoveRevision(expectedMoveCount))");
-    const rateLimit = route.indexOf(
-      'guardRankedRateLimit(admin, verifiedUserId, "move")',
-    );
+    const rateLimit = route.indexOf('admin.rpc("execute_ranked_move",');
     assert.ok(validation > route.indexOf("status: 401"));
     assert.ok(rateLimit > validation);
     assert.ok(route.indexOf("p_expected_move_count: expectedMoveCount") > rateLimit);
-    assert.match(route, /\.code === "PT409"/);
+    assert.match(route, /combinedMoveResponse\(data, Boolean\(error\)\)/);
   }
 });
 
