@@ -1,0 +1,329 @@
+/* Settings-only layout. Existing preference and authentication behavior is unchanged. */
+.settings-page:has(.settings-workspace) {
+  max-width: 1180px;
+}
+.settings-workspace {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.settings-category-bar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.settings-category-button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  min-height: 60px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+.settings-category-button > svg {
+  flex-shrink: 0;
+}
+.settings-category-button > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.settings-category-button strong {
+  color: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 650;
+}
+.settings-category-button small {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.settings-category-button:hover {
+  background: #242424;
+  color: var(--text);
+}
+.settings-category-button[aria-pressed="true"] {
+  background: #28191b;
+  border-color: #713038;
+  color: var(--text);
+}
+.settings-category-button[aria-pressed="true"] > svg {
+  color: var(--red);
+}
+.settings-workspace button:focus-visible,
+.settings-workspace summary:focus-visible,
+.settings-workspace input:focus-visible,
+.settings-workspace select:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+.settings-workspace-pane[hidden] {
+  display: none !important;
+}
+.settings-storage-note {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.settings-workspace .settings-preference-layout,
+.settings-workspace .settings-content {
+  min-width: 0;
+}
+.settings-workspace .settings-content .settings-section {
+  min-height: 0;
+  max-width: none;
+  padding: clamp(18px, 3vw, 28px);
+}
+.settings-workspace .settings-section-heading h2,
+.settings-workspace .coach-tooltip-settings h2,
+.settings-workspace .account-management h2,
+.settings-workspace .leaderboard-privacy h2 {
+  margin: 0;
+  font-family: var(--heading-font);
+  font-size: 25px;
+  font-weight: 700;
+}
+.settings-workspace .settings-section-heading p {
+  font-size: 14px;
+}
+.settings-workspace .settings-options {
+  margin-top: 18px;
+  gap: 8px;
+}
+.settings-workspace .settings-competitiveness .settings-options {
+  margin-top: 0;
+}
+.settings-workspace .settings-option {
+  padding: 13px 15px;
+}
+.settings-workspace .settings-section-actions {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.settings-workspace .settings-actions-top {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.settings-workspace
+  :is(.coach-tooltip-settings, .account-management, .leaderboard-privacy) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(18px, 3vw, 28px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.settings-workspace .coach-tooltip-settings {
+  display: grid;
+  gap: 0;
+}
+.settings-workspace .coach-tooltip-settings h2 {
+  margin-bottom: 14px;
+}
+.settings-workspace
+  :is(.coach-tooltip-option, .coach-replay-view-setting, .leaderboard-privacy-check) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0;
+  padding: 18px 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+}
+.settings-workspace :is(.coach-tooltip-option, .leaderboard-privacy-check) > span {
+  order: -1;
+  display: grid;
+  gap: 5px;
+  flex: 1 1 220px;
+}
+.settings-workspace :is(.coach-tooltip-option, .coach-replay-view-setting) > span > span,
+.settings-workspace .leaderboard-privacy-check small {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.settings-workspace
+  :is(.coach-tooltip-option, .leaderboard-privacy-check)
+  input[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 24px;
+  border: 1px solid #747474;
+  border-radius: 20px;
+  background: #333;
+  cursor: pointer;
+}
+.settings-workspace
+  :is(.coach-tooltip-option, .leaderboard-privacy-check)
+  input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: #eee;
+  border-radius: 50%;
+  transition: transform 140ms ease;
+}
+.settings-workspace
+  :is(.coach-tooltip-option, .leaderboard-privacy-check)
+  input[type="checkbox"]:checked {
+  background: #b62634;
+  border-color: #d64b55;
+}
+.settings-workspace
+  :is(.coach-tooltip-option, .leaderboard-privacy-check)
+  input[type="checkbox"]:checked::before {
+  transform: translateX(20px);
+}
+.settings-workspace input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.settings-workspace
+  :is(
+    .coach-replay-view-setting select,
+    .leaderboard-privacy-name input,
+    .account-management input
+  ) {
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: #111;
+  color: var(--text);
+  border: 1px solid #444;
+  border-radius: 6px;
+  font: inherit;
+}
+.settings-workspace .leaderboard-privacy > p:not(.eyebrow),
+.settings-workspace .leaderboard-privacy-help,
+.settings-workspace .leaderboard-privacy-rating {
+  color: var(--text-secondary);
+}
+.settings-workspace .leaderboard-privacy-rating {
+  background: #111;
+  border: 1px solid var(--line);
+}
+.settings-workspace .leaderboard-privacy-rating strong {
+  color: var(--text);
+}
+.settings-workspace .account-management {
+  gap: 14px;
+}
+.settings-workspace .account-management > p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.settings-workspace .account-management a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.settings-workspace .account-management details {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #111;
+  padding: 14px 16px;
+}
+.settings-workspace .account-management details > summary {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text);
+}
+.settings-workspace .account-management details[open] > summary {
+  margin-bottom: 12px;
+}
+.settings-workspace .account-management details p {
+  font-size: 13px;
+  margin: 8px 0 12px;
+}
+.settings-workspace .account-management form label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.settings-workspace .account-management .auth-submit {
+  min-height: 40px;
+  padding: 10px 15px;
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
+  color: white;
+  background: #b62634;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.settings-workspace .account-management .auth-submit:hover:not(:disabled) {
+  background: #c42b39;
+}
+.settings-workspace .account-management .auth-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.settings-workspace .account-management details:last-of-type {
+  border-color: #673238;
+  background: #211618;
+}
+.settings-workspace .account-management details:last-of-type > summary {
+  color: #ff9ba3;
+}
+@media (max-width: 850px) {
+  .settings-category-bar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .settings-category-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .settings-category-button {
+    min-height: 48px;
+  }
+  .settings-category-button small {
+    display: none;
+  }
+  .settings-workspace .settings-profile-grid,
+  .settings-workspace .settings-goal-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-workspace .settings-actions-top,
+  .settings-workspace .settings-section-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .settings-workspace .settings-actions-buttons,
+  .settings-workspace .settings-section-action-buttons {
+    justify-content: flex-start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .settings-workspace input[type="checkbox"]::before {
+    transition: none;
+  }
+}

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { AlignLeft, MessageSquare, UserRound, type LucideIcon } from "lucide-react";
 
 import { useSettingsPreferences } from "@/lib/settings/use-settings-preferences";
@@ -120,10 +119,7 @@ function SectionActions({
   return (
     <div className="settings-section-actions">
       <p className="settings-actions-status" role="status" aria-live="polite">
-        {statusMessage ||
-          (hasChanges
-            ? "This section has unsaved changes."
-            : "No unsaved changes in this section.")}
+        {statusMessage || (hasChanges ? "This section has unsaved changes." : "")}
       </p>
       <div className="settings-section-action-buttons">
         <button
@@ -147,8 +143,7 @@ function SectionActions({
   );
 }
 
-export function SettingsPanel() {
-  const [activeSection, setActiveSection] = useState<SettingsSection>("coaching-style");
+export function SettingsPanel({ category }: { category: "coaching" | "player" }) {
   const {
     preferences,
     sectionMessages,
@@ -168,7 +163,7 @@ export function SettingsPanel() {
 
   function confirmResetAll() {
     const confirmed = window.confirm(
-      "Reset all settings to their default values? You will need to save all settings to keep them.",
+      "Reset coaching and player preferences to defaults? Save your preferences to keep the changes.",
     );
     if (!confirmed) return;
     resetAll();
@@ -194,9 +189,9 @@ export function SettingsPanel() {
     <>
       <div className="settings-actions settings-actions-top">
         <div className="settings-actions-copy">
-          {globalMessage && (
+          {(globalMessage || hasUnsavedChanges) && (
             <p className="settings-actions-status" role="status" aria-live="polite">
-              {globalMessage}
+              {globalMessage || "You have unsaved coaching or player preferences."}
             </p>
           )}
         </div>
@@ -207,7 +202,7 @@ export function SettingsPanel() {
             onClick={confirmResetAll}
             disabled={isSaving}
           >
-            Reset all settings
+            Reset preferences
           </button>
           <button
             className="settings-button settings-button-secondary"
@@ -215,7 +210,7 @@ export function SettingsPanel() {
             onClick={discardAll}
             disabled={!hasUnsavedChanges || isSaving}
           >
-            Discard all changes
+            Discard preference changes
           </button>
           <button
             className="settings-button settings-button-primary"
@@ -223,38 +218,14 @@ export function SettingsPanel() {
             onClick={saveAll}
             disabled={!hasUnsavedChanges || isSaving}
           >
-            Save all settings
+            Save all preferences
           </button>
         </div>
       </div>
 
-      <div className="settings-layout">
-        <aside className="settings-sidebar" aria-label="Settings sections">
-          <p className="settings-sidebar-label">PREFERENCES</p>
-          <nav className="settings-sidebar-nav" aria-label="Settings categories">
-            {settingsSections.map(({ id, title, description, icon: Icon }) => (
-              <button
-                className={`settings-nav-item${activeSection === id ? " active" : ""}`}
-                type="button"
-                key={id}
-                aria-pressed={activeSection === id}
-                aria-controls="settings-content"
-                onClick={() => setActiveSection(id)}
-              >
-                <span className="settings-nav-icon">
-                  <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-                </span>
-                <span className="settings-nav-copy">
-                  <span className="settings-nav-title">{title}</span>
-                  <span className="settings-nav-description">{description}</span>
-                </span>
-              </button>
-            ))}
-          </nav>
-        </aside>
-
+      <div className="settings-preference-layout">
         <div className="settings-content" id="settings-content">
-          {activeSection === "coaching-style" && (
+          {category === "coaching" && (
             <section className="settings-section" aria-labelledby="coaching-style-title">
               <div className="settings-section-heading">
                 <div>
@@ -308,7 +279,7 @@ export function SettingsPanel() {
             </section>
           )}
 
-          {activeSection === "explanation-detail" && (
+          {category === "coaching" && (
             <section
               className="settings-section"
               aria-labelledby="explanation-detail-title"
@@ -363,7 +334,7 @@ export function SettingsPanel() {
             </section>
           )}
 
-          {activeSection === "player-profile" && (
+          {category === "player" && (
             <section className="settings-section" aria-labelledby="player-profile-title">
               <div className="settings-section-heading">
                 <div>

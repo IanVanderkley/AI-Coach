@@ -164,7 +164,7 @@ test("replay controls use fixed square geometry, continuous range, icon controls
     "utf8",
   );
   const settings = readFileSync(
-    new URL("../app/settings/page.tsx", import.meta.url),
+    new URL("../components/settings/settings-workspace.tsx", import.meta.url),
     "utf8",
   );
   assert.match(panel, /step="any"/);

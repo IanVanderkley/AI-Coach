@@ -137,7 +137,7 @@ test("settings API checks owner and accepts only username/privacy, not score cha
 test("UI exposes two boards, public names, and a saved Anonymous mode control", () => {
   const board = read("components/leaderboard/verified-leaderboard.tsx");
   const privacy = read("components/leaderboard/leaderboard-privacy.tsx");
-  const settings = read("app/settings/page.tsx");
+  const settings = read("components/settings/settings-workspace.tsx");
   assert.match(board, /Elo-style rating/);
   assert.match(board, /Fastest Wins/);
   assert.match(board, /entry\.username/);
