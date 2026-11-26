@@ -5,7 +5,8 @@ import { Clock3, Medal, RefreshCw, ShieldCheck, Trophy } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { formatRankedDuration } from "@/lib/ranked/result-summary";
-import { ratingTier, ratingTierClass } from "@/lib/leaderboard/rating-tier";
+import { competitiveRank } from "@/lib/leaderboard/rank-policy";
+import { RankEmblem } from "@/components/ranked/rank-emblem";
 import {
   PUBLIC_LEADERBOARD_ENDPOINT,
   parsePublicStandings,
@@ -23,6 +24,16 @@ function formatDate(value: string) {
     month: "short",
     day: "numeric",
   });
+}
+
+function CompetitiveRankCell({ rating }: { rating: number }) {
+  const rank = competitiveRank(rating);
+  return (
+    <span className="leaderboard-competitive-rank">
+      <RankEmblem rating={rating} size={64} decorative />
+      <span style={{ color: rank.color }}>{rank.label}</span>
+    </span>
+  );
 }
 
 /** Both boards are read-only, privacy-filtered, and server-derived. */
@@ -145,7 +156,7 @@ export function VerifiedLeaderboard() {
                   <tr>
                     <th scope="col">Position</th>
                     <th scope="col">Player</th>
-                    <th scope="col">Rating</th>
+                    <th scope="col">Elo</th>
                     <th scope="col">Rank</th>
                     <th scope="col">Wins</th>
                     <th scope="col">Losses</th>
@@ -178,11 +189,7 @@ export function VerifiedLeaderboard() {
                           {entry.rating.toLocaleString()}
                         </td>
                         <td>
-                          <span
-                            className={`rating-tier ${ratingTierClass(ratingTier(entry.rating))}`}
-                          >
-                            {ratingTier(entry.rating)}
-                          </span>
+                          <CompetitiveRankCell rating={entry.rating} />
                         </td>
                         <td>{entry.wins}</td>
                         <td>{entry.losses}</td>
@@ -221,8 +228,13 @@ export function VerifiedLeaderboard() {
       )}
       <p className="verified-board-footnote">
         {tab === "elo"
-          ? "Elo-style: start at 1000; wins raise and losses lower the rating against a fixed benchmark (K=32). This is solo progression, not player-versus-player matchmaking."
+          ? "Competitive ranks and divisions reflect saved Elo. This is solo progression, not player-versus-player matchmaking."
           : "One best server-verified victory per visible player. Times use the server clock."}{" "}
+        {tab === "elo" && (
+          <>
+            <Link href="/ranked/rating-guide">How Elo works</Link>.{" "}
+          </>
+        )}
         New players are public by default; Anonymous mode hides your name and results.
         <Link href="/settings">Manage visibility</Link>.
       </p>

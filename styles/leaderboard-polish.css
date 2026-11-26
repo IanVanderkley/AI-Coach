@@ -88,6 +88,26 @@
   color: #b6d9ff;
   background: #283750;
 }
+/* Competitive rank cells use the same original emblems as the lobby and profile. */
+.verified-board-table .leaderboard-competitive-rank {
+  display: inline-grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  text-align: left;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.verified-board-table td:has(.leaderboard-competitive-rank) {
+  padding-block: 5px;
+}
+@media (max-width: 600px) {
+  .verified-board-table .leaderboard-competitive-rank {
+    grid-template-columns: 52px minmax(0, 1fr);
+    min-width: 148px;
+  }
+}
 /* The settings sidebar occupies 246px + 22px gap at desktop width. */
 .settings-page > .leaderboard-privacy {
   margin: 22px 0 68px calc(246px + 22px);
