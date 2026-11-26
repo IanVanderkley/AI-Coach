@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/sever";
 import { callbackPath } from "@/lib/account/validation";
 import { isFirstEmailConfirmation } from "@/lib/account/email-confirmation";
+import { authLinkFailurePath } from "@/lib/account/auth-link-feedback";
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
@@ -16,8 +17,7 @@ export async function GET(request: NextRequest) {
   };
   const emailStatus = (status: "pending" | "complete" | "error") =>
     redirect(`/auth/email-change?status=${status}#email-change`);
-  const fail = () =>
-    kind === "email" ? emailStatus("error") : redirect("/sign-in?authError=link");
+  const fail = () => redirect(authLinkFailurePath(kind));
 
   if (isFirstEmailConfirmation(params)) return emailStatus("pending");
   if (
