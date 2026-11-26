@@ -335,3 +335,65 @@
 .gameplayPage > p {
   margin: 6px 0 12px;
 }
+
+/* Batch 24: compact match HUD only; the lobby and server move logic stay unchanged. */
+.gameplayPage .dashboard {
+  gap: 7px;
+  margin-bottom: 8px;
+  padding-inline: 8px;
+}
+.gameplayPage .stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.gameplayPage .stats > div {
+  grid-template-columns: 17px minmax(0, 1fr);
+  align-items: center;
+  align-content: center;
+  gap: 3px 7px;
+  padding: 8px 10px;
+}
+.gameplayPage .stats svg {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+.gameplayPage .stats dt {
+  grid-column: 2;
+  grid-row: 1;
+  order: 0;
+}
+.gameplayPage .stats dd {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: clamp(17px, 2vw, 24px);
+  overflow-wrap: anywhere;
+}
+.gameplayPage :global(.game-panel) {
+  padding: 10px 0;
+}
+.gameplayPage :global(.board-area) {
+  padding-block: 5px 10px;
+  overflow-x: auto;
+}
+.gameplayPage .moveQueueStatus {
+  min-height: 30px;
+}
+@media (min-width: 761px) {
+  .gameplayPage :global(.ranked-server-board) {
+    width: min(100%, clamp(400px, calc(100svh - 360px), 600px));
+  }
+}
+@media (max-width: 760px) {
+  .gameplayPage :global(.ranked-server-board) {
+    width: max(100%, 552px);
+    max-width: 600px;
+    grid-template-columns: repeat(var(--board-columns), minmax(32px, 1fr));
+    gap: 2px;
+    padding: 3px;
+  }
+}
+@media (max-width: 500px) {
+  .gameplayPage .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

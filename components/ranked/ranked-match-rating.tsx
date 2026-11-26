@@ -163,7 +163,7 @@ export function RankedMatchRating({
         <Link href="/ranked/rating-guide">How Elo works</Link>
         <div>
           <Link href="/leaderboard">Leaderboard</Link>
-          {state.kind !== "loading" && (
+          {(state.kind === "missing" || state.kind === "unavailable") && (
             <button type="button" onClick={() => setRevision((n) => n + 1)}>
               <RefreshCw size={13} aria-hidden="true" /> Retry
             </button>

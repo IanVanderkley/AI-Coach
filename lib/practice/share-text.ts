@@ -12,7 +12,7 @@ export function formatPracticeShareText(
   >,
 ): string {
   return [
-    `AI-Coach Practice ${result.outcome === "win" ? "Win" : "Loss"} · ${result.difficulty}`,
+    `MindSweeper Practice ${result.outcome === "win" ? "Win" : "Loss"} · ${result.difficulty}`,
     `${formatTime(result.durationSeconds)} · ${result.moveCount} moves · ${result.flagsOnBoard} flags placed`,
     "Practice game (not a server-verified record).",
   ].join("\n");

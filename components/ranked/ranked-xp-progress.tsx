@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleHelp, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
+import { RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { calculateLevelProgress, type LevelProgress } from "@/lib/levels/progression";
@@ -55,9 +55,11 @@ export function RankedXpProgress({ matchId }: { matchId: string }) {
         <span>
           <Sparkles size={17} aria-hidden="true" /> Account progression
         </span>
-        <span className="ranked-xp-trust">
-          <ShieldCheck size={15} aria-hidden="true" /> Saved account balance
-        </span>
+        {state.kind === "ready" && (
+          <span className="ranked-xp-trust">
+            <ShieldCheck size={15} aria-hidden="true" /> Saved account balance
+          </span>
+        )}
       </div>
 
       {state.kind === "loading" && (
@@ -111,18 +113,15 @@ export function RankedXpProgress({ matchId }: { matchId: string }) {
         </>
       )}
 
-      <button
-        type="button"
-        className="ranked-xp-refresh"
-        onClick={() => setRevision((previous) => previous + 1)}
-        disabled={state.kind === "loading"}
-      >
-        <RefreshCw size={14} aria-hidden="true" /> Refresh saved XP
-      </button>
-      <p className="ranked-xp-disclaimer">
-        <CircleHelp size={13} aria-hidden="true" /> This is your saved XP total, not the
-        XP earned in this match. Ranked Elo is separate.
-      </p>
+      {state.kind === "unavailable" && (
+        <button
+          type="button"
+          className="ranked-xp-refresh"
+          onClick={() => setRevision((previous) => previous + 1)}
+        >
+          <RefreshCw size={14} aria-hidden="true" /> Retry saved XP
+        </button>
+      )}
     </section>
   );
 }

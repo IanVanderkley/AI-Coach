@@ -65,7 +65,7 @@ test("copy/share results include only server-confirmed statistics", () => {
   assert.ok(result);
   assert.equal(
     formatRankedShareText(result),
-    "AI-Coach Ranked — Victory\n16 × 16 board · 40 mines\nTime: 01:05.50\nMoves: 28\nFlags on board: 10\nServer-confirmed Ranked match result",
+    "MindSweeper Ranked — Victory\n16 × 16 board · 40 mines\nTime: 01:05.50\nMoves: 28\nFlags on board: 10\nServer-confirmed Ranked match result",
   );
   const loss = buildRankedResult(
     { ...confirmed, status: "lost", durationMs: undefined },

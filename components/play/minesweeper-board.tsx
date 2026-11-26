@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { visibleBoardHash } from "@/lib/coach/visible-board-hash";
 import { recordPracticeBest } from "@/lib/practice/personal-best";
+import { completedPracticeSeconds } from "@/lib/practice/clock";
 import { savePracticeReviewHandoff } from "@/lib/practice/review-handoff";
 import type { PracticeSession } from "@/lib/practice/history";
 import type { DifficultySettings } from "@/lib/game-settings";
@@ -308,8 +309,7 @@ export function MinesweeperBoard({
   // Backgrounding auto-pauses and masks the board until the player resumes.
   useEffect(() => {
     const flush = () => persistCurrent();
-    const onVisibility = () => {
-      if (document.visibilityState !== "hidden") return;
+    const pauseAndPersist = () => {
       const current = recoveryViewRef.current;
       if (
         recoveryActiveRef.current &&
@@ -325,11 +325,14 @@ export function MinesweeperBoard({
       }
       flush();
     };
-    window.addEventListener("pagehide", flush);
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") pauseAndPersist();
+    };
+    window.addEventListener("pagehide", pauseAndPersist);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       flush();
-      window.removeEventListener("pagehide", flush);
+      window.removeEventListener("pagehide", pauseAndPersist);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [activeElapsedMs, persistCurrent]);
@@ -386,9 +389,12 @@ export function MinesweeperBoard({
     if (reportedRef.current) return;
     reportedRef.current = true;
 
-    // Freeze the clock at the exact value the player saw and send the same
-    // number to the coach, so the timer and the report can never disagree.
-    const finalSeconds = Math.floor(activeElapsedMs() / 1000);
+    // The terminal action already has a timestamp. React scheduling, animation,
+    // or a backgrounded tab must not add time to a completed recording.
+    const finalSeconds = completedPracticeSeconds(
+      movesRef.current.at(-1)?.atMs,
+      activeElapsedMs(),
+    );
     setElapsedSeconds(finalSeconds);
 
     const session: PracticeSession = {

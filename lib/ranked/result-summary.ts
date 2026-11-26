@@ -61,7 +61,7 @@ export function formatRankedDuration(milliseconds: number | null): string {
 export function formatRankedShareText(result: RankedResultSummary): string {
   const outcome = result.outcome === "won" ? "Victory" : "Game over";
   return [
-    `AI-Coach Ranked — ${outcome}`,
+    `MindSweeper Ranked — ${outcome}`,
     `${result.rows} × ${result.columns} board · ${result.mineCount} mines`,
     `Time: ${formatRankedDuration(result.durationMs)}`,
     `Moves: ${result.moveCount}`,

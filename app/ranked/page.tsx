@@ -25,6 +25,20 @@ import { Navbar } from "@/components/play/navbar";
 import { RankedResultDialog } from "@/components/ranked/ranked-result-dialog";
 import { RankedLadderOverview } from "@/components/ranked/ranked-ladder-overview"; // AI_COACH_RANKED_LADDER_OVERVIEW_V1
 import { RankedLobby } from "@/components/ranked/ranked-lobby";
+import { RankedClock } from "@/components/ranked/ranked-clock";
+import {
+  RankedReviewCell,
+  RankedReviewLegend,
+} from "@/components/ranked/ranked-review-cell";
+import {
+  buildRankedBoardReview,
+  type RankedBoardReview,
+} from "@/lib/ranked/board-review";
+import {
+  firstRevealClock,
+  recoveredRankedClock,
+  type RankedClockAnchor,
+} from "@/lib/ranked/display-clock";
 import { buildRankedResult } from "@/lib/ranked/result-summary"; // AI_COACH_RANKED_RESULT_DIALOG_V1
 
 type Position = {
@@ -44,6 +58,10 @@ type RankedBoard = {
   mineCount: number;
   moveCount: number;
   firstMoveDone: boolean;
+  startedAt?: string | null;
+  // Display only: never supplied to any Ranked move API.
+  clock?: RankedClockAnchor | null;
+  review?: RankedBoardReview | null;
   revealedCells: RevealedCell[];
   flaggedCells: Position[];
   flagCount: number;
@@ -187,7 +205,17 @@ export default function RankedPage() {
       const data: RankedBoard = await response.json();
       rememberMatchId(data.status === "active" ? data.matchId : null);
 
-      setBoard(data);
+      setBoard({
+        ...data,
+        review: null,
+        clock: data.firstMoveDone
+          ? recoveredRankedClock(
+              data.startedAt,
+              response.headers.get("date"),
+              performance.now(),
+            )
+          : null,
+      });
       setNoMatch(false);
       return true;
     } catch {
@@ -259,6 +287,7 @@ export default function RankedPage() {
     setNotice(null);
 
     try {
+      const requestStartedAtMs = performance.now();
       const response = await fetch("/api/ranked/matches/reveal", {
         method: "POST",
         headers: {
@@ -290,6 +319,10 @@ export default function RankedPage() {
         throw new Error("Invalid response from the Ranked server.");
       }
 
+      const observedClock = board.firstMoveDone
+        ? null
+        : firstRevealClock(requestStartedAtMs, performance.now());
+
       // Merge the newly revealed cells with the existing board.
       // Supabase controls the mines and decides wins or losses.
       setBoard((current) => {
@@ -313,7 +346,13 @@ export default function RankedPage() {
           moveCount: verifiedResult.moveCount,
           status: verifiedResult.status,
           durationMs: verifiedResult.durationMs,
+          review: buildRankedBoardReview(
+            current,
+            verifiedResult,
+            Array.from(revealed.values()),
+          ),
           firstMoveDone: true,
+          clock: current.clock ?? observedClock,
         };
       });
     } catch {
@@ -530,6 +569,11 @@ export default function RankedPage() {
           moveCount: verifiedResult.moveCount,
           status: verifiedResult.status,
           durationMs: verifiedResult.durationMs,
+          review: buildRankedBoardReview(
+            current,
+            verifiedResult,
+            Array.from(revealed.values()),
+          ),
         };
       });
     } catch {
@@ -652,7 +696,7 @@ export default function RankedPage() {
       <Navbar />
 
       <main
-        className={`page-shell ${showLobby ? styles.lobbyPage : board && !resumeRequired ? styles.gameplayPage : ""}`}
+        className={`page-shell ${showLobby ? styles.lobbyPage : board && !resumeRequired ? `${styles.gameplayPage} ranked-gameplay-page` : ""}`}
         id="main-content"
       >
         <div className="page-heading">
@@ -764,6 +808,12 @@ export default function RankedPage() {
                 <span className={styles.difficulty}>Ranked · Intermediate</span>
               </div>
               <dl className={styles.stats}>
+                <RankedClock
+                  clock={board.clock}
+                  firstMoveDone={board.firstMoveDone}
+                  status={board.status}
+                  durationMs={board.durationMs}
+                />
                 <div>
                   <MousePointer2 size={17} aria-hidden="true" />
                   <dt>Moves</dt>
@@ -856,6 +906,16 @@ export default function RankedPage() {
 
                   const isRevealed = revealed.has(key);
                   const isFlagged = flags.has(key);
+                  if (board.status !== "active" && board.review) {
+                    return (
+                      <RankedReviewCell
+                        key={key}
+                        review={board.review}
+                        index={index}
+                        flagged={isFlagged}
+                      />
+                    );
+                  }
                   const isPending =
                     pendingCell?.row === row && pendingCell?.column === column;
                   const isQueued =
@@ -923,10 +983,28 @@ export default function RankedPage() {
               </div>
             </div>
 
-            <p className="board-instructions">
-              Reveal: click a covered square · Flag: use Flag mode or right-click · Chord:
-              click a revealed number when its neighboring flags match.
-            </p>
+            {board.status !== "active" ? (
+              board.review ? (
+                <>
+                  <RankedReviewLegend />
+                  <p className="ranked-review-note">
+                    Completed match · Read-only board. Dashed squares were not revealed
+                    during play.
+                  </p>
+                </>
+              ) : (
+                <p className="ranked-review-note">
+                  Full board inspection is unavailable for this result. Only confirmed
+                  visible squares are shown.
+                </p>
+              )
+            ) : (
+              <p className="board-instructions">
+                Reveal: click a covered square · Flag: use Flag mode or right-click ·
+                Chord: click a revealed number when its neighboring flags match. Ranked
+                time includes time away after the first reveal.
+              </p>
+            )}
 
             {/* Display results after a win or loss. */}
             {board.status !== "active" && (

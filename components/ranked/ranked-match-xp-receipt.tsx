@@ -81,13 +81,13 @@ export function RankedMatchXpReceipt({
           balance has not been changed by this display.
         </p>
       )}
-      {state.kind !== "loading" && (
+      {(state.kind === "missing" || state.kind === "unavailable") && (
         <button
           type="button"
           className="ranked-match-xp-refresh"
           onClick={() => setRevision((old) => old + 1)}
         >
-          <RefreshCw size={14} aria-hidden="true" /> Refresh match XP
+          <RefreshCw size={14} aria-hidden="true" /> Retry match XP
         </button>
       )}
     </section>
