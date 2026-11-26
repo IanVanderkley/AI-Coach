@@ -2,13 +2,13 @@ import {
   RANK_DEFINITIONS,
   RANK_POLICY,
   competitiveRank,
-  calculateRankPolicyV2,
+  calculateRankPolicyV3,
 } from "./rank-policy.ts";
 
 export type RankedLobbyRating = {
   rating: number;
   highestRating: number;
-  policyVersion: 2;
+  policyVersion: 3;
 };
 
 function validRating(value: unknown): value is number {
@@ -36,7 +36,7 @@ export function projectRankedLobbyRating(
   return {
     rating,
     highestRating: Math.max(rating, bestBefore ?? rating, bestAfter ?? rating),
-    policyVersion: 2,
+    policyVersion: 3,
   };
 }
 
@@ -45,13 +45,13 @@ export function parseRankedLobbyRating(value: unknown): RankedLobbyRating {
     throw new TypeError("Invalid Ranked lobby response.");
   const row = value as Record<string, unknown>;
   if (
-    row.policyVersion !== 2 ||
+    row.policyVersion !== 3 ||
     !validRating(row.rating) ||
     !validRating(row.highestRating) ||
     row.highestRating < row.rating
   )
     throw new TypeError("Invalid Ranked lobby response.");
-  return { rating: row.rating, highestRating: row.highestRating, policyVersion: 2 };
+  return { rating: row.rating, highestRating: row.highestRating, policyVersion: 3 };
 }
 
 /** Position is interpolated between the equally spaced rank markers, not the raw Elo range. */
@@ -70,8 +70,8 @@ export function rankedLobbyModel(value: RankedLobbyRating) {
     highest,
     index,
     journeyPercent: (position / (RANK_DEFINITIONS.length - 1)) * 100,
-    win: calculateRankPolicyV2(value.rating, "won").delta,
-    loss: calculateRankPolicyV2(value.rating, "lost").delta,
+    win: calculateRankPolicyV3(value.rating, "won").delta,
+    loss: calculateRankPolicyV3(value.rating, "lost").delta,
     nextRank:
       current.nextThreshold === null
         ? null

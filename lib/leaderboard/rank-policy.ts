@@ -1,6 +1,6 @@
 /** Batch 23 candidate policy. Not used to award live ratings until the SQL rollout. */
 export const RANK_POLICY = {
-  version: 2,
+  version: 3,
   minimum: 100,
   maximum: 10000,
   starting: 1600,
@@ -10,6 +10,8 @@ export const RANK_POLICY = {
   kFactor: 45,
   winMultiplier: 2,
   lossMultiplier: 1,
+  minimumWin: 5,
+  maximumWin: 100,
 } as const;
 
 export const RANK_DEFINITIONS = [
@@ -107,5 +109,19 @@ export function calculateRankPolicyV2(
     RANK_POLICY.minimum,
     Math.min(RANK_POLICY.maximum, rating + change),
   );
+  return { rating: after, delta: after - rating };
+}
+/** Version 3 retains v2 losses and bounds, and clamps the win reward before applying the ceiling. */
+export function calculateRankPolicyV3(
+  rating: number,
+  outcome: "won" | "lost",
+): { rating: number; delta: number } {
+  const previous = calculateRankPolicyV2(rating, outcome);
+  if (outcome === "lost") return previous;
+  const reward = Math.max(
+    RANK_POLICY.minimumWin,
+    Math.min(RANK_POLICY.maximumWin, previous.delta),
+  );
+  const after = Math.min(RANK_POLICY.maximum, rating + reward);
   return { rating: after, delta: after - rating };
 }

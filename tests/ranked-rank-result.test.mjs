@@ -43,14 +43,14 @@ test("rejects malformed, forged or incorrectly versioned receipts", () => {
   const value = receipt(1000, "won");
   for (const bad of [
     { ...value, policyVersion: 1 },
-    { ...value, policyVersion: 3 },
+    { ...value, policyVersion: 4 },
     { ...value, policyVersion: undefined },
     { ...value, ratingDelta: 62, ratingAfter: 1062 },
     { ...value, outcome: "lost" },
     { ...value, ratingAfter: 1064 },
   ])
     assert.throws(() => parseRankedMatchRating(bad));
-  assert.throws(() => formatRatingDelta(91));
+  assert.throws(() => formatRatingDelta(101));
   assert.deepEqual(parseRankedMatchRating({ ...value, userId: "private" }), value);
 });
 test("rank transitions use only before and after, including division and tier changes", () => {

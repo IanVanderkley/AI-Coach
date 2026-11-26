@@ -9,16 +9,21 @@ import {
 import { parseRankedMatchRating } from "../lib/leaderboard/match-rating.ts";
 
 const read = (path) => readFileSync(path, "utf8");
-test("public standings use the v2 contract and preserve saved balances and strict parsing", () => {
+test("public standings use the v3 contract and preserve saved balances and strict parsing", () => {
   const payload = projectPublicStandings(
     [{ username: "OldPlayer", rating: 914, games: 5, wins: 0, losses: 5 }],
     [],
   );
-  assert.equal(PUBLIC_RATING_SYSTEM, "solo-elo-benchmark-v2");
+  assert.equal(PUBLIC_RATING_SYSTEM, "solo-elo-benchmark-v3");
   assert.equal(payload.ratingSystem, PUBLIC_RATING_SYSTEM);
   assert.equal(payload.elo[0].rating, 914);
   assert.deepEqual(parsePublicStandings(payload), payload);
-  for (const ratingSystem of ["solo-elo-benchmark-v1", "unknown", null])
+  for (const ratingSystem of [
+    "solo-elo-benchmark-v1",
+    "solo-elo-benchmark-v2",
+    "unknown",
+    null,
+  ])
     assert.throws(() => parsePublicStandings({ ...payload, ratingSystem }));
 });
 test("legacy cosmetic tiers are retired but historical v1 receipt parsing remains", () => {

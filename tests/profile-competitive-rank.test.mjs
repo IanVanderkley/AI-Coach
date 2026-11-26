@@ -13,7 +13,7 @@ test("profile derives current and highest rank from the same saved data as the l
   const saved = parseRankedLobbyRating({
     rating: 914,
     highestRating: 1000,
-    policyVersion: 2,
+    policyVersion: 3,
   });
   const model = rankedLobbyModel(saved);
   assert.equal(model.current.label, "Bronze II");
@@ -21,12 +21,12 @@ test("profile derives current and highest rank from the same saved data as the l
   assert.equal(model.current.eloToPromotion, 86);
   assert.equal(model.nextRank, "Bronze I");
   const highest = rankedLobbyModel(
-    parseRankedLobbyRating({ rating: 3400, highestRating: 3500, policyVersion: 2 }),
+    parseRankedLobbyRating({ rating: 3400, highestRating: 3500, policyVersion: 3 }),
   );
   assert.equal(highest.current.progress, null);
   assert.equal(highest.current.label, "Omniscient");
   assert.throws(() =>
-    parseRankedLobbyRating({ rating: 1000, highestRating: 900, policyVersion: 2 }),
+    parseRankedLobbyRating({ rating: 1000, highestRating: 900, policyVersion: 3 }),
   );
 });
 

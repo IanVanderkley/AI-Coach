@@ -1,7 +1,7 @@
 /** Public standings are privacy-filtered in PostgreSQL before ranking or limiting. */
 export const PUBLIC_LEADERBOARD_ENDPOINT = "/api/leaderboard";
 export const PUBLIC_LEADERBOARD_LIMIT = 50;
-export const PUBLIC_RATING_SYSTEM = "solo-elo-benchmark-v2" as const;
+export const PUBLIC_RATING_SYSTEM = "solo-elo-benchmark-v3" as const;
 export const PUBLIC_USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 
 export type EloStanding = {

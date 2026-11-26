@@ -12,7 +12,7 @@ test("lobby projects real current and historical ratings, including pre-v2 recei
   assert.deepEqual(projectRankedLobbyRating(1000, null, null), {
     rating: 1000,
     highestRating: 1000,
-    policyVersion: 2,
+    policyVersion: 3,
   });
   assert.equal(projectRankedLobbyRating(1400, 1800, 1750).highestRating, 1800);
   assert.equal(projectRankedLobbyRating(1400, 1800, 1900).highestRating, 1900);
@@ -23,7 +23,7 @@ test("lobby rejects invalid data and never fabricates a starting rating", () => 
     assert.throws(() => projectRankedLobbyRating(rating, null, null));
   assert.throws(() => projectRankedLobbyRating(1000, 99, null));
   assert.throws(() =>
-    parseRankedLobbyRating({ rating: 1000, highestRating: 900, policyVersion: 2 }),
+    parseRankedLobbyRating({ rating: 1000, highestRating: 900, policyVersion: 3 }),
   );
   assert.throws(() =>
     parseRankedLobbyRating({ rating: 1000, highestRating: 1000, policyVersion: 1 }),
@@ -32,7 +32,7 @@ test("lobby rejects invalid data and never fabricates a starting rating", () => 
     parseRankedLobbyRating({
       rating: 1000,
       highestRating: 1000,
-      policyVersion: 2,
+      policyVersion: 3,
       userId: "private",
     }),
     projectRankedLobbyRating(1000, null, null),

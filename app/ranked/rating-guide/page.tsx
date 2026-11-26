@@ -3,7 +3,7 @@ import { Navbar } from "@/components/play/navbar";
 import {
   RANK_DEFINITIONS,
   RANK_POLICY,
-  calculateRankPolicyV2,
+  calculateRankPolicyV3,
   competitiveRank,
 } from "@/lib/leaderboard/rank-policy";
 
@@ -59,23 +59,25 @@ export default function RatingGuidePage() {
                       {rank.name}
                     </th>
                     <td>{rank.min.toLocaleString()}</td>
-                    <td>+{calculateRankPolicyV2(rank.min, "won").delta}</td>
-                    <td>{calculateRankPolicyV2(rank.min, "lost").delta}</td>
+                    <td>+{calculateRankPolicyV3(rank.min, "won").delta}</td>
+                    <td>{calculateRankPolicyV3(rank.min, "lost").delta}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <p>
-            Examples use the v2 policy at each entry threshold, including the rating
+            Examples use the v3 policy at each entry threshold, including the rating
             floor. Actual rewards depend on your rating when the server records the match.
             Rating is separate from account XP.
           </p>
           <h2>Calculation</h2>
           <p>
             Expected score E = 1 / (1 + 10^((1700 − rating) / 1900)). A win adds round(90
-            × (1 − E)); a loss subtracts round(45 × E). The result is clamped to the
-            allowed rating range.
+            × (1 − E)), bounded to +5 through +100 Elo before applying the rating ceiling.
+            A loss subtracts round(45 × E). The result is clamped to the allowed rating
+            range. Near 10,000 Elo, a win can award fewer than 5 points; at the ceiling it
+            awards zero.
           </p>
         </section>
       </main>

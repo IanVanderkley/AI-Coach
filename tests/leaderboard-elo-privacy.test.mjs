@@ -7,7 +7,7 @@ import {
   projectPublicStandings,
   parsePublicStandings,
 } from "../lib/leaderboard/public-standings.ts";
-import { RANK_POLICY, calculateRankPolicyV2 } from "../lib/leaderboard/rank-policy.ts";
+import { RANK_POLICY, calculateRankPolicyV3 } from "../lib/leaderboard/rank-policy.ts";
 
 const read = (path) => readFileSync(path, "utf8");
 const time = "2026-11-24T10:00:00Z";
@@ -17,20 +17,20 @@ const sampleElo = [
 ];
 const sampleFast = [{ username: "Player_One", duration_ms: 54321, finished_at: time }];
 
-test("current solo Elo starts at Gold V and uses the shared v2 formula", () => {
+test("current solo Elo starts at Gold V and uses the shared v3 formula", () => {
   assert.equal(RANK_POLICY.starting, 1600);
-  assert.deepEqual(calculateRankPolicyV2(RANK_POLICY.starting, "won"), {
+  assert.deepEqual(calculateRankPolicyV3(RANK_POLICY.starting, "won"), {
     rating: 1648,
     delta: 48,
   });
-  assert.deepEqual(calculateRankPolicyV2(RANK_POLICY.starting, "lost"), {
+  assert.deepEqual(calculateRankPolicyV3(RANK_POLICY.starting, "lost"), {
     rating: 1579,
     delta: -21,
   });
-  assert.ok(calculateRankPolicyV2(2100, "won").delta < 48);
-  assert.ok(calculateRankPolicyV2(1000, "lost").delta > -21);
-  assert.throws(() => calculateRankPolicyV2(0, "won"));
-  assert.throws(() => calculateRankPolicyV2(10001, "won"));
+  assert.ok(calculateRankPolicyV3(2100, "won").delta < 48);
+  assert.ok(calculateRankPolicyV3(1000, "lost").delta > -21);
+  assert.throws(() => calculateRankPolicyV3(0, "won"));
+  assert.throws(() => calculateRankPolicyV3(10001, "won"));
 });
 
 test("ratings and verified times become two correctly ranked public boards", () => {
