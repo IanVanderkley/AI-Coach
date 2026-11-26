@@ -7,6 +7,11 @@ import { CoachReportView } from "@/components/coach/coach-report-view";
 import { analyzeGameplay, toRuleReport } from "@/lib/coach/analyze";
 import { shapeReportForPreferences } from "@/lib/coach/preferences";
 import type { CoachResult, GameplaySession } from "@/lib/coach/types";
+import {
+  hasMoveCheckpoints,
+  prepareVerifiedAnalysis,
+} from "@/lib/coach/verified-analysis";
+import { coachPreparedPractice } from "@/lib/coach/practice-coach-result";
 import { loadCoachPreferences } from "@/lib/settings/coach-preferences";
 import { createSettingsRepository } from "@/lib/settings/repository";
 import type { CoachPreferences } from "@/lib/settings/types";
@@ -60,6 +65,15 @@ export function GameCoachReport({ session }: { session: GameplaySession }) {
         if (!alive) return;
         if (rejected) {
           setError(rejected);
+          return;
+        }
+        if (hasMoveCheckpoints(payload)) {
+          const checked = prepareVerifiedAnalysis(payload);
+          if (!checked.ok) {
+            setError(checked.error);
+            return;
+          }
+          setResult(coachPreparedPractice(checked.analysis, preferences));
           return;
         }
         const report = toRuleReport(analyzeGameplay(payload));

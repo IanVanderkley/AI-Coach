@@ -461,11 +461,16 @@ export function replayRecordedGame(game: RecordedGame): ReplayResult {
         } else if (mines.has(index)) {
           decision = "good";
           explanation = `The visible numbers proved ${label(index, columns)} contained a mine.`;
+        } else {
+          explanation =
+            "This flag was not supported or contradicted by a visible-board proof. Its actual correctness does not establish the quality of the decision.";
         }
         target.flagged = true;
         changed = true;
       }
     } else if (move.action === "unflag" && target.flagged && !target.revealed) {
+      explanation =
+        "A flag was removed. This action alone is not classified as a mistake or a proven strength.";
       target.flagged = false;
       changed = true;
     } else if (move.action === "reveal" && !target.revealed && !target.flagged) {
@@ -483,6 +488,13 @@ export function replayRecordedGame(game: RecordedGame): ReplayResult {
         decision = "mistake";
         mistakeType = "unnecessary-guess";
         explanation = `This square was uncertain while ${safe.size} other square(s) were provably safe.`;
+      }
+      if (decision === "not-enough-evidence") {
+        explanation = frames.some(
+          (frame) => frame.move.action === "reveal" && frame.changed,
+        )
+          ? "This reveal was unresolved by the solver; no proven-safe alternative was found. That does not prove guessing was unavoidable."
+          : "The opening reveal is not graded as a guess merely because there are no visible clues yet.";
       }
       changed = reveal(index);
     } else if (
@@ -510,6 +522,9 @@ export function replayRecordedGame(game: RecordedGame): ReplayResult {
           mistakeType = "unnecessary-guess";
           explanation =
             "This chord included uncertain squares while proven-safe moves were available.";
+        } else {
+          explanation =
+            "The solver could not establish the safety of every square in this chord. No proven-safe alternative was found; the risk remains unresolved.";
         }
         if (targets.some((neighbour) => hiddenMines.has(neighbour))) {
           // Match the LIVE Practice board exactly: a failed chord reveals

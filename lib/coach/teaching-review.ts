@@ -1,12 +1,12 @@
 import {
   deduceVisibleBoard,
-  replayRecordedGame,
   type Proof,
   type ProofDerivation,
   type ReplayFrame,
   type VisibleCell,
 } from "./verified-replay.ts";
-import { buildEvidenceReport, type EvidenceReport } from "./evidence-report.ts";
+import type { EvidenceReport } from "./evidence-report.ts";
+import { preparePracticeAnalysis, type PracticeAnalysis } from "./practice-analysis.ts";
 import { recommendedReveal } from "./visual-coaching.ts";
 import type { PracticeSession } from "../practice/history.ts";
 
@@ -146,11 +146,13 @@ export function explainMove(
 
 /** The UI uses zero-based teaching moves; persisted recordings and API IDs stay unchanged. */
 export function buildTeachingReview(game: PracticeSession) {
-  const report = buildEvidenceReport(game);
-  const replay = replayRecordedGame(game);
-  const start = openingIndex(game.moves);
-  const frames = replay.frames.slice(start + 1).filter((frame) => frame.changed);
-  const moments = report.moments.filter((moment) => moment.moveNumber > start + 1);
+  return buildPreparedTeachingReview(preparePracticeAnalysis(game));
+}
+
+/** Reuse a checked recording, grouping only the decisions shown in this review. */
+export function buildPreparedTeachingReview(analysis: PracticeAnalysis) {
+  const { game, replay, report: localReport } = analysis;
+  const moments = localReport.moments;
   const explanations = new Map(
     moments.map((moment) => [
       moment.id,
@@ -162,22 +164,13 @@ export function buildTeachingReview(game: PracticeSession) {
       ),
     ]),
   );
-  const localReport: EvidenceReport = {
-    ...report,
-    recordedActions: replay.frames.length - start - 1,
-    verifiedMistakes: frames.filter((frame) => frame.decision === "mistake").length,
-    provenGood: frames.filter((frame) => frame.decision === "good").length,
-    uncertainActions: frames.filter((frame) => frame.decision === "not-enough-evidence")
-      .length,
-    moments,
-  };
   const followUpReport: EvidenceReport = {
     ...localReport,
     moments: moments.map((moment) => {
       const explanation = explanations.get(moment.id);
       return {
         ...moment,
-        moveNumber: displayMoveNumber(game.moves, moment.moveNumber),
+        moveNumber: moment.moveNumber - analysis.opening - 1,
         evidence: explanation?.steps.length
           ? explanation.steps.map((step) => `${step.title}: ${step.text}`).join("\n")
           : moment.evidence,

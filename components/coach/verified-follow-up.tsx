@@ -2,17 +2,18 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, MessageCircleQuestion, ShieldCheck } from "lucide-react";
-
+import { SUGGESTED_QUESTIONS, type FollowUpAnswer } from "@/lib/coach/verified-follow-up";
 import {
-  answerVerifiedFollowUp,
-  SUGGESTED_QUESTIONS,
-  type FollowUpAnswer,
-} from "@/lib/coach/verified-follow-up";
+  appendThreadAnswer,
+  FOLLOW_UP_THREAD_LIMIT,
+  resolveThreadQuestion,
+  restoreFollowUpThread,
+  serializeFollowUpThread,
+} from "@/lib/coach/follow-up-thread";
 import type { EvidenceReport } from "@/lib/coach/evidence-report";
 import type { PracticeSession } from "@/lib/practice/history";
 
-// Keep one answered question per recording during the browser-tab session.
-// No user question or mine layout is sent to an API.
+// Same tab-local key as the earlier single-answer version. No provider calls.
 const STORAGE_PREFIX = "mindsweeper.practice.verifiedFollowUp.v1.";
 
 export function followUpGameKey(game: PracticeSession): string {
@@ -37,33 +38,24 @@ export function VerifiedFollowUp({
 }) {
   const [momentId, setMomentId] = useState(report.moments[0]?.id ?? "");
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<FollowUpAnswer | null>(null);
+  const [thread, setThread] = useState<FollowUpAnswer[]>([]);
   const [notice, setNotice] = useState("");
-  const [storageReady, setStorageReady] = useState(false);
+  const [loadedKey, setLoadedKey] = useState("");
   const storageKey = STORAGE_PREFIX + followUpGameKey(game);
+  const ready = loadedKey === storageKey;
 
   useEffect(() => {
-    // The first render is intentionally empty until we load the tab's record.
+    let restored: FollowUpAnswer[] = [];
     try {
-      const raw = window.sessionStorage.getItem(storageKey);
-      if (raw) {
-        const saved: unknown = JSON.parse(raw);
-        if (saved && typeof saved === "object") {
-          const entry = saved as { momentId?: unknown; question?: unknown };
-          if (typeof entry.momentId === "string" && typeof entry.question === "string") {
-            const result = answerVerifiedFollowUp(report, entry.momentId, entry.question);
-            if (result.supported) {
-              setMomentId(entry.momentId);
-              setQuestion(entry.question);
-              setAnswer(result.answer);
-            }
-          }
-        }
-      }
+      restored = restoreFollowUpThread(report, window.sessionStorage.getItem(storageKey));
     } catch {
-      // Storage can be disabled. The question still works for this page view.
+      // The conversation still works when storage is unavailable.
     }
-    setStorageReady(true);
+    setThread(restored);
+    setMomentId(restored.at(-1)?.momentId ?? report.moments[0]?.id ?? "");
+    setQuestion("");
+    setNotice("");
+    setLoadedKey(storageKey);
   }, [report, storageKey]);
 
   if (report.moments.length === 0) {
@@ -73,8 +65,8 @@ export function VerifiedFollowUp({
           <MessageCircleQuestion size={19} aria-hidden="true" /> Ask about a verified move
         </h4>
         <p>
-          There isn't a verified coaching moment to ask about in this game. We won't
-          invent an explanation for an uncertain move.
+          There are no verified teaching moments in this recording. You can still inspect
+          its replay.
         </p>
       </section>
     );
@@ -82,124 +74,168 @@ export function VerifiedFollowUp({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!storageReady || answer) return;
-    const result = answerVerifiedFollowUp(report, momentId, question);
+    if (!ready) return;
+    const result = resolveThreadQuestion(report, momentId, question);
     if (!result.supported) {
-      setNotice(result.message);
+      setNotice(
+        result.message.replace(
+          " Unsupported questions do not use your one follow-up.",
+          "",
+        ),
+      );
       return;
     }
+    const next = appendThreadAnswer(thread, result.answer);
+    setThread(next);
+    setQuestion("");
     setNotice("");
-    setAnswer(result.answer);
-    onReviewMove(result.answer.moveNumber);
     try {
-      window.sessionStorage.setItem(
-        storageKey,
-        JSON.stringify({ momentId, question: result.answer.question }),
-      );
+      window.sessionStorage.setItem(storageKey, serializeFollowUpThread(next));
     } catch {
-      // Do not interrupt a coaching answer if tab storage is unavailable.
+      // Do not interrupt local coaching if tab storage is unavailable.
+    }
+  }
+
+  function clearThread() {
+    if (!ready) return;
+    setThread([]);
+    setQuestion("");
+    setNotice("");
+    try {
+      window.sessionStorage.removeItem(storageKey);
+    } catch {
+      // The in-memory conversation has still been cleared.
     }
   }
 
   const selected = report.moments.find((item) => item.id === momentId);
   return (
-    <section className="verified-follow-up" aria-label="One coaching follow-up">
+    <section className="verified-follow-up" aria-label="Coaching conversation">
       <div className="follow-up-title-row">
         <h4>
-          <MessageCircleQuestion size={19} aria-hidden="true" /> Ask one follow-up
-          question
+          <MessageCircleQuestion size={19} aria-hidden="true" /> Ask your coach
         </h4>
         <span>
-          <ShieldCheck size={13} aria-hidden="true" /> Verified rule answer
+          <ShieldCheck size={13} aria-hidden="true" /> Verified rule answers
         </span>
       </div>
       <p>
-        Choose a recorded coaching moment and ask one question about it. This works
-        without an OpenAI key and uses only facts already verified by your board replay.
+        Ask about a verified move: why it was classified that way, what the clues prove,
+        or what to do next. Answers are assembled locally from the recording, not
+        generated by a language model.
       </p>
-      {!answer ? (
-        <form onSubmit={submit} className="follow-up-form">
-          <label htmlFor="follow-up-moment">Which move?</label>
-          <select
-            id="follow-up-moment"
-            value={momentId}
-            onChange={(event) => {
-              setMomentId(event.target.value);
-              setNotice("");
-            }}
+      {ready && thread.length > 0 && (
+        <>
+          <div
+            className="coach-follow-up-thread"
+            role="log"
+            aria-label="Coaching answers"
+            aria-live="polite"
           >
-            {report.moments.map((moment) => (
-              <option key={moment.id} value={moment.id}>
-                Move {moment.moveNumber} — {moment.category}
-              </option>
-            ))}
-          </select>
-          <label htmlFor="follow-up-question">Your question</label>
-          <textarea
-            id="follow-up-question"
-            value={question}
-            onChange={(event) => {
-              setQuestion(event.target.value);
-              setNotice("");
-            }}
-            placeholder="Why was this decision classified this way?"
-            maxLength={240}
-            rows={2}
-            required
-          />
-          <div className="follow-up-suggestions" aria-label="Example questions">
-            {SUGGESTED_QUESTIONS.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => {
-                  setQuestion(suggestion);
-                  setNotice("");
-                }}
+            {thread.map((answer, index) => (
+              <article
+                className="follow-up-answer"
+                key={`${answer.momentId}-${answer.intent}-${index}`}
               >
-                {suggestion}
-              </button>
+                <span className="subtle-label">
+                  Move {answer.moveNumber} · Verified response
+                </span>
+                <p className="follow-up-asked">“{answer.question}”</p>
+                <h5>{answer.title}</h5>
+                {answer.paragraphs.map((paragraph, i) => (
+                  <p key={i} className="coach-follow-up-paragraph">
+                    {paragraph}
+                  </p>
+                ))}
+                <button
+                  type="button"
+                  className="evidence-review-button"
+                  onClick={() => onReviewMove(answer.moveNumber)}
+                >
+                  View move {answer.moveNumber} in replay
+                </button>
+              </article>
             ))}
           </div>
-          {selected && (
-            <p className="follow-up-context">
-              Selected: move {selected.moveNumber}, {selected.location}
-            </p>
-          )}
-          {notice && (
-            <p className="follow-up-notice" role="status">
-              {notice}
-            </p>
-          )}
-          <button
-            className="follow-up-submit"
-            type="submit"
-            disabled={!storageReady || question.trim().length < 5}
-          >
-            Ask about this move <ArrowRight size={16} aria-hidden="true" />
-          </button>
-        </form>
-      ) : (
-        <div className="follow-up-answer" aria-live="polite">
-          <span className="subtle-label">YOUR ONE VERIFIED FOLLOW-UP</span>
-          <p className="follow-up-asked">“{answer.question}”</p>
-          <h5>{answer.title}</h5>
-          {answer.paragraphs.map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
-          ))}
-          <button
-            type="button"
-            className="evidence-review-button"
-            onClick={() => onReviewMove(answer.moveNumber)}
-          >
-            View move {answer.moveNumber} in replay
-          </button>
-          <p className="follow-up-context">
-            One answer per game in this browser tab. You can still review all the other
-            moves in the report.
-          </p>
-        </div>
+          <div className="coach-follow-up-thread-meta">
+            <span className="follow-up-context">
+              Latest {thread.length} of up to {FOLLOW_UP_THREAD_LIMIT} answers saved in
+              this browser tab.
+            </span>
+            <button
+              type="button"
+              className="evidence-review-button"
+              onClick={clearThread}
+            >
+              Clear conversation
+            </button>
+          </div>
+        </>
       )}
+      <form onSubmit={submit} className="follow-up-form">
+        <label htmlFor="follow-up-moment">Which move?</label>
+        <select
+          id="follow-up-moment"
+          value={momentId}
+          disabled={!ready}
+          onChange={(event) => {
+            setMomentId(event.target.value);
+            setNotice("");
+          }}
+        >
+          {report.moments.map((moment) => (
+            <option key={moment.id} value={moment.id}>
+              Move {moment.moveNumber} — {moment.category}
+            </option>
+          ))}
+        </select>
+        <label htmlFor="follow-up-question">Your question</label>
+        <textarea
+          id="follow-up-question"
+          value={question}
+          onChange={(event) => {
+            setQuestion(event.target.value);
+            setNotice("");
+          }}
+          placeholder="Why was this decision classified this way?"
+          maxLength={240}
+          rows={2}
+          required
+          disabled={!ready}
+        />
+        <div className="follow-up-suggestions" aria-label="Example questions">
+          {SUGGESTED_QUESTIONS.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              disabled={!ready}
+              onClick={() => {
+                setQuestion(suggestion);
+                setNotice("");
+              }}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+        {selected && (
+          <p className="follow-up-context">
+            Selected: move {selected.moveNumber}, {selected.location}
+          </p>
+        )}
+        {notice && (
+          <p className="follow-up-notice" role="status">
+            {notice}
+          </p>
+        )}
+        <button
+          className="follow-up-submit"
+          type="submit"
+          disabled={!ready || !selected || question.trim().length < 5}
+        >
+          Ask about this move <ArrowRight size={16} aria-hidden="true" />
+        </button>
+      </form>
     </section>
   );
 }

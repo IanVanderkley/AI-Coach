@@ -9,6 +9,9 @@ import type { VerifiedFocusInput } from "./verified-focus-input";
 import type { ConfiguredProvider } from "./providers";
 import type { CoachNarrative } from "./prompt";
 import type { EvidenceReport } from "./evidence-report";
+import { focusCandidates, focusPreferences } from "./visual-coaching.ts";
+import { hasMoveCheckpoints, prepareVerifiedAnalysis } from "./verified-analysis.ts";
+import { coachPreparedPractice } from "./practice-coach-result.ts";
 
 // Keep the real HTTP orchestration testable without creating fake accounts,
 // sending provider requests, or modifying the staging database. The Next.js
@@ -37,6 +40,17 @@ export async function handleCoachPost(
 
   const parsed = deps.validateSession(parsedBody.value);
   if ("error" in parsed) return json({ error: parsed.error }, 400);
+
+  // The compatibility validator drops checkpoints. Validate the original body
+  // before quota or coaching, and never downgrade a partially stamped recording.
+  // Older recordings without any checkpoints retain the legacy report contract.
+  if (hasMoveCheckpoints(parsedBody.value)) {
+    const checked = prepareVerifiedAnalysis(parsedBody.value);
+    if (!checked.ok) return json({ error: checked.error }, checked.status);
+    // Finished, checkpointed recordings use the same deterministic review as the UI.
+    // Free-form paid narrative is not needed; optional AI focus has its own endpoint.
+    return json(coachPreparedPractice(checked.analysis, parsed.session.preferences));
+  }
 
   // The reservation gate checks the authenticated account and the atomic
   // database quota. Without a reservation, only the rule coach may answer.
@@ -70,10 +84,19 @@ export async function handleVerifiedCoachPost(
   const prepared = deps.prepareVerifiedFocusInput(parsed.value);
   if (!prepared.ok) return json({ error: prepared.error }, prepared.status);
   const { report } = prepared;
-
+  const raw = parsed.value;
+  const preferences = focusPreferences(
+    raw && typeof raw === "object" && "focusPreferences" in raw
+      ? raw.focusPreferences
+      : undefined,
+  );
+  const candidates = focusCandidates(report, preferences);
   const fallback = {
-    focusId: report.moments[0]?.id ?? null,
-    style: "step-by-step",
+    focusId: candidates[0]?.id ?? null,
+    style:
+      preferences.explanationDetail === "brief" || preferences.coachingStyle === "direct"
+        ? "direct"
+        : "step-by-step",
     selectedBy: "rules",
     model: null,
     note: "Verified rule coaching selected the focus; AI was not needed or available.",
@@ -90,7 +113,7 @@ export async function handleVerifiedCoachPost(
   if (!provider) return json(fallback);
 
   // Only evidence established by the deterministic replay reaches the model.
-  const choices = report.moments.map((moment) => ({
+  const choices = candidates.map((moment) => ({
     id: moment.id,
     kind: moment.kind,
     category: moment.category,
@@ -117,7 +140,8 @@ export async function handleVerifiedCoachPost(
       selection?.headline,
       selection?.summary,
     );
-    if (!checked) return json(fallback);
+    if (!checked || !candidates.some((moment) => moment.id === checked.focusId))
+      return json(fallback);
     return json({
       focusId: checked.focusId,
       style: checked.style,

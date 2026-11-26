@@ -134,6 +134,15 @@ Response — a `CoachResult`:
 }
 ```
 
+For completed Practice payloads with move checkpoints, the server returns the shared
+post-opening learning review (Batch 25). `score` and `grade` are both `null` when no
+post-opening decision can be proven. `metrics` is `null` for this path rather than
+mixing legacy counters with verified counts; the summary and notes describe the evidence.
+Only the deterministic coach writes this report; optional paid prioritization is handled
+by `/api/coach/verified`. Requests with no checkpoints retain the legacy contract below.
+The verified brief continues to report whole-recording counts; verified focus selection
+uses the same post-opening moment IDs as the visual review.
+
 `report.source` is `rules` when the rule engine wrote the wording, or
 `openai` / `anthropic` / `gemini` when a provider did. `report.model` names the
 model in that case. `fallbackReason` is set whenever the rules answered for a
@@ -161,7 +170,7 @@ differ.
 - `avoidableGuesses` — a guess made while at least one square was already proven
   safe by the numbers. These are the mistakes that cost points.
 - `forcedGuesses` — a guess made when no provably safe square existed, so the
-  player had no choice. These do not count against the score.
+  solver found no proven-safe alternative. This does not establish that the guess was unavoidable.
 
 `avoidableGuesses + forcedGuesses === guesses`.
 

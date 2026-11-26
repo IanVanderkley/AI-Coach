@@ -20,7 +20,7 @@ function fixture() {
 test("focus input accepts a real completed and checkpointed Practice game", () => {
   const result = prepareVerifiedFocusInput(fixture());
   assert.equal(result.ok, true);
-  assert.equal(result.report.recordedActions, 4);
+  assert.equal(result.report.recordedActions, 3);
   assert.ok(result.report.moments.some((moment) => moment.kind === "mistake"));
 });
 

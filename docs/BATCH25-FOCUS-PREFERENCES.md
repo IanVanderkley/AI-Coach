@@ -1,0 +1,5 @@
+# Batch 25A.5 — Consistent coaching focus
+
+The deterministic lesson order remains unchanged: mistakes first, matching selected goals next, then occurrence count and move order. The optional verified focus endpoint now receives only recognized structured goals and style/detail fields; it uses the same lesson priority as the visual report and checkpointed compatibility report. An optional provider can choose only a verified moment in the highest applicable tier (mistakes before strengths; goal matches where present). Invalid suggestions fall back to the local priority. Free-text custom goals remain local to the visual report and do not enter this endpoint's model prompt. Changing preferences aborts a pending focus request and resets the old selection.
+
+Preferences do not change the grade, replay, evidence, counts, or move IDs. Legacy unstamped coaching and the whole-recording brief remain compatible. No paid AI activation, database migration, or provider calls are required to test the patch.

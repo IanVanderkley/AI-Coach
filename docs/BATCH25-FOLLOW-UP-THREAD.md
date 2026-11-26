@@ -1,0 +1,7 @@
+# Batch 25B.4 — Grounded coaching conversation
+
+The existing rule-backed question classifier remains the source of answers. The interface now allows successive questions about any displayed verified moment, without jumping away automatically. Each response links to its own recorded move. Up to 12 recent answers are retained in the current browser tab; older entries are dropped, not billed or blocked. Clear conversation removes the saved thread when session storage is accessible. Existing single-question entries are compatible. Stored questions are re-evaluated against the current verified report, not trusted as saved proof or answers. Storage is local to the browser tab, not account-level persistence. No new provider, request, quota, database write or migration is introduced.
+
+The feature is a sequence of independent, move-scoped rule answers, not a general conversational AI or counterfactual simulator. Questions explicitly referring to another displayed move or asking for probabilities are rejected. Existing why/evidence/next-step responses remain available. No conclusions about future outcomes or overall skill are invented.
+
+Manual check: ask why about one move, ask what to do next about another, verify both answers remain visible and each replay link opens its own move. Ask an unsupported probability question and confirm no response is added. Reopen the same review in the same tab, verify restoration, clear the thread, and verify a new question works. Check keyboard controls and browser console.

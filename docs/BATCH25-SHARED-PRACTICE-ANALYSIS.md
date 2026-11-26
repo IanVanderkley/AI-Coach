@@ -1,0 +1,5 @@
+# Batch 25A.3 — Shared Practice analysis
+
+The selected Practice game now has a single prepared replay. The grade, replay counts and teaching report consume the same post-opening changed actions. Group lessons only after scoping the recording so early setup actions cannot consume a lesson category or distort occurrence counts. The versioned local analysis is derived on demand; it does not introduce persisted grades or change the current 60/40 progress/decision-quality formula. The background history grade worker retains its public wrapper. Whole-recording verified HTTP reports retain their existing scope and response contract. Older unstamped recordings remain readable; mixed checkpoints are rejected for selected review and grade calculation.
+
+The legacy demo analyzer still has separate scoring and deduction rules. This patch does not replace it, change AI permissions, modify Ranked, or introduce database changes. Saved coaching preferences still order existing evidence and control presentation. Run all regression tests, then verify that a real selected Practice review has matching counts, accurate lesson links, and a working replay.

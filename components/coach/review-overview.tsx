@@ -1,13 +1,21 @@
 import { CheckCircle2, Target, TriangleAlert } from "lucide-react";
 import type { ReviewScore } from "@/lib/coach/review-score";
+import type { ReportMoment } from "@/lib/coach/evidence-report";
+import type { CoachPreferences } from "@/lib/settings/types";
+import { reviewToneSummary } from "@/lib/coach/review-presentation";
 
 export function ReviewOverview({
   review,
+  preferences,
+  focus,
   onReviewMove,
 }: {
   review: ReviewScore;
+  preferences?: CoachPreferences | null;
+  focus?: ReportMoment;
   onReviewMove: (move: number) => void;
 }) {
+  const focusMove = focus?.moveNumber ?? review.focusMove;
   return (
     <article className="coach-review-overview" aria-label="Post-game feedback">
       <p className="subtle-label">POST-GAME FEEDBACK</p>
@@ -19,7 +27,7 @@ export function ReviewOverview({
           </span>
         </div>
         <div>
-          <h2>{review.headline}</h2>
+          <h2>{reviewToneSummary(review, preferences?.coachingStyle)}</h2>
           <p>
             Practice learning score · based on this recording, not your overall ability.
           </p>
@@ -50,17 +58,19 @@ export function ReviewOverview({
           <CheckCircle2 size={19} aria-hidden="true" />
         )}
         <p>
-          {review.mistakes
-            ? "See the exact clues you missed, and learn how to find the safer move next time."
-            : review.good
-              ? "See the rules behind your successful decisions and practice them again."
-              : "The coach cannot prove enough about your choices to give a fair score. You can still inspect the replay."}
+          {focus
+            ? `Suggested lesson: ${focus.category}.`
+            : review.mistakes
+              ? "Inspect the visible clues behind your mistakes."
+              : review.good
+                ? "Review the deductions that supported your decisions."
+                : "There is not enough evidence to grade the decisions. You can still inspect the replay."}
         </p>
-        {review.focusMove !== null && (
+        {focusMove !== null && (
           <button
             type="button"
             className="coach-btn"
-            onClick={() => onReviewMove(review.focusMove!)}
+            onClick={() => onReviewMove(focusMove!)}
           >
             <Target size={15} aria-hidden="true" /> Review key move
           </button>

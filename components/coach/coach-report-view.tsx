@@ -17,14 +17,14 @@ function metricItems(report: CoachReport) {
   if (!metrics) return [];
   const items: Array<{ label: string; value: string }> = [
     {
-      label: "Certain reveals",
-      value: `${metrics.logicalReveals} / ${metrics.reveals}`,
+      label: "Certain reveal or chord actions",
+      value: `${metrics.logicalReveals} / ${metrics.reveals + metrics.chords}`,
     },
     {
       label: "Guesses",
       value: `${metrics.guesses}${metrics.avoidableGuesses > 0 ? ` (${metrics.avoidableGuesses} avoidable)` : ""}`,
     },
-    { label: "Forced guesses", value: String(metrics.forcedGuesses) },
+    { label: "No proven-safe alternative found", value: String(metrics.forcedGuesses) },
     {
       label: "Flag accuracy",
       // No flags placed means there is no accuracy to report. Showing 100%
@@ -64,8 +64,10 @@ export function CoachReportView({
 
       <div className="coach-report-top">
         <div className="grade-badge">
-          <span className="grade-letter">{report.grade}</span>
-          <span className="grade-score">{report.score}/100</span>
+          <span className="grade-letter">{report.grade ?? "—"}</span>
+          <span className="grade-score">
+            {report.score === null ? "Not graded" : `${report.score}/100`}
+          </span>
         </div>
         <div>
           <h3>{report.headline}</h3>

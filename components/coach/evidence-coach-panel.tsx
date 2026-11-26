@@ -10,19 +10,18 @@ import {
   TriangleAlert,
 } from "lucide-react";
 
-import {
-  buildTeachingReview,
-  displayMoveNumber,
-  openingIndex,
-} from "@/lib/coach/teaching-review";
-import { TeachingProof } from "@/components/coach/teaching-proof";
+import { buildPreparedTeachingReview } from "@/lib/coach/teaching-review";
+import { explanationLabel } from "@/lib/coach/review-presentation";
 import { VerifiedFollowUp, followUpGameKey } from "@/components/coach/verified-follow-up";
 import type { PracticeSession } from "@/lib/practice/history";
+import type { PracticeAnalysis } from "@/lib/coach/practice-analysis";
 import type { CoachPreferences } from "@/lib/settings/types";
 import {
   coachingLead,
   practicePrompt,
   prioritizeMoments,
+  focusCandidates,
+  focusPreferences,
 } from "@/lib/coach/visual-coaching";
 import Link from "next/link";
 
@@ -36,25 +35,27 @@ type FocusResponse = {
 
 export function EvidenceCoachPanel({
   game,
+  analysis,
   onReviewMove,
   preferences,
   aiAvailable = false,
 }: {
   game: PracticeSession;
+  analysis: PracticeAnalysis;
   onReviewMove: (moveNumber: number) => void;
   preferences?: CoachPreferences | null;
   aiAvailable?: boolean;
 }) {
   const prepared = useMemo(() => {
     try {
-      return { review: buildTeachingReview(game), error: null };
+      return { review: buildPreparedTeachingReview(analysis), error: null };
     } catch (error) {
       return {
         review: null,
         error: error instanceof Error ? error.message : "Unable to verify this game.",
       };
     }
-  }, [game]);
+  }, [analysis]);
   const [focus, setFocus] = useState<FocusResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -66,11 +67,11 @@ export function EvidenceCoachPanel({
     setLoading(false);
     setError("");
     return () => pending.current?.abort();
-  }, [game]);
+  }, [game, preferences]);
 
   const report = prepared.review?.report;
   const explanations = prepared.review?.explanations;
-  const displayedNumber = (raw: number) => displayMoveNumber(game.moves, raw);
+  const displayedNumber = (raw: number) => raw - analysis.opening - 1;
   if (!report) {
     return (
       <section className="evidence-report" aria-label="Verified coaching">
@@ -91,7 +92,10 @@ export function EvidenceCoachPanel({
       const response = await fetch("/api/coach/verified", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(game),
+        body: JSON.stringify({
+          ...game,
+          focusPreferences: focusPreferences(preferences),
+        }),
         signal: controller.signal,
       });
       const body = (await response.json().catch(() => null)) as
@@ -101,7 +105,7 @@ export function EvidenceCoachPanel({
       if (
         !body ||
         (body.focusId !== null &&
-          !report.moments.some((item) => item.id === body.focusId))
+          !focusCandidates(report, preferences).some((item) => item.id === body.focusId))
       ) {
         throw new Error("The AI suggestion was not based on a verified moment.");
       }
@@ -131,7 +135,7 @@ export function EvidenceCoachPanel({
         <div>
           <span className="subtle-label">VERIFIED POST-GAME REPORT · PRACTICE</span>
           <h3>
-            <BrainCircuit size={22} aria-hidden="true" /> Your next Practice lesson
+            <BrainCircuit size={22} aria-hidden="true" /> Lessons and follow-up
           </h3>
         </div>
         <span className="evidence-lock">
@@ -158,7 +162,7 @@ export function EvidenceCoachPanel({
         <div className="coach-preference-summary">
           {preferences ? (
             <>
-              Using {preferences.coachingStyle} tone · {detail} detail ·{" "}
+              Using {preferences.coachingStyle} tone · {explanationLabel(detail)} ·{" "}
               {preferences.experienceLevel} experience
               {preferences.selectedGoals.length
                 ? ` · Goals: ${preferences.selectedGoals.join(", ")}`
@@ -176,23 +180,7 @@ export function EvidenceCoachPanel({
           </p>
         )}
       </div>
-      <details className="evidence-focus-tools">
-        <summary>Decision totals</summary>
-        <div className="evidence-counts">
-          <span>
-            <strong>{report.recordedActions}</strong> review moves (opening excluded)
-          </span>
-          <span>
-            <strong>{report.verifiedMistakes}</strong> verified mistakes
-          </span>
-          <span>
-            <strong>{report.provenGood}</strong> proven good moves
-          </span>
-          <span>
-            <strong>{report.uncertainActions}</strong> insufficient evidence
-          </span>
-        </div>
-      </details>
+
       <details className="evidence-focus-tools">
         <summary>Optional AI focus</summary>
         <div className="evidence-focus-row">
@@ -280,12 +268,12 @@ export function EvidenceCoachPanel({
                   {explanations?.get(moment.id)?.summary || moment.finding}
                 </p>
               )}
-              <TeachingProof
-                explanation={explanations?.get(moment.id)}
-                fallback={moment.evidence}
-                expanded={detail !== "brief"}
-                technical={detail === "detailed"}
-              />
+              {detail === "detailed" && (
+                <p className="coach-lesson-proof-link">
+                  Full deduction chain and exact coordinates are available in the move
+                  review.
+                </p>
+              )}
               <p>
                 <strong>Use this in your next game:</strong>{" "}
                 {explanations?.get(moment.id)?.nextStep || moment.nextTime}
@@ -295,7 +283,7 @@ export function EvidenceCoachPanel({
                 className="evidence-review-button"
                 onClick={() => onReviewMove(moment.moveNumber)}
               >
-                View board at move {displayedNumber(moment.moveNumber)}
+                Review move {displayedNumber(moment.moveNumber)} and proof
               </button>
             </article>
           ))}
@@ -312,9 +300,7 @@ export function EvidenceCoachPanel({
           key={followUpGameKey(game)}
           report={prepared.review!.followUpReport}
           game={game}
-          onReviewMove={(displayed) =>
-            onReviewMove(displayed + openingIndex(game.moves) + 1)
-          }
+          onReviewMove={(displayed) => onReviewMove(displayed + analysis.opening + 1)}
         />
       </details>
       <p className="evidence-caveat">
