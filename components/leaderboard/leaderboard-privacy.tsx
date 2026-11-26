@@ -110,7 +110,7 @@ export function LeaderboardPrivacy() {
             </label>
             {rating !== null && (
               <p className="leaderboard-privacy-rating">
-                Your saved solo rating: <strong>{rating.toLocaleString()}</strong>
+                Your saved Ranked Elo: <strong>{rating.toLocaleString()}</strong>
               </p>
             )}
             <button

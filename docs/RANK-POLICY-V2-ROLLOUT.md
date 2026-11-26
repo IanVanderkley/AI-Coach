@@ -4,7 +4,7 @@ Local-only until the matching rank UI and API are ready. The current live applic
 
 The new migration adds a policy version to the existing receipt ledger (historical receipts default to version 1), then replaces only the calculation inside the existing verified-match award function. New receipts explicitly record version 2. The existing row lock, receipt primary key, verified-win gate, private function permissions, server-owned completion trigger, initial rating and profile totals remain in place. No historical match replay or rating reset occurs. The reference function remains private and is not an API for browser awards. The migration refuses unexpected drift in the original function body.
 
-The current public API still advertises the legacy rating-system identifier; update that contract and rank presentation before hosted activation. The rating economy is a provisional fixed-benchmark solo model, not competitive player-versus-player Elo. At 1000 the new awards are +63/-13; at 3400 they are +10/-40. Rounding eventually makes wins worth zero at very high ratings; assess that behavior and the actual player win-rate distribution in balancing tests before release.
+Batch 23G.3b updates the public API identifier to `solo-elo-benchmark-v2` and retires the legacy rank presentation. Deploy the matching application and database migrations together; historical v1 receipts remain valid. The rating economy is a provisional fixed-benchmark solo model, not competitive player-versus-player Elo. At 1000 the new awards are +63/-13; at 3400 they are +10/-40. Rounding eventually makes wins worth zero at very high ratings; assess that behavior and the actual player win-rate distribution in balancing tests before release.
 
 ## Verification
 

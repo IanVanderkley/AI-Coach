@@ -1,6 +1,7 @@
 /** Public standings are privacy-filtered in PostgreSQL before ranking or limiting. */
 export const PUBLIC_LEADERBOARD_ENDPOINT = "/api/leaderboard";
 export const PUBLIC_LEADERBOARD_LIMIT = 50;
+export const PUBLIC_RATING_SYSTEM = "solo-elo-benchmark-v2" as const;
 export const PUBLIC_USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 
 export type EloStanding = {
@@ -21,7 +22,7 @@ export type SpeedStanding = {
 
 export type PublicStandings = {
   source: "server-verified";
-  ratingSystem: "solo-elo-benchmark-v1";
+  ratingSystem: typeof PUBLIC_RATING_SYSTEM;
   board: "intermediate-16x16-40";
   elo: EloStanding[];
   fastest: SpeedStanding[];
@@ -39,17 +40,6 @@ const validInt = (value: unknown, min: number, max: number): value is number =>
   Number.isSafeInteger(value) &&
   value >= min &&
   value <= max;
-
-/** Fixed 1000-point baseline, K=32. Not head-to-head Elo. */
-export function calculateSoloElo(currentRating: number, outcome: "won" | "lost") {
-  if (!validInt(currentRating, 100, 10000)) {
-    throw new RangeError("Rating is outside the permitted range.");
-  }
-  const expectation = 1 / (1 + 10 ** ((1000 - currentRating) / 400));
-  const adjustment = Math.round(32 * ((outcome === "won" ? 1 : 0) - expectation));
-  const nextRating = Math.max(100, Math.min(10000, currentRating + adjustment));
-  return { rating: nextRating, delta: nextRating - currentRating };
-}
 
 /** Server-side projection: never pass through user IDs, e-mails, or match IDs. */
 export function projectPublicStandings(
@@ -118,7 +108,7 @@ export function projectPublicStandings(
   });
   return {
     source: "server-verified",
-    ratingSystem: "solo-elo-benchmark-v1",
+    ratingSystem: PUBLIC_RATING_SYSTEM,
     board: "intermediate-16x16-40",
     elo,
     fastest,
@@ -130,7 +120,7 @@ export function parsePublicStandings(value: unknown): PublicStandings {
   if (
     !isRow(value) ||
     value.source !== "server-verified" ||
-    value.ratingSystem !== "solo-elo-benchmark-v1" ||
+    value.ratingSystem !== PUBLIC_RATING_SYSTEM ||
     value.board !== "intermediate-16x16-40" ||
     !Array.isArray(value.elo) ||
     !Array.isArray(value.fastest)

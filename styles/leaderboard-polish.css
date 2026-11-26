@@ -55,39 +55,6 @@
 .verified-board-table th {
   vertical-align: middle;
 }
-.rating-tier {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 82px;
-  padding: 5px 10px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.2px;
-  white-space: nowrap;
-}
-.rating-tier-bronze {
-  color: #ecc0a0;
-  background: #3e2c28;
-}
-.rating-tier-silver {
-  color: #e1e4ee;
-  background: #363a42;
-}
-.rating-tier-gold {
-  color: #ffdda1;
-  background: #403421;
-}
-.rating-tier-platinum {
-  color: #b5f1e5;
-  background: #233a39;
-}
-.rating-tier-diamond {
-  color: #b6d9ff;
-  background: #283750;
-}
 /* Competitive rank cells use the same original emblems as the lobby and profile. */
 .verified-board-table .leaderboard-competitive-rank {
   display: inline-grid;

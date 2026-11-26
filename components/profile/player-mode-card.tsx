@@ -98,9 +98,9 @@ export function PlayerModeCard({
         )}
         <p className="player-mode-context">
           {verifiedLifetime
-            ? "All recorded, server-verified Intermediate outcomes. Competitive RP is separate."
+            ? "All recorded, server-verified Intermediate outcomes. Ranked Elo is separate from account XP."
             : ranked
-              ? "Latest ten server-recorded Intermediate matches; not lifetime Ranked RP."
+              ? "Latest ten server-recorded Intermediate matches; not lifetime statistics."
               : trackedPractice
                 ? "Retained Practice history at tracking activation plus subsequent account uploads; not server-verified or guaranteed complete before activation."
                 : "Saved Practice records only; browser and account retention limits apply."}

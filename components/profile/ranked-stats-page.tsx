@@ -127,8 +127,8 @@ export function RankedStatsPage() {
           </section>
           <p className="profile-detail-note">
             These totals include all server-verified Intermediate wins and server-recorded
-            terminal losses. Beginner and Expert Ranked are not yet playable; RP and
-            placements are not active.
+            terminal losses. Beginner and Expert Ranked are not yet playable. Ranked Elo
+            is separate from account XP.
           </p>
         </>
       )}

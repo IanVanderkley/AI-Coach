@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { ratingTier, ratingTierClass } from "../lib/leaderboard/rating-tier.ts";
+import { competitiveRank } from "../lib/leaderboard/rank-policy.ts";
 import {
   parseRankedMatchRating,
   formatRatingDelta,
@@ -16,24 +16,25 @@ const receipt = {
   ratingAfter: 1016,
 };
 
-test("rating milestones are explicit, bounded, and cosmetic", () => {
+test("competitive rating milestones use the shared eight-rank scale and remain bounded", () => {
   for (const [n, expected] of [
-    [100, "Bronze"],
-    [899, "Bronze"],
-    [900, "Silver"],
-    [1099, "Silver"],
-    [1100, "Gold"],
-    [1299, "Gold"],
-    [1300, "Platinum"],
-    [1499, "Platinum"],
-    [1500, "Diamond"],
-    [10000, "Diamond"],
-  ]) {
-    assert.equal(ratingTier(n), expected);
-  }
-  assert.equal(ratingTierClass("Gold"), "rating-tier-gold");
+    [100, "Copper V"],
+    [599, "Copper I"],
+    [600, "Bronze V"],
+    [1099, "Bronze I"],
+    [1100, "Silver V"],
+    [1599, "Silver I"],
+    [1600, "Gold V"],
+    [2100, "Platinum V"],
+    [2600, "Emerald V"],
+    [3100, "Diamond III"],
+    [3399, "Diamond I"],
+    [3400, "Omniscient"],
+    [10000, "Omniscient"],
+  ])
+    assert.equal(competitiveRank(n).label, expected);
   for (const n of [0, -1, 10001, 100.5, NaN, Infinity])
-    assert.throws(() => ratingTier(n));
+    assert.throws(() => competitiveRank(n));
 });
 
 test("only consistent, signed rating receipts are accepted", () => {

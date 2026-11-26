@@ -3,10 +3,11 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import {
   PUBLIC_LEADERBOARD_ENDPOINT,
-  calculateSoloElo,
+  PUBLIC_RATING_SYSTEM,
   projectPublicStandings,
   parsePublicStandings,
 } from "../lib/leaderboard/public-standings.ts";
+import { RANK_POLICY, calculateRankPolicyV2 } from "../lib/leaderboard/rank-policy.ts";
 
 const read = (path) => readFileSync(path, "utf8");
 const time = "2026-11-24T10:00:00Z";
@@ -16,18 +17,26 @@ const sampleElo = [
 ];
 const sampleFast = [{ username: "Player_One", duration_ms: 54321, finished_at: time }];
 
-test("solo Elo-style rating starts at 1000 with +16 / -16 versus benchmark", () => {
-  assert.deepEqual(calculateSoloElo(1000, "won"), { rating: 1016, delta: 16 });
-  assert.deepEqual(calculateSoloElo(1000, "lost"), { rating: 984, delta: -16 });
-  assert.ok(calculateSoloElo(1016, "won").delta < 16);
-  assert.ok(calculateSoloElo(984, "lost").delta > -16);
-  assert.throws(() => calculateSoloElo(0, "won"));
-  assert.throws(() => calculateSoloElo(10001, "won"));
+test("current solo Elo starts at Gold V and uses the shared v2 formula", () => {
+  assert.equal(RANK_POLICY.starting, 1600);
+  assert.deepEqual(calculateRankPolicyV2(RANK_POLICY.starting, "won"), {
+    rating: 1648,
+    delta: 48,
+  });
+  assert.deepEqual(calculateRankPolicyV2(RANK_POLICY.starting, "lost"), {
+    rating: 1579,
+    delta: -21,
+  });
+  assert.ok(calculateRankPolicyV2(2100, "won").delta < 48);
+  assert.ok(calculateRankPolicyV2(1000, "lost").delta > -21);
+  assert.throws(() => calculateRankPolicyV2(0, "won"));
+  assert.throws(() => calculateRankPolicyV2(10001, "won"));
 });
 
 test("ratings and verified times become two correctly ranked public boards", () => {
   assert.equal(PUBLIC_LEADERBOARD_ENDPOINT, "/api/leaderboard");
   const projected = projectPublicStandings(sampleElo, sampleFast);
+  assert.equal(projected.ratingSystem, PUBLIC_RATING_SYSTEM);
   assert.deepEqual(
     projected.elo.map((x) => [x.rank, x.username, x.rating]),
     [
