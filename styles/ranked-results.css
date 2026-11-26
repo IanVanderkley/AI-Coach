@@ -412,3 +412,301 @@
     transition: none !important;
   }
 }
+
+/* Batch 23F compact result layout. The dialog can scroll on small screens. */
+.ranked-result-dialog {
+  width: min(96vw, 940px);
+  max-height: calc(100dvh - 24px);
+}
+.ranked-result-content {
+  padding: 20px 24px 16px;
+}
+.ranked-result-header {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  text-align: left;
+  padding-right: 36px;
+  margin-bottom: 14px;
+}
+.ranked-result-header .ranked-result-emblem {
+  margin: 0;
+}
+.ranked-result-header .ranked-result-eyebrow {
+  margin: 0 0 4px;
+}
+.ranked-result-header h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  margin: 4px 0 6px;
+}
+.ranked-result-header .ranked-result-description {
+  margin: 0;
+  max-width: none;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.ranked-result-stats > div {
+  padding: 9px 5px;
+  gap: 4px;
+}
+.ranked-result-stats strong {
+  font-size: clamp(16px, 3vw, 22px);
+  overflow-wrap: anywhere;
+}
+.ranked-result-board-label {
+  margin: 8px 0 12px;
+}
+.ranked-result-rewards {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+  text-align: left;
+}
+.ranked-result-xp {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+.ranked-result-rewards .ranked-rating-receipt,
+.ranked-result-rewards .ranked-match-xp-receipt,
+.ranked-result-rewards .ranked-xp-panel {
+  margin: 0;
+  padding: 12px;
+  min-width: 0;
+}
+.ranked-result-rewards .ranked-rating-summary {
+  margin: 10px 0 5px;
+  gap: 6px;
+}
+.ranked-result-rewards .ranked-rating-summary > div {
+  gap: 3px;
+  padding: 7px 4px;
+}
+.ranked-result-rewards .ranked-rating-summary strong {
+  font-size: 20px;
+}
+.ranked-result-rewards .ranked-rating-transition {
+  padding: 2px 0;
+}
+.ranked-result-rewards .ranked-rating-emblems {
+  gap: 7px;
+}
+.ranked-result-rewards .ranked-rating-rank svg {
+  width: 80px;
+  height: 80px;
+}
+.ranked-result-rewards .ranked-rating-current svg {
+  width: 104px;
+  height: 104px;
+}
+.ranked-result-rewards .ranked-rating-current strong {
+  font-size: 19px;
+}
+.ranked-result-rewards .ranked-rating-progress {
+  margin-top: 7px;
+}
+.ranked-result-rewards .ranked-rating-footer {
+  margin-top: 8px;
+  gap: 7px;
+}
+.ranked-result-rewards .ranked-xp-totals {
+  margin: 9px 0;
+}
+.ranked-result-rewards .ranked-xp-totals strong {
+  font-size: 21px;
+}
+.ranked-result-rewards .ranked-xp-progress-heading {
+  margin: 6px 0;
+}
+.ranked-result-rewards .ranked-xp-progress-track {
+  height: 7px;
+}
+.ranked-result-rewards .ranked-xp-next {
+  margin-top: 5px;
+}
+.ranked-result-rewards .ranked-xp-disclaimer {
+  margin-top: 6px;
+}
+.ranked-result-rewards .ranked-xp-refresh,
+.ranked-result-rewards .ranked-match-xp-refresh {
+  margin-top: 6px;
+  padding: 5px 7px;
+}
+.ranked-result-rewards .ranked-match-xp-earned {
+  margin-top: 6px;
+}
+.ranked-result-rewards .ranked-match-xp-earned strong {
+  font-size: 24px;
+}
+.ranked-result-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 12px;
+  gap: 8px;
+}
+.ranked-result-actions > * {
+  min-height: 40px;
+  padding: 7px 8px;
+  font-size: 13px;
+}
+.ranked-result-utilities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 18px;
+  margin-top: 6px;
+}
+.ranked-result-utilities .ranked-result-sharing {
+  margin: 0;
+  gap: 4px 14px;
+}
+.ranked-result-utilities .ranked-result-view-board {
+  margin: 0;
+  padding: 7px 3px;
+}
+.ranked-result-note {
+  margin-top: 5px;
+}
+.ranked-result-confetti {
+  top: 55px;
+  left: 67px;
+}
+.ranked-result-close {
+  z-index: 6;
+}
+@media (max-width: 680px) {
+  .ranked-result-dialog {
+    width: 95vw;
+  }
+  .ranked-result-content {
+    padding: 16px 14px;
+  }
+  .ranked-result-header {
+    gap: 10px;
+  }
+  .ranked-result-rewards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ranked-result-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 390px) {
+  .ranked-result-header {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+    padding-right: 0;
+  }
+  .ranked-result-header .ranked-result-emblem {
+    margin: auto;
+  }
+  .ranked-result-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Ranked-only motion: longer payoff, no delay to controls. */
+@media (prefers-reduced-motion: no-preference) {
+  .ranked-result-win .ranked-result-emblem,
+  .ranked-result-loss .ranked-result-emblem {
+    animation-duration: 700ms;
+  }
+  .ranked-result-dialog .practice-win-trophy {
+    animation-duration: 1800ms;
+  }
+  .ranked-result-dialog .practice-win-ring {
+    animation-duration: 2100ms;
+  }
+  .ranked-result-dialog .practice-win-glint {
+    animation-duration: 2400ms;
+  }
+  .ranked-result-dialog .practice-victory-burst span {
+    animation-duration: 2200ms;
+  }
+  .ranked-result-dialog .practice-loss-logo {
+    animation: ranked-loss-logo-recover 2800ms ease-in-out both;
+  }
+  .ranked-result-dialog .practice-loss-fuse {
+    animation-duration: 1550ms;
+  }
+  .ranked-result-dialog .practice-loss-spark {
+    animation-duration: 1700ms;
+  }
+  .ranked-result-dialog .practice-loss-flash {
+    animation-duration: 2400ms;
+  }
+  .ranked-result-dialog .practice-loss-smoke {
+    animation: ranked-loss-smoke-clear 2800ms ease-out both;
+  }
+  .ranked-result-dialog
+    .ranked-rating-transition[data-transition="promotion"]
+    .ranked-rating-current {
+    animation: ranked-promotion-ceremony 2400ms ease-out both;
+  }
+  .ranked-result-dialog
+    .ranked-rating-transition[data-transition="demotion"]
+    .ranked-rating-current {
+    animation: ranked-demotion-in 1800ms ease-out both;
+  }
+}
+@keyframes ranked-loss-logo-recover {
+  0%,
+  42% {
+    opacity: 1;
+    transform: none;
+  }
+  49% {
+    opacity: 1;
+    transform: rotate(-10deg) scale(1.08);
+  }
+  56% {
+    opacity: 0;
+    transform: rotate(10deg) scale(0.8);
+  }
+  72% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ranked-loss-smoke-clear {
+  0%,
+  48% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.5);
+  }
+  66% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(1.2);
+  }
+}
+@keyframes ranked-promotion-ceremony {
+  0% {
+    opacity: 0.4;
+    transform: translateY(8px) scale(0.88);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 9px #d7aa72);
+  }
+  75% {
+    opacity: 1;
+    transform: none;
+    filter: drop-shadow(0 0 5px #d7aa72);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}

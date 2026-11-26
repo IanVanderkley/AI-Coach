@@ -652,7 +652,7 @@ export default function RankedPage() {
       <Navbar />
 
       <main
-        className={`page-shell ${showLobby ? styles.lobbyPage : ""}`}
+        className={`page-shell ${showLobby ? styles.lobbyPage : board && !resumeRequired ? styles.gameplayPage : ""}`}
         id="main-content"
       >
         <div className="page-heading">
@@ -939,14 +939,24 @@ export default function RankedPage() {
                     : "You hit a mine. Start a new match when you are ready."
                 }
                 action={
-                  <button
-                    type="button"
-                    data-primary="true"
-                    onClick={returnToLobby}
-                    disabled={starting}
-                  >
-                    Return to Ranked lobby
-                  </button>
+                  <div className="finished-result-actions">
+                    <button
+                      type="button"
+                      className="finished-result-reopen"
+                      onClick={() => setDismissedResultMatchId(null)}
+                      disabled={starting}
+                    >
+                      View results
+                    </button>
+                    <button
+                      type="button"
+                      data-primary="true"
+                      onClick={returnToLobby}
+                      disabled={starting}
+                    >
+                      Return to Ranked lobby
+                    </button>
+                  </div>
                 }
               />
             )}

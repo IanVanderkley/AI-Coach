@@ -118,30 +118,37 @@ export function RankedResultDialog({
           >
             <X size={19} aria-hidden="true" />
           </button>
-          <div className="ranked-result-emblem practice-result-emblem" aria-hidden="true">
-            {won ? (
-              <>
-                <span className="practice-win-ring" />
-                <Trophy className="practice-win-trophy" size={40} strokeWidth={2.2} />
-                <span className="practice-win-glint" />
-              </>
-            ) : (
-              <>
-                <MineLogo className="ranked-result-mine practice-loss-logo" />
-                <span className="practice-loss-fuse" />
-                <span className="practice-loss-spark" />
-                <span className="practice-loss-flash" />
-                <span className="practice-loss-smoke" />
-              </>
-            )}
+          <div className="ranked-result-header">
+            <div
+              className="ranked-result-emblem practice-result-emblem"
+              aria-hidden="true"
+            >
+              {won ? (
+                <>
+                  <span className="practice-win-ring" />
+                  <Trophy className="practice-win-trophy" size={40} strokeWidth={2.2} />
+                  <span className="practice-win-glint" />
+                </>
+              ) : (
+                <>
+                  <MineLogo className="ranked-result-mine practice-loss-logo" />
+                  <span className="practice-loss-fuse" />
+                  <span className="practice-loss-spark" />
+                  <span className="practice-loss-flash" />
+                  <span className="practice-loss-smoke" />
+                </>
+              )}
+            </div>
+            <div>
+              <p className="ranked-result-eyebrow">RANKED MATCH COMPLETE</p>
+              <h2 id="ranked-result-title">{won ? "Victory!" : "Game over"}</h2>
+              <p id="ranked-result-description" className="ranked-result-description">
+                {won
+                  ? "Every safe square cleared. Your victory was confirmed by the Ranked server."
+                  : "A mine ended this run. Your result was confirmed by the Ranked server."}
+              </p>
+            </div>
           </div>
-          <p className="ranked-result-eyebrow">RANKED MATCH COMPLETE</p>
-          <h2 id="ranked-result-title">{won ? "Victory!" : "Game over"}</h2>
-          <p id="ranked-result-description" className="ranked-result-description">
-            {won
-              ? "Every safe square cleared. Your victory was confirmed by the Ranked server."
-              : "A mine ended this run. Your result was confirmed by the Ranked server."}
-          </p>
           <div className="ranked-result-stats" aria-label="Ranked match statistics">
             <div>
               <span>Server time</span>
@@ -160,11 +167,21 @@ export function RankedResultDialog({
             {result.rows} × {result.columns} · {result.mineCount} mines ·
             Server-controlled
           </p>
-          <RankedMatchRating
-            key={`rating-${result.matchId}`}
-            matchId={result.matchId}
-            expectedOutcome={result.outcome}
-          />
+          <div className="ranked-result-rewards">
+            <RankedMatchRating
+              key={`rating-${result.matchId}`}
+              matchId={result.matchId}
+              expectedOutcome={result.outcome}
+            />
+            <div className="ranked-result-xp">
+              <RankedMatchXpReceipt
+                key={`reward-${result.matchId}`}
+                matchId={result.matchId}
+                expectedOutcome={result.outcome}
+              />
+              <RankedXpProgress key={result.matchId} matchId={result.matchId} />
+            </div>
+          </div>
           <div className="ranked-result-actions">
             <button
               type="button"
@@ -187,46 +204,46 @@ export function RankedResultDialog({
               View profile
             </Link>
           </div>
-          <div className="ranked-result-sharing" aria-label="Share Ranked match result">
-            <button type="button" onClick={() => void shareResult()}>
-              {shareState === "shared" || shareState === "copied" ? (
-                <Check size={16} aria-hidden="true" />
-              ) : (
-                <Share2 size={16} aria-hidden="true" />
-              )}
-              {shareState === "shared"
-                ? "Shared!"
-                : shareState === "copied"
-                  ? "Copied to share"
-                  : "Share result"}
-            </button>
-            <button type="button" onClick={() => void copyResult()}>
-              {copyState === "copied" ? (
-                <Check size={16} aria-hidden="true" />
-              ) : (
-                <Clipboard size={16} aria-hidden="true" />
-              )}
-              {copyState === "copied" ? "Copied!" : "Copy result"}
+          <div className="ranked-result-utilities">
+            <div className="ranked-result-sharing" aria-label="Share Ranked match result">
+              <button type="button" onClick={() => void shareResult()}>
+                {shareState === "shared" || shareState === "copied" ? (
+                  <Check size={16} aria-hidden="true" />
+                ) : (
+                  <Share2 size={16} aria-hidden="true" />
+                )}
+                {shareState === "shared"
+                  ? "Shared!"
+                  : shareState === "copied"
+                    ? "Copied to share"
+                    : "Share result"}
+              </button>
+              <button type="button" onClick={() => void copyResult()}>
+                {copyState === "copied" ? (
+                  <Check size={16} aria-hidden="true" />
+                ) : (
+                  <Clipboard size={16} aria-hidden="true" />
+                )}
+                {copyState === "copied" ? "Copied!" : "Copy result"}
+              </button>
+            </div>
+            {(copyState === "unavailable" || shareState === "unavailable") && (
+              <p className="ranked-result-share-status" role="status">
+                Sharing is unavailable in this browser. Match results remain visible
+                above.
+              </p>
+            )}
+            <button
+              type="button"
+              className="ranked-result-view-board"
+              onClick={onDismiss}
+            >
+              View finished board
             </button>
           </div>
-          {(copyState === "unavailable" || shareState === "unavailable") && (
-            <p className="ranked-result-share-status" role="status">
-              Sharing is unavailable in this browser. Match results remain visible above.
-            </p>
-          )}
-          <button type="button" className="ranked-result-view-board" onClick={onDismiss}>
-            View finished board
-          </button>
-          <RankedMatchXpReceipt
-            key={`reward-${result.matchId}`}
-            matchId={result.matchId}
-            expectedOutcome={result.outcome}
-          />
-          <RankedXpProgress key={result.matchId} matchId={result.matchId} />
           <p className="ranked-result-note">
             The match reward comes from a database receipt; the account XP card shows your
-            saved lifetime total. Elo-style ratings are separate; competitive RP is not
-            enabled.
+            saved lifetime total. Ranked Elo and account XP are separate.
           </p>
         </div>
       ) : null}

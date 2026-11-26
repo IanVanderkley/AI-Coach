@@ -121,7 +121,7 @@ export function RankedXpProgress({ matchId }: { matchId: string }) {
       </button>
       <p className="ranked-xp-disclaimer">
         <CircleHelp size={13} aria-hidden="true" /> This is your saved XP total, not the
-        XP earned in this match. Competitive RP is separate.
+        XP earned in this match. Ranked Elo is separate.
       </p>
     </section>
   );

@@ -313,3 +313,25 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Gameplay-only spacing; the lobby remains unchanged. */
+.gameplayPage {
+  padding-top: 14px;
+  padding-bottom: 16px;
+}
+.gameplayPage :global(.page-heading) {
+  margin-bottom: 8px;
+}
+.gameplayPage :global(.page-heading) h1 {
+  font-size: clamp(26px, 3vw, 38px);
+}
+.gameplayPage :global(.page-heading) :global(.eyebrow) {
+  display: none;
+}
+.gameplayPage :global(.page-heading) :global(.page-subtitle) {
+  margin-top: 4px;
+  font-size: 13px;
+}
+.gameplayPage > p {
+  margin: 6px 0 12px;
+}

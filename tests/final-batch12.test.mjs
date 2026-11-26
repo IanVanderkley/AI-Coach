@@ -9,6 +9,7 @@ import {
 
 const read = (p) => readFileSync(p, "utf8");
 const receipt = {
+  policyVersion: 1,
   outcome: "won",
   ratingBefore: 1000,
   ratingDelta: 16,
@@ -42,12 +43,19 @@ test("only consistent, signed rating receipts are accepted", () => {
   );
   assert.deepEqual(
     parseRankedMatchRating({
+      policyVersion: 1,
       outcome: "lost",
       ratingBefore: 1000,
       ratingDelta: -16,
       ratingAfter: 984,
     }),
-    { outcome: "lost", ratingBefore: 1000, ratingDelta: -16, ratingAfter: 984 },
+    {
+      policyVersion: 1,
+      outcome: "lost",
+      ratingBefore: 1000,
+      ratingDelta: -16,
+      ratingAfter: 984,
+    },
   );
   for (const bad of [
     null,
@@ -92,7 +100,7 @@ test("result dialog includes real match rating, preserves verified XP, and never
   assert.match(cmp, /ratingDelta/);
   assert.match(cmp, /ratingAfter/);
   assert.match(cmp, /state\.kind === "missing"/);
-  assert.match(cmp, /not competitive RP/);
+  assert.match(cmp, /How Elo works/);
   assert.doesNotMatch(dialog, /\+\d+ RP/);
 });
 

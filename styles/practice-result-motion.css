@@ -251,3 +251,78 @@
     display: none;
   }
 }
+
+/* Batch 23F.3: Practice ceremony matches Ranked; opt out for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .practice-result-dialog .practice-win-trophy {
+    animation-duration: 1800ms;
+  }
+  .practice-result-dialog .practice-win-ring {
+    animation-duration: 2100ms;
+  }
+  .practice-result-dialog .practice-win-glint {
+    animation-duration: 2400ms;
+  }
+  .practice-result-dialog .practice-victory-burst span {
+    animation-duration: 2200ms;
+  }
+  .practice-result-dialog .practice-record-burst-extra span {
+    animation-duration: 2600ms;
+  }
+  .practice-result-dialog .practice-result-achievement {
+    animation-duration: 1200ms;
+  }
+  .practice-result-dialog .practice-loss-logo {
+    animation: practice-loss-logo-recover 2800ms ease-in-out both;
+  }
+  .practice-result-dialog .practice-loss-fuse {
+    animation-duration: 1550ms;
+  }
+  .practice-result-dialog .practice-loss-spark {
+    animation-duration: 1700ms;
+  }
+  .practice-result-dialog .practice-loss-flash {
+    animation-duration: 2400ms;
+  }
+  .practice-result-dialog .practice-loss-smoke {
+    animation: practice-loss-smoke-clear 2800ms ease-out both;
+  }
+}
+@keyframes practice-loss-logo-recover {
+  0%,
+  42% {
+    opacity: 1;
+    transform: none;
+  }
+  49% {
+    opacity: 1;
+    transform: rotate(-10deg) scale(1.08);
+  }
+  56% {
+    opacity: 0;
+    transform: rotate(10deg) scale(0.8);
+  }
+  72% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes practice-loss-smoke-clear {
+  0%,
+  48% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.5);
+  }
+  66% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(1.2);
+  }
+}

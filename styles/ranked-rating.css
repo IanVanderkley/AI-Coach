@@ -103,3 +103,126 @@
     padding: 11px 5px;
   }
 }
+
+/* Competitive result: the receipt owns all values, the visuals only describe them. */
+.ranked-rating-transition {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.ranked-rating-transition-title {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ranked-rating-transition[data-transition="promotion"] .ranked-rating-transition-title {
+  color: #b8efc5;
+}
+.ranked-rating-transition[data-transition="demotion"] .ranked-rating-transition-title {
+  color: #ffadb5;
+}
+.ranked-rating-emblems {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.ranked-rating-rank {
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.ranked-rating-current strong {
+  font-size: clamp(20px, 4vw, 27px);
+}
+.ranked-rating-arrow {
+  color: #e2cdb8;
+  font-size: 24px;
+}
+.ranked-rating-progress {
+  width: min(100%, 320px);
+  margin: 12px auto 0;
+}
+.ranked-rating-progress progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  accent-color: #d7aa72;
+}
+.ranked-rating-progress p {
+  margin: 6px 0 0;
+}
+.ranked-rating-transition[data-transition="promotion"] .ranked-rating-current {
+  animation: ranked-promotion-in 650ms ease-out both;
+}
+.ranked-rating-transition[data-transition="demotion"] .ranked-rating-current {
+  animation: ranked-demotion-in 350ms ease-out both;
+}
+@keyframes ranked-promotion-in {
+  from {
+    opacity: 0.35;
+    transform: translateY(9px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ranked-demotion-in {
+  from {
+    opacity: 0.5;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 420px) {
+  .ranked-rating-emblems {
+    gap: 4px;
+  }
+  .ranked-rating-rank svg {
+    width: 96px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ranked-rating-transition .ranked-rating-current {
+    animation: none !important;
+  }
+}
+
+/* Batch 23F: verified Elo change controls the result progress color. */
+.ranked-rating-progress {
+  --ranked-result-progress-color: #a1a1aa;
+}
+.ranked-rating-progress[data-rating-change="gain"] {
+  --ranked-result-progress-color: #58c987;
+}
+.ranked-rating-progress[data-rating-change="loss"] {
+  --ranked-result-progress-color: #ef535e;
+}
+.ranked-rating-progress progress {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: #403a37;
+  overflow: hidden;
+  accent-color: var(--ranked-result-progress-color);
+  color: var(--ranked-result-progress-color);
+}
+.ranked-rating-progress progress::-webkit-progress-bar {
+  background: #403a37;
+  border-radius: 999px;
+}
+.ranked-rating-progress progress::-webkit-progress-value {
+  background: var(--ranked-result-progress-color);
+  border-radius: 999px;
+}
+.ranked-rating-progress progress::-moz-progress-bar {
+  background: var(--ranked-result-progress-color);
+  border-radius: 999px;
+}

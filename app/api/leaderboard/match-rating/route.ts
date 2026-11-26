@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     const admin = createAdminClient();
     const { data, error } = await admin
       .from("ranked_elo_events")
-      .select("outcome,rating_before,rating_delta,rating_after")
+      .select("outcome,rating_before,rating_delta,rating_after,policy_version")
       .eq("match_id", matchIds[0])
       .eq("user_id", user.id)
       .maybeSingle();
@@ -48,6 +48,7 @@ export async function GET(request: Request) {
 
     const receipt = parseRankedMatchRating({
       outcome: data.outcome,
+      policyVersion: data.policy_version,
       ratingBefore: data.rating_before,
       ratingDelta: data.rating_delta,
       ratingAfter: data.rating_after,

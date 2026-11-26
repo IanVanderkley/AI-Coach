@@ -201,6 +201,7 @@ export function MinesweeperBoard({
   const [explodedCell, setExplodedCell] = useState<Position | null>(null);
   const [clockStarted, setClockStarted] = useState(false);
   const [resultSummary, setResultSummary] = useState<PracticeResultSummary | null>(null);
+  const [resultsOpen, setResultsOpen] = useState(false);
   const [pendingRecovery, setPendingRecovery] = useState<PracticeRecoverySnapshot | null>(
     null,
   );
@@ -425,6 +426,7 @@ export function MinesweeperBoard({
       /* Storage unavailable */
     }
     const xpSave = onGameComplete?.(session);
+    setResultsOpen(true);
     setResultSummary({
       xpSave,
       outcome: session.outcome,
@@ -464,6 +466,7 @@ export function MinesweeperBoard({
     setPaused(false);
     setExplodedCell(null);
     setClockStarted(false);
+    setResultsOpen(false);
     setResultSummary(null);
     movesRef.current = [];
     minesRef.current = [];
@@ -503,6 +506,7 @@ export function MinesweeperBoard({
     setPaused(false);
     setExplodedCell(null);
     setFocusedCell({ row: 0, col: 0 });
+    setResultsOpen(false);
     setResultSummary(null);
     setPendingRecovery(null);
     recoveryActiveRef.current = true;
@@ -818,6 +822,15 @@ export function MinesweeperBoard({
                 : "That mine ended your run. Every game is a chance to improve."}
             </span>
           </div>
+          {resultSummary && !resultsOpen && (
+            <button
+              type="button"
+              className="finished-result-reopen"
+              onClick={() => setResultsOpen(true)}
+            >
+              View results
+            </button>
+          )}
         </div>
       )}
 
@@ -935,9 +948,9 @@ export function MinesweeperBoard({
       />
 
       <PracticeResultDialog
-        result={resultSummary}
+        result={gameOver && resultsOpen ? resultSummary : null}
         onPlayAgain={newGame}
-        onDismiss={() => setResultSummary(null)}
+        onDismiss={() => setResultsOpen(false)}
       />
 
       <div className="board-footer">
