@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useGameViewportScroll } from "@/components/play/use-game-viewport-scroll";
 
 import { visibleBoardHash } from "@/lib/coach/visible-board-hash";
 import { recordPracticeBest } from "@/lib/practice/personal-best";
@@ -209,6 +210,14 @@ export function MinesweeperBoard({
   const [recoveryReady, setRecoveryReady] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const gamePanelRef = useRef<HTMLElement | null>(null);
+  const [gameViewRevision, setGameViewRevision] = useState(0);
+  useGameViewportScroll(
+    gamePanelRef,
+    settings.rows > 9 && recoveryReady && !pendingRecovery && !replaceOpen && !resultsOpen
+      ? String(gameViewRevision)
+      : null,
+  );
 
   // Recording for the coaching API. Moves are kept in a ref so replaying a
   // game does not re-render the board on every click. The clock is derived from
@@ -463,6 +472,7 @@ export function MinesweeperBoard({
     recoveryActiveRef.current = true;
     setPendingRecovery(null);
     setReplaceOpen(false);
+    setGameViewRevision((revision) => revision + 1);
     onGameStart?.();
     setBoard(emptyBoard(rows, columns));
     setStatus("ready");
@@ -516,6 +526,7 @@ export function MinesweeperBoard({
     setResultSummary(null);
     setPendingRecovery(null);
     recoveryActiveRef.current = true;
+    setGameViewRevision((revision) => revision + 1);
     onGameStart?.();
   }, [pendingRecovery, onGameStart]);
 
@@ -735,7 +746,11 @@ export function MinesweeperBoard({
   } as CSSProperties;
 
   return (
-    <section className="game-panel" aria-label={`${settings.label} Minesweeper game`}>
+    <section
+      ref={gamePanelRef}
+      className="game-panel"
+      aria-label={`${settings.label} Minesweeper game`}
+    >
       <GameStats
         minesRemaining={mines - flaggedCount}
         totalMines={mines}

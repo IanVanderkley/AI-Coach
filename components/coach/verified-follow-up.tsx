@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, MessageCircleQuestion, ShieldCheck } from "lucide-react";
 import { SUGGESTED_QUESTIONS, type FollowUpAnswer } from "@/lib/coach/verified-follow-up";
 import {
   appendThreadAnswer,
   FOLLOW_UP_THREAD_LIMIT,
+  latestFollowUpScrollTop,
   resolveThreadQuestion,
   restoreFollowUpThread,
   serializeFollowUpThread,
@@ -41,22 +42,63 @@ export function VerifiedFollowUp({
   const [thread, setThread] = useState<FollowUpAnswer[]>([]);
   const [notice, setNotice] = useState("");
   const [loadedKey, setLoadedKey] = useState("");
+  const loadedKeyRef = useRef("");
+  const threadRef = useRef<FollowUpAnswer[]>([]);
+  const threadPanelRef = useRef<HTMLDivElement | null>(null);
+  const revealLatestRef = useRef(false);
   const storageKey = STORAGE_PREFIX + followUpGameKey(game);
   const ready = loadedKey === storageKey;
 
   useEffect(() => {
+    const newGame = loadedKeyRef.current !== storageKey;
     let restored: FollowUpAnswer[] = [];
-    try {
-      restored = restoreFollowUpThread(report, window.sessionStorage.getItem(storageKey));
-    } catch {
-      // The conversation still works when storage is unavailable.
+    if (newGame) {
+      try {
+        restored = restoreFollowUpThread(
+          report,
+          window.sessionStorage.getItem(storageKey),
+        );
+      } catch {
+        // The conversation still works when storage is unavailable.
+      }
+      setQuestion("");
+      setNotice("");
+      revealLatestRef.current = restored.length > 0;
+    } else {
+      // A recomputed report must not replace newer in-memory answers with stored data.
+      // Revalidate against the current evidence while retaining any draft question.
+      restored = restoreFollowUpThread(
+        report,
+        serializeFollowUpThread(threadRef.current),
+      );
     }
+    threadRef.current = restored;
+    loadedKeyRef.current = storageKey;
     setThread(restored);
-    setMomentId(restored.at(-1)?.momentId ?? report.moments[0]?.id ?? "");
-    setQuestion("");
-    setNotice("");
+    setMomentId((current) =>
+      !newGame && report.moments.some((moment) => moment.id === current)
+        ? current
+        : (restored.at(-1)?.momentId ?? report.moments[0]?.id ?? ""),
+    );
     setLoadedKey(storageKey);
   }, [report, storageKey]);
+
+  useEffect(() => {
+    if (!ready || !revealLatestRef.current) return;
+    const panel = threadPanelRef.current;
+    const latest = panel?.lastElementChild;
+    if (!panel || !latest) return;
+    revealLatestRef.current = false;
+    const answerTop =
+      panel.scrollTop +
+      latest.getBoundingClientRect().top -
+      panel.getBoundingClientRect().top;
+    panel.scrollTop = latestFollowUpScrollTop(
+      answerTop,
+      panel.scrollHeight,
+      panel.clientHeight,
+    );
+  }, [ready, thread]);
 
   if (report.moments.length === 0) {
     return (
@@ -85,7 +127,9 @@ export function VerifiedFollowUp({
       );
       return;
     }
-    const next = appendThreadAnswer(thread, result.answer);
+    const next = appendThreadAnswer(threadRef.current, result.answer);
+    threadRef.current = next;
+    revealLatestRef.current = true;
     setThread(next);
     setQuestion("");
     setNotice("");
@@ -98,6 +142,8 @@ export function VerifiedFollowUp({
 
   function clearThread() {
     if (!ready) return;
+    threadRef.current = [];
+    revealLatestRef.current = false;
     setThread([]);
     setQuestion("");
     setNotice("");
@@ -127,8 +173,10 @@ export function VerifiedFollowUp({
       {ready && thread.length > 0 && (
         <>
           <div
+            ref={threadPanelRef}
             className="coach-follow-up-thread"
             role="log"
+            tabIndex={0}
             aria-label="Coaching answers"
             aria-live="polite"
           >

@@ -7,6 +7,15 @@ import {
 
 export const FOLLOW_UP_THREAD_LIMIT = 12;
 
+/** Reveal the latest answer; if it is tall, keep its beginning in view. */
+export function latestFollowUpScrollTop(
+  answerTop: number,
+  scrollHeight: number,
+  clientHeight: number,
+): number {
+  return Math.max(0, Math.min(answerTop, scrollHeight - clientHeight));
+}
+
 /** The selected recorded move is the scope; do not silently answer about another move. */
 export function resolveThreadQuestion(
   report: EvidenceReport,

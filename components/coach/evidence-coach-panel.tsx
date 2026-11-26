@@ -294,7 +294,7 @@ export function EvidenceCoachPanel({
           will not invent five points just to fill the report.
         </p>
       )}
-      <details className="evidence-focus-tools">
+      <details className="evidence-focus-tools" open>
         <summary>Ask a follow-up question</summary>
         <VerifiedFollowUp
           key={followUpGameKey(game)}
