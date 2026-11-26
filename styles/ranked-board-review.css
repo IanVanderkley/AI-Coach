@@ -1,0 +1,74 @@
+/* Terminal Ranked inspection only. Active board styles and inputs stay unchanged. */
+.ranked-server-board .ranked-review-cell {
+  position: relative;
+  background: #1c1c1c;
+  cursor: default;
+}
+.ranked-review-cell > svg {
+  width: 56%;
+  height: 56%;
+  max-width: 22px;
+}
+.ranked-server-board .ranked-review-cell[data-review-kind="mine"] {
+  color: #f2c0c4;
+  background: #35252a;
+}
+.ranked-server-board .ranked-review-cell[data-review-kind="hit"] {
+  color: #ff8992;
+  background: #76232c;
+  box-shadow: inset 0 0 0 2px #ff8992;
+}
+.ranked-server-board .ranked-review-cell[data-review-kind="correct-flag"] {
+  color: #a6ebbc;
+  background: #233d2c;
+}
+.ranked-server-board .ranked-review-cell[data-review-kind="wrong-flag"] {
+  color: #ff9b9f;
+  background: #44292d;
+}
+.ranked-review-cell > .ranked-review-mark {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 38%;
+  height: 38%;
+  background: #161616;
+  border-radius: 2px;
+}
+.ranked-server-board .ranked-review-cell[data-review-kind="unopened"] {
+  color: #bdbdbd;
+  background: #2e2e2e;
+  outline: 1px dashed #797979;
+  outline-offset: -2px;
+}
+.ranked-review-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.ranked-review-legend > span {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.ranked-review-legend svg {
+  width: 14px;
+  height: 14px;
+}
+.ranked-review-legend [data-review-kind="hit"],
+.ranked-review-legend [data-review-kind="wrong-flag"] {
+  color: #ff9b9f;
+}
+.ranked-review-legend [data-review-kind="correct-flag"] {
+  color: #a6ebbc;
+}
+.ranked-review-note {
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: center;
+  margin: 8px 12px;
+}

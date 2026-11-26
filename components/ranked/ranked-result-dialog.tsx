@@ -72,7 +72,7 @@ export function RankedResultDialog({
     const text = getShareText();
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ title: "AI-Coach Ranked result", text });
+        await navigator.share({ title: "MindSweeper Ranked result", text });
         setShareState("shared");
         return;
       } catch (error) {

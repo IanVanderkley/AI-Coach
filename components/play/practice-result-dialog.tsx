@@ -90,7 +90,7 @@ export function PracticeResultDialog({
     const text = shareText();
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ title: "AI-Coach Practice result", text });
+        await navigator.share({ title: "MindSweeper Practice result", text });
         setShareState("shared");
         return;
       } catch (error) {

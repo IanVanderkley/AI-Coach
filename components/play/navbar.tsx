@@ -136,9 +136,9 @@ export function Navbar() {
   return (
     <header className="site-header">
       <div className="nav-shell">
-        <Link className="brand" href="/" aria-label="AI-Coach home">
+        <Link className="brand" href="/" aria-label="MindSweeper home">
           <MineLogo className="brand-mine" />
-          <span>AI-Coach</span>
+          <span>MindSweeper</span>
         </Link>
 
         <nav className="main-nav" aria-label="Main navigation">

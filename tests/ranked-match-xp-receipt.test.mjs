@@ -30,7 +30,7 @@ test("Ranked result shows receipt only after read-only lookup", () => {
   assert.match(component, /\+\{state\.amount\.toLocaleString\(\)\} XP/);
   assert.match(component, /No saved XP receipt for this match/);
   assert.match(component, /Match XP could not be verified/);
-  assert.match(component, /Refresh match XP/);
+  assert.match(component, /Retry match XP/);
   assert.match(css, /\.ranked-match-xp-receipt/);
   assert.doesNotMatch(dialog, /\+125 XP|\+10 XP|\+\d+ RP/);
 });

@@ -49,8 +49,8 @@ test("Result progress loads again per match and handles errors without fake tota
   assert.match(panel, /if \(!active\) return/);
   assert.match(panel, /kind: "unavailable"/);
   assert.match(panel, /kind: "guest"/);
-  assert.match(panel, /Refresh saved XP/);
-  assert.match(panel, /This is your saved XP total/);
+  assert.match(panel, /Retry saved XP/);
+  assert.match(dialog, /saved lifetime total/);
   assert.doesNotMatch(panel, /setItem\(|localStorage|sessionStorage/);
 });
 

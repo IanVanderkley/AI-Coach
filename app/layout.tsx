@@ -15,6 +15,8 @@ import "../styles/profile.css";
 import "../styles/responsive.css";
 import "../styles/ui-consistency.css";
 import "../styles/practice-layout.css";
+import "../styles/batch24-gameplay.css";
+import "../styles/ranked-board-review.css";
 import { SiteTooltip } from "@/components/ui/site-tooltip";
 
 // These paths are relative to this file, not the browser URL.
@@ -36,7 +38,7 @@ const robotoCondensed = localFont({
 
 // Next.js uses this for the browser tab, page description and favicon.
 export const metadata: Metadata = {
-  title: "AI-Coach | Minesweeper",
+  title: "MindSweeper | Play. Learn. Improve.",
   description: "Practise Minesweeper with post-game feedback on patterns and decisions.",
   icons: {
     icon: "/favicon.svg",
