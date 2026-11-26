@@ -4,13 +4,13 @@ Approved design direction: Copper, Bronze, Silver, Gold, Platinum, Emerald, Diam
 
 ## Candidate rating economy
 
-- Starting rating: 1000 (Bronze I); floor: 100; ceiling: 10000.
+- Starting rating for new profiles: 1600 (Gold V); floor: 100; ceiling: 10000.
 - Rank entry ratings: 100, 600, 1100, 1600, 2100, 2600, 3100, 3400.
 - Fixed reference rating: 1700; curve spread: 1900; K-factor: 45.
 - Expected score E = 1 / (1 + 10^((1700 - rating) / 1900)).
 - Victory: round(90 × (1 - E)); defeat: -round(45 × E).
 - Clamp the resulting rating to the floor/ceiling and record the actual delta.
-- At 1000: +63 / -13; at 3400: +10 / -40.
+- At 1600: +48 / -21; at 1000: +63 / -13; at 3400: +10 / -40.
 - The theoretical unrounded equilibrium for win rate p is 1700 + 1900 × log10(2p / (1 - p)). This targets Gold for assumed 35–40% win rates. It is not a measured distribution; verify real player data and board solvability before tuning.
 
 ## Rollout constraints

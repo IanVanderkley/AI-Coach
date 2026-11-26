@@ -48,8 +48,9 @@ test("all 33 divisions have exactly 100 rating points and correct Roman numerals
   }
 });
 
-test("starting rating is Bronze I and Omniscient has no division or promotion", () => {
-  assert.equal(competitiveRank(RANK_POLICY.starting).label, "Bronze I");
+test("starting rating is Gold V and Omniscient has no division or promotion", () => {
+  assert.equal(RANK_POLICY.starting, 1600);
+  assert.equal(competitiveRank(RANK_POLICY.starting).label, "Gold V");
   assert.equal(competitiveRank(3399).label, "Diamond I");
   for (const rating of [3400, 5000, 10000]) {
     const rank = competitiveRank(rating);

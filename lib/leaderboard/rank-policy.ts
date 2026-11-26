@@ -3,7 +3,7 @@ export const RANK_POLICY = {
   version: 2,
   minimum: 100,
   maximum: 10000,
-  starting: 1000,
+  starting: 1600,
   divisionWidth: 100,
   benchmark: 1700,
   spread: 1900,

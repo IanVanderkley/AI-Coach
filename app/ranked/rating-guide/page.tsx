@@ -4,6 +4,7 @@ import {
   RANK_DEFINITIONS,
   RANK_POLICY,
   calculateRankPolicyV2,
+  competitiveRank,
 } from "@/lib/leaderboard/rank-policy";
 
 export default function RatingGuidePage() {
@@ -26,10 +27,11 @@ export default function RatingGuidePage() {
           <div className="settings-section-heading">
             <h2>Solo rating progression</h2>
             <p>
-              Every new player begins at {RANK_POLICY.starting.toLocaleString()} Elo
-              (Bronze I). Verified Intermediate wins increase your rating and losses
-              decrease it. The server records the actual change after each completed game.
-              This is a fixed-benchmark solo rating, not head-to-head matchmaking Elo.
+              Every new player begins at {RANK_POLICY.starting.toLocaleString()} Elo (
+              {competitiveRank(RANK_POLICY.starting).label}). Verified Intermediate wins
+              increase your rating and losses decrease it. The server records the actual
+              change after each completed game. This is a fixed-benchmark solo rating, not
+              head-to-head matchmaking Elo.
             </p>
           </div>
           <p>

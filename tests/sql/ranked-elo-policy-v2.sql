@@ -54,6 +54,10 @@ BEGIN
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
 
   INSERT INTO auth.users(id,email_confirmed_at) VALUES (a,now()),(b,now());
+  IF (SELECT rating FROM public.ranked_leaderboard_profiles WHERE user_id=a) IS DISTINCT FROM 1600 OR
+     (SELECT rating FROM public.ranked_leaderboard_profiles WHERE user_id=b) IS DISTINCT FROM 1600 THEN
+    RAISE EXCEPTION 'New confirmed account did not start at Gold V';
+  END IF;
   -- Model a pre-v2 completed loss and its original immutable receipt.
   INSERT INTO public.ranked_matches(user_id,status,started_at,finished_at,duration_ms)
     VALUES(a,'lost',now()-interval '1 second',now(),1000) RETURNING id INTO legacy;
@@ -94,9 +98,9 @@ BEGIN
   END LOOP;
   PERFORM ranked_internal.apply_verified_match_rating(m);
   IF NOT EXISTS(SELECT 1 FROM public.ranked_verified_results WHERE match_id=m AND user_id=b) OR
-     NOT EXISTS(SELECT 1 FROM public.ranked_elo_events WHERE match_id=m AND policy_version=2 AND rating_before=1000 AND rating_delta=63 AND rating_after=1063) OR
+     NOT EXISTS(SELECT 1 FROM public.ranked_elo_events WHERE match_id=m AND policy_version=2 AND rating_before=1600 AND rating_delta=48 AND rating_after=1648) OR
      (SELECT games FROM public.ranked_leaderboard_profiles WHERE user_id=b) IS DISTINCT FROM 1 OR
-     (SELECT rating FROM public.ranked_leaderboard_profiles WHERE user_id=b) IS DISTINCT FROM 1063 THEN RAISE EXCEPTION 'Verified win or duplicate guard failed'; END IF;
+     (SELECT rating FROM public.ranked_leaderboard_profiles WHERE user_id=b) IS DISTINCT FROM 1648 THEN RAISE EXCEPTION 'Verified win or duplicate guard failed'; END IF;
 END;
 $checks$;
 ROLLBACK;
