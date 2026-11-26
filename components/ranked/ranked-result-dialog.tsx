@@ -19,6 +19,7 @@ type RankedResultDialogProps = {
   result: RankedResultSummary | null;
   busy: boolean;
   onPlayAgain: () => void;
+  onReturnLobby: () => void;
   onDismiss: () => void;
 };
 
@@ -26,6 +27,7 @@ export function RankedResultDialog({
   result,
   busy,
   onPlayAgain,
+  onReturnLobby,
   onDismiss,
 }: RankedResultDialogProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
@@ -172,6 +174,14 @@ export function RankedResultDialog({
             >
               <RotateCcw size={17} aria-hidden="true" />
               {busy ? "Starting…" : "Play again"}
+            </button>
+            <button
+              type="button"
+              className="ranked-result-secondary"
+              onClick={onReturnLobby}
+              disabled={busy}
+            >
+              Return to lobby
             </button>
             <Link className="ranked-result-secondary" href="/profile">
               View profile

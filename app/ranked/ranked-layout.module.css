@@ -218,3 +218,98 @@
   outline: 2px solid white;
   outline-offset: 2px;
 }
+
+/* Compact lobby-only layout. Queue stays above the progression artwork. */
+.lobbyPage {
+  padding-top: 16px;
+}
+.lobbyPage :global(.page-heading) {
+  margin-bottom: 8px;
+}
+.lobbyPage :global(.page-heading) h1 {
+  font-size: clamp(30px, 3vw, 42px);
+}
+.lobbyPage :global(.page-subtitle) {
+  margin-top: 4px;
+  font-size: 13px;
+}
+.lobbyPage > p {
+  margin: 6px 0 12px;
+}
+.lobbySetup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 290px);
+  gap: 12px;
+  align-items: stretch;
+  max-width: 1120px;
+  margin: 12px auto;
+}
+.lobbySetup > :global(.ranked-ladders) {
+  margin: 0;
+  padding: 12px;
+  min-width: 0;
+}
+.lobbySetup :global(.ranked-ladders-heading) {
+  gap: 6px;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+.lobbySetup :global(.ranked-ladders-heading) h2 {
+  font-size: 19px;
+}
+.lobbySetup :global(.ranked-ladder-grid) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.lobbySetup :global(.ranked-ladder-card) {
+  padding: 8px;
+  min-width: 0;
+}
+.lobbySetup :global(.ranked-ladder-title) {
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.lobbySetup :global(.ranked-ladder-card) p {
+  margin-top: 4px;
+}
+.lobbyActions {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+}
+.lobbyActions .launch {
+  margin: 0;
+  max-width: none;
+  gap: 6px;
+}
+.lobbyActions .playButton {
+  min-height: 60px;
+  padding: 12px;
+  gap: 10px;
+}
+.lobbyActions .playButton strong {
+  font-size: clamp(17px, 2vw, 22px);
+}
+.lobbyActions .playButton small {
+  margin-top: 3px;
+}
+.savedMatch {
+  color: #b8d8ff;
+  font-size: 12px;
+  text-align: center;
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .lobbySetup {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lobbyActions {
+    grid-row: 1;
+  }
+}
+@media (max-width: 410px) {
+  .lobbySetup :global(.ranked-ladder-grid) {
+    grid-template-columns: 1fr;
+  }
+}

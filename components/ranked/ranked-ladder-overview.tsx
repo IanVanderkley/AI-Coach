@@ -1,6 +1,6 @@
 import { LockKeyhole, ShieldCheck } from "lucide-react";
 
-import { RANKED_LADDERS, RANKED_RP_ENABLED } from "@/lib/ranked/ladders";
+import { RANKED_LADDERS } from "@/lib/ranked/ladders";
 
 /** An honest overview: only the existing Intermediate backend is playable. */
 export function RankedLadderOverview() {
@@ -34,13 +34,6 @@ export function RankedLadderOverview() {
           </div>
         ))}
       </div>
-      <p className="ranked-ladders-note">
-        {RANKED_RP_ENABLED
-          ? "Competitive RP is enabled."
-          : "RP ratings and placement games are not enabled yet. Verified Ranked XP is a separate account reward."}{" "}
-        Only Intermediate is playable until the other server-controlled boards are
-        implemented.
-      </p>
     </section>
   );
 }
