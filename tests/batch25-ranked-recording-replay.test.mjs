@@ -2,6 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { replayRecordedGame } from "../lib/coach/verified-replay.ts";
 import { readCompletedRankedRecording } from "../lib/ranked/coaching-recording.ts";
+import { summarizeVerifiedRankedReview } from "../lib/ranked/coaching-analysis.ts";
+import {
+  preparePracticeAnalysis,
+  projectCompletedAnalysis,
+} from "../lib/coach/practice-analysis.ts";
+import { scorePreparedPracticeReview } from "../lib/coach/review-score.ts";
+import { buildPreparedTeachingReview } from "../lib/coach/teaching-review.ts";
+import { readFileSync } from "node:fs";
 
 const id = "11111111-1111-4111-8111-111111111111";
 const uid = "22222222-2222-4222-8222-222222222222";
@@ -152,4 +160,81 @@ test("actual replay rejects a committed no-op even if the outcome would otherwis
       status: 422,
     },
   );
+});
+
+for (const status of ["won", "lost", "chord-loss"]) {
+  test(`Ranked ${status} uses the identical post-opening Practice learning projection`, async () => {
+    const f = fixture(status);
+    let calls = 0;
+    const checked = await readCompletedRankedRecording(f.store, id, uid, (game) => {
+      calls++;
+      return replayRecordedGame(game);
+    });
+    assert.equal(checked.ok, true);
+    const summary = summarizeVerifiedRankedReview(checked);
+    assert.equal(calls, 1);
+    const practice = preparePracticeAnalysis(checked.data.recording);
+    assert.deepEqual(summary.score, scorePreparedPracticeReview(practice));
+    assert.deepEqual(summary.report, practice.report);
+    assert.equal(summary.report.recordedActions, f.moves.length - 1);
+    assert.equal(
+      summary.score.good + summary.score.mistakes + summary.score.uncertain,
+      f.moves.length - 1,
+    );
+    assert.deepEqual(Object.keys(summary).sort(), ["report", "score", "version"]);
+    assert.equal(summary.version, practice.version);
+  });
+}
+
+test("Ranked teaching proofs retain original move IDs and post-opening display numbering", async () => {
+  const f = fixture("chord-loss");
+  const checked = await readCompletedRankedRecording(
+    f.store,
+    id,
+    uid,
+    replayRecordedGame,
+  );
+  assert.equal(checked.ok, true);
+  const analysis = projectCompletedAnalysis(checked.data.recording, checked.replay);
+  assert.equal(analysis.replay, checked.replay);
+  const teaching = buildPreparedTeachingReview(analysis);
+  assert.ok(teaching.report.moments.length > 0);
+  for (const moment of teaching.report.moments) {
+    assert.equal(moment.id, `move-${moment.moveNumber}`);
+    assert.ok(moment.moveNumber > 1);
+    const followUp = teaching.followUpReport.moments.find(
+      (item) => item.id === moment.id,
+    );
+    assert.equal(followUp.moveNumber, moment.moveNumber - 1);
+    assert.ok(teaching.explanations.has(moment.id));
+  }
+});
+
+test("shared post-opening projection rejects a terminal outcome mismatch", async () => {
+  const f = fixture("lost");
+  const checked = await readCompletedRankedRecording(
+    f.store,
+    id,
+    uid,
+    replayRecordedGame,
+  );
+  assert.equal(checked.ok, true);
+  assert.throws(
+    () =>
+      projectCompletedAnalysis(
+        { ...checked.data.recording, outcome: "win" },
+        checked.replay,
+      ),
+    /outcome/i,
+  );
+});
+
+test("Ranked endpoint only projects a successful server read and serializes no internal replay", () => {
+  const route = readFileSync("app/api/ranked/coaching/recording/route.ts", "utf8");
+  assert.ok(
+    route.indexOf("if (!result.ok)") <
+      route.indexOf("const review = summarizeVerifiedRankedReview(result)"),
+  );
+  assert.match(route, /Response\.json\(\{ \.\.\.result\.data, review \}/);
+  assert.doesNotMatch(route, /Response\.json\(result[,)]|request\.json\(/);
 });

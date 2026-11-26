@@ -1,4 +1,8 @@
-import { preparePracticeAnalysis, type PracticeAnalysis } from "./practice-analysis.ts";
+import {
+  preparePracticeAnalysis,
+  type CompletedGameAnalysis,
+  type PracticeAnalysis,
+} from "./practice-analysis.ts";
 import type { PracticeSession } from "../practice/history.ts";
 
 export type ReviewScore = {
@@ -19,6 +23,11 @@ export function scorePracticeReview(game: PracticeSession): ReviewScore {
 
 /** Project the existing learning score from the shared post-opening scope. */
 export function scorePreparedPracticeReview(analysis: PracticeAnalysis): ReviewScore {
+  return scorePreparedReview(analysis);
+}
+
+/** Shared learning score, never a competitive rating or reward. */
+export function scorePreparedReview(analysis: CompletedGameAnalysis): ReviewScore {
   const { game, replay, reviewed, report } = analysis;
   const good = report.provenGood;
   const mistakes = reviewed.filter((frame) => frame.decision === "mistake");

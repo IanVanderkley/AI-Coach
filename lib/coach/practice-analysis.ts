@@ -9,7 +9,7 @@ import type { PracticeSession } from "../practice/history.ts";
 /** Version for the post-opening Practice review, not an official Ranked rating. */
 export const PRACTICE_ANALYSIS_VERSION = 1;
 
-export type PracticeAnalysis = {
+export type CompletedGameAnalysis = {
   version: typeof PRACTICE_ANALYSIS_VERSION;
   game: PracticeSession;
   replay: ReplayResult;
@@ -17,6 +17,9 @@ export type PracticeAnalysis = {
   reviewed: readonly ReplayFrame[];
   report: EvidenceReport;
 };
+
+// Compatibility alias for existing Practice consumers.
+export type PracticeAnalysis = CompletedGameAnalysis;
 
 /** Validate the recording once, then reuse the same evidence for every review surface.
  * Completed recordings are client-recorded Practice evidence, not authenticated Ranked results.
@@ -39,7 +42,19 @@ export function preparePracticeAnalysis(game: PracticeSession): PracticeAnalysis
   ) {
     throw new Error("The Practice recording has missing or invalid checkpoints.");
   }
-  const replay = replayRecordedGame(game);
+  return projectCompletedAnalysis(game, replayRecordedGame(game));
+}
+
+/** Project shared post-opening evidence from an already replayed recording.
+ * This helper does not establish provenance or authorize a Ranked match.
+ */
+export function projectCompletedAnalysis(
+  game: PracticeSession,
+  replay: ReplayResult,
+): CompletedGameAnalysis {
+  if (game.outcome !== "win" && game.outcome !== "loss") {
+    throw new Error("A completed outcome is required.");
+  }
   if (replay.status !== (game.outcome === "win" ? "won" : "lost")) {
     throw new Error("The recorded outcome does not match the replay.");
   }

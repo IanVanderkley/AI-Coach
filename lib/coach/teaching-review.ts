@@ -6,7 +6,10 @@ import {
   type VisibleCell,
 } from "./verified-replay.ts";
 import type { EvidenceReport } from "./evidence-report.ts";
-import { preparePracticeAnalysis, type PracticeAnalysis } from "./practice-analysis.ts";
+import {
+  preparePracticeAnalysis,
+  type CompletedGameAnalysis,
+} from "./practice-analysis.ts";
 import { recommendedReveal } from "./visual-coaching.ts";
 import type { PracticeSession } from "../practice/history.ts";
 
@@ -150,7 +153,7 @@ export function buildTeachingReview(game: PracticeSession) {
 }
 
 /** Reuse a checked recording, grouping only the decisions shown in this review. */
-export function buildPreparedTeachingReview(analysis: PracticeAnalysis) {
+export function buildPreparedTeachingReview(analysis: CompletedGameAnalysis) {
   const { game, replay, report: localReport } = analysis;
   const moments = localReport.moments;
   const explanations = new Map(

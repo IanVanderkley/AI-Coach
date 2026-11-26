@@ -23,9 +23,14 @@ export type CompletedRankedRecording = {
   recording: PracticeSession;
 };
 
-type RecordingResult =
-  | { ok: true; data: CompletedRankedRecording }
-  | { ok: false; status: 404 | 422 };
+// The verified replay is server-internal. Serialize only data and compact projections.
+export type VerifiedRankedRecording = {
+  ok: true;
+  data: CompletedRankedRecording;
+  replay: ReplayResult;
+};
+
+type RecordingResult = VerifiedRankedRecording | { ok: false; status: 404 | 422 };
 
 export type RankedRecordingStore = {
   match: (matchId: string, userId: string) => Promise<unknown>;
@@ -222,6 +227,7 @@ export async function readCompletedRankedRecording(
     }
     return {
       ok: true,
+      replay: result,
       data: {
         source: "server-recorded-ranked",
         matchId,

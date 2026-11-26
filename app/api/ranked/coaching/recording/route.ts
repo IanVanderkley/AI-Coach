@@ -8,6 +8,7 @@ import {
   readCompletedRankedRecording,
 } from "@/lib/ranked/coaching-recording";
 import { replayRecordedGame } from "@/lib/coach/verified-replay";
+import { summarizeVerifiedRankedReview } from "@/lib/ranked/coaching-analysis";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -105,7 +106,8 @@ export async function GET(request: Request) {
         ? failure("Completed Ranked match not found.", 404)
         : failure("A complete verified recording is unavailable for this match.", 422);
     }
-    return Response.json(result.data, { status: 200, headers });
+    const review = summarizeVerifiedRankedReview(result);
+    return Response.json({ ...result.data, review }, { status: 200, headers });
   } catch {
     console.error("Ranked coaching recording lookup failed.");
     return failure("Ranked coaching is temporarily unavailable.", 503);
