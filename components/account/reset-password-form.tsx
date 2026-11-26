@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { authError, passwordProblem } from "@/lib/account/validation";
@@ -187,6 +188,11 @@ export function ResetPasswordForm() {
         <p className="auth-message" role="status">
           {message}
         </p>
+      )}
+      {!token && !verifiedUserId && !busy && message !== "Checking recovery link…" && (
+        <div className="account-auth-links">
+          <Link href="/sign-in?mode=recover">Request a new password reset email</Link>
+        </div>
       )}
     </>
   );

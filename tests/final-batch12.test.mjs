@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { ratingTier, ratingTierClass } from "../lib/leaderboard/rating-tier.ts";
+import { competitiveRank } from "../lib/leaderboard/rank-policy.ts";
 import {
   parseRankedMatchRating,
   formatRatingDelta,
@@ -9,30 +9,32 @@ import {
 
 const read = (p) => readFileSync(p, "utf8");
 const receipt = {
+  policyVersion: 1,
   outcome: "won",
   ratingBefore: 1000,
   ratingDelta: 16,
   ratingAfter: 1016,
 };
 
-test("rating milestones are explicit, bounded, and cosmetic", () => {
+test("competitive rating milestones use the shared eight-rank scale and remain bounded", () => {
   for (const [n, expected] of [
-    [100, "Bronze"],
-    [899, "Bronze"],
-    [900, "Silver"],
-    [1099, "Silver"],
-    [1100, "Gold"],
-    [1299, "Gold"],
-    [1300, "Platinum"],
-    [1499, "Platinum"],
-    [1500, "Diamond"],
-    [10000, "Diamond"],
-  ]) {
-    assert.equal(ratingTier(n), expected);
-  }
-  assert.equal(ratingTierClass("Gold"), "rating-tier-gold");
+    [100, "Copper V"],
+    [599, "Copper I"],
+    [600, "Bronze V"],
+    [1099, "Bronze I"],
+    [1100, "Silver V"],
+    [1599, "Silver I"],
+    [1600, "Gold V"],
+    [2100, "Platinum V"],
+    [2600, "Emerald V"],
+    [3100, "Diamond III"],
+    [3399, "Diamond I"],
+    [3400, "Omniscient"],
+    [10000, "Omniscient"],
+  ])
+    assert.equal(competitiveRank(n).label, expected);
   for (const n of [0, -1, 10001, 100.5, NaN, Infinity])
-    assert.throws(() => ratingTier(n));
+    assert.throws(() => competitiveRank(n));
 });
 
 test("only consistent, signed rating receipts are accepted", () => {
@@ -42,12 +44,19 @@ test("only consistent, signed rating receipts are accepted", () => {
   );
   assert.deepEqual(
     parseRankedMatchRating({
+      policyVersion: 1,
       outcome: "lost",
       ratingBefore: 1000,
       ratingDelta: -16,
       ratingAfter: 984,
     }),
-    { outcome: "lost", ratingBefore: 1000, ratingDelta: -16, ratingAfter: 984 },
+    {
+      policyVersion: 1,
+      outcome: "lost",
+      ratingBefore: 1000,
+      ratingDelta: -16,
+      ratingAfter: 984,
+    },
   );
   for (const bad of [
     null,
@@ -92,7 +101,7 @@ test("result dialog includes real match rating, preserves verified XP, and never
   assert.match(cmp, /ratingDelta/);
   assert.match(cmp, /ratingAfter/);
   assert.match(cmp, /state\.kind === "missing"/);
-  assert.match(cmp, /not competitive RP/);
+  assert.match(cmp, /How Elo works/);
   assert.doesNotMatch(dialog, /\+\d+ RP/);
 });
 
@@ -102,7 +111,7 @@ test("both boards contain player names and rank numbers plus cosmetic milestones
   assert.match(board, /Elo-style rating/);
   assert.match(board, /Fastest Wins/);
   assert.match(board, /entry\.username/);
-  assert.match(board, /ratingTier\(entry\.rating\)/);
+  assert.match(board, /<CompetitiveRankCell rating=\{entry\.rating\}/);
   assert.match(board, /#\{entry\.rank\}/);
   assert.match(board, /<Medal/);
   assert.match(page, /appear\s*publicly by default/);

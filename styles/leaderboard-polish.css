@@ -55,38 +55,25 @@
 .verified-board-table th {
   vertical-align: middle;
 }
-.rating-tier {
-  display: inline-flex;
-  justify-content: center;
+/* Competitive rank cells use the same original emblems as the lobby and profile. */
+.verified-board-table .leaderboard-competitive-rank {
+  display: inline-grid;
+  grid-template-columns: 64px minmax(0, 1fr);
   align-items: center;
-  min-width: 82px;
-  padding: 5px 10px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 11px;
+  gap: 8px;
+  min-width: 160px;
+  text-align: left;
   font-weight: 750;
-  letter-spacing: 0.2px;
   white-space: nowrap;
 }
-.rating-tier-bronze {
-  color: #ecc0a0;
-  background: #3e2c28;
+.verified-board-table td:has(.leaderboard-competitive-rank) {
+  padding-block: 5px;
 }
-.rating-tier-silver {
-  color: #e1e4ee;
-  background: #363a42;
-}
-.rating-tier-gold {
-  color: #ffdda1;
-  background: #403421;
-}
-.rating-tier-platinum {
-  color: #b5f1e5;
-  background: #233a39;
-}
-.rating-tier-diamond {
-  color: #b6d9ff;
-  background: #283750;
+@media (max-width: 600px) {
+  .verified-board-table .leaderboard-competitive-rank {
+    grid-template-columns: 52px minmax(0, 1fr);
+    min-width: 148px;
+  }
 }
 /* The settings sidebar occupies 246px + 22px gap at desktop width. */
 .settings-page > .leaderboard-privacy {

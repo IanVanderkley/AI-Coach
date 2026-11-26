@@ -142,30 +142,34 @@ export function PracticeResultDialog({
             <X size={18} aria-hidden="true" />
           </button>
 
-          <div className="practice-result-emblem" aria-hidden="true">
-            {isWin ? (
-              <>
-                <span className="practice-win-ring" />
-                <Trophy className="practice-win-trophy" size={33} />
-                <span className="practice-win-glint" />
-              </>
-            ) : (
-              <>
-                <MineLogo className="practice-loss-logo" />
-                <span className="practice-loss-fuse" />
-                <span className="practice-loss-spark" />
-                <span className="practice-loss-flash" />
-                <span className="practice-loss-smoke" />
-              </>
-            )}
+          <div className="practice-result-header">
+            <div className="practice-result-emblem" aria-hidden="true">
+              {isWin ? (
+                <>
+                  <span className="practice-win-ring" />
+                  <Trophy className="practice-win-trophy" size={33} />
+                  <span className="practice-win-glint" />
+                </>
+              ) : (
+                <>
+                  <MineLogo className="practice-loss-logo" />
+                  <span className="practice-loss-fuse" />
+                  <span className="practice-loss-spark" />
+                  <span className="practice-loss-flash" />
+                  <span className="practice-loss-smoke" />
+                </>
+              )}
+            </div>
+            <div>
+              <p className="practice-result-eyebrow">PRACTICE COMPLETE</p>
+              <h2 id="practice-result-title">{isWin ? "Victory!" : "Game over"}</h2>
+              <p id="practice-result-subtitle" className="practice-result-subtitle">
+                {isWin
+                  ? "Every safe square revealed. Nicely played."
+                  : "A mine ended this run. Review your decisions and try again."}
+              </p>
+            </div>
           </div>
-          <p className="practice-result-eyebrow">PRACTICE COMPLETE</p>
-          <h2 id="practice-result-title">{isWin ? "Victory!" : "Game over"}</h2>
-          <p id="practice-result-subtitle" className="practice-result-subtitle">
-            {isWin
-              ? "Every safe square revealed. Nicely played."
-              : "A mine ended this run. Review your decisions and try again."}
-          </p>
 
           {(isPersonalBest || isFirstBest) && (
             <div className="practice-result-achievement" role="status">
@@ -182,41 +186,44 @@ export function PracticeResultDialog({
             </div>
           )}
 
-          <div className="practice-result-metrics" aria-label="Game results">
+          <div className="practice-result-details">
             <div>
-              <span>Time</span>
-              <strong>{formatTime(result.durationSeconds)}</strong>
+              <div className="practice-result-metrics" aria-label="Game results">
+                <div>
+                  <span>Time</span>
+                  <strong>{formatTime(result.durationSeconds)}</strong>
+                </div>
+                <div>
+                  <span>Moves</span>
+                  <strong>{result.moveCount}</strong>
+                </div>
+                <div>
+                  <span>Flags placed</span>
+                  <strong>{result.flagsOnBoard}</strong>
+                </div>
+              </div>
+              <p className="practice-result-difficulty">
+                {result.difficulty} · Practice mode
+                {isWin &&
+                  result.personalBest?.bestSeconds !== null &&
+                  result.personalBest?.bestSeconds !== undefined &&
+                  ` · Browser best: ${formatTime(result.personalBest.bestSeconds)}`}
+              </p>
             </div>
-            <div>
-              <span>Moves</span>
-              <strong>{result.moveCount}</strong>
-            </div>
-            <div>
-              <span>Flags placed</span>
-              <strong>{result.flagsOnBoard}</strong>
-            </div>
+            <MatchXpBar
+              saveResult={result.xpSave}
+              expectedOutcome={result.outcome}
+              expectedDifficulty={result.difficulty}
+              key={
+                result.reviewId ??
+                result.difficulty + ":" + result.durationSeconds + ":" + result.moveCount
+              }
+              resultKey={
+                result.reviewId ??
+                result.difficulty + ":" + result.durationSeconds + ":" + result.moveCount
+              }
+            />
           </div>
-          <p className="practice-result-difficulty">
-            {result.difficulty} · Practice mode
-            {isWin &&
-              result.personalBest?.bestSeconds !== null &&
-              result.personalBest?.bestSeconds !== undefined &&
-              ` · Browser best: ${formatTime(result.personalBest.bestSeconds)}`}
-          </p>
-          <MatchXpBar
-            saveResult={result.xpSave}
-            expectedOutcome={result.outcome}
-            expectedDifficulty={result.difficulty}
-            key={
-              result.reviewId ??
-              result.difficulty + ":" + result.durationSeconds + ":" + result.moveCount
-            }
-            resultKey={
-              result.reviewId ??
-              result.difficulty + ":" + result.durationSeconds + ":" + result.moveCount
-            }
-          />
-
           <div className="practice-result-actions">
             <button
               type="button"

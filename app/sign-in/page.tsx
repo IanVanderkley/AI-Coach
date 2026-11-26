@@ -8,6 +8,8 @@ import { Navbar } from "@/components/play/navbar";
 export const metadata: Metadata = {
   title: "Sign In | AI-Coach",
   description: "Sign in to your AI-Coach player profile.",
+  referrer: "no-referrer",
+  robots: { index: false, follow: false },
 };
 
 export default function SignInPage() {

@@ -18,8 +18,22 @@ export function isAllowedRequestOrigin(request: Request, requireOrigin = false):
   if (site === "cross-site" || site === "same-site") return false;
   const origin = request.headers.get("origin");
   if (origin === null) return !requireOrigin;
-  // Origin is an exact serialized origin, not an arbitrary URL with a path.
-  return origin === new URL(request.url).origin;
+  const target = new URL(request.url);
+  // Next can normalize the loopback request URL to localhost even when the
+  // browser is using 127.0.0.1. Only the fixed local launcher/database pair
+  // may use the exact incoming loopback Host to recover the browser origin.
+  if (
+    process.env.NEXT_PUBLIC_SUPABASE_URL === "http://127.0.0.1:54321" &&
+    (target.origin === "http://localhost:3000" ||
+      target.origin === "http://127.0.0.1:3000")
+  ) {
+    const host = request.headers.get("host");
+    if (host !== "localhost:3000" && host !== "127.0.0.1:3000") return false;
+    return origin === `http://${host}`;
+  }
+  // Hosted requests retain exact serialized origin comparison. Never use
+  // forwarded host headers or accept sibling origins.
+  return origin === target.origin;
 }
 
 export async function readBoundedJson(

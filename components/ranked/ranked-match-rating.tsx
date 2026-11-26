@@ -9,7 +9,8 @@ import {
   parseRankedMatchRating,
   type RankedMatchRating,
 } from "@/lib/leaderboard/match-rating";
-import { ratingTier, ratingTierClass } from "@/lib/leaderboard/rating-tier";
+import { RankEmblem } from "@/components/ranked/rank-emblem";
+import { rankResultModel } from "@/lib/leaderboard/rank-result";
 
 type RatingState =
   | { kind: "loading" }
@@ -62,7 +63,7 @@ export function RankedMatchRating({
   }, [matchId, expectedOutcome, revision]);
 
   const value = state.kind === "ready" ? state.rating : null;
-  const tier = value ? ratingTier(value.ratingAfter) : null;
+  const model = value ? rankResultModel(value) : null;
 
   return (
     <section className="ranked-rating-receipt" aria-label="Verified Ranked rating change">
@@ -77,7 +78,7 @@ export function RankedMatchRating({
         )}
       </div>
       {state.kind === "loading" && <p role="status">Loading saved rating change…</p>}
-      {value && tier && (
+      {value && model && (
         <>
           <div className="ranked-rating-summary" role="status">
             <div>
@@ -95,10 +96,59 @@ export function RankedMatchRating({
               <strong>{value.ratingAfter.toLocaleString()}</strong>
             </div>
           </div>
-          <p className="ranked-rating-tier">
-            Rating milestone:{" "}
-            <span className={`rating-tier ${ratingTierClass(tier)}`}>{tier}</span>
-          </p>
+          <div className="ranked-rating-transition" data-transition={model.transition}>
+            <p className="ranked-rating-transition-title" role="status">
+              {model.transition === "promotion"
+                ? "Promoted!"
+                : model.transition === "demotion"
+                  ? "Demoted"
+                  : "Rank after match"}
+            </p>
+            <div className="ranked-rating-emblems">
+              {model.transition !== "unchanged" && (
+                <>
+                  <div className="ranked-rating-rank">
+                    <RankEmblem rating={value.ratingBefore} size={112} decorative />
+                    <span style={{ color: model.before.color }}>
+                      {model.before.label}
+                    </span>
+                  </div>
+                  <span className="ranked-rating-arrow" aria-hidden="true">
+                    →
+                  </span>
+                </>
+              )}
+              <div className="ranked-rating-rank ranked-rating-current">
+                <RankEmblem rating={value.ratingAfter} size={144} decorative />
+                <strong style={{ color: model.after.color }}>{model.after.label}</strong>
+              </div>
+            </div>
+            {model.after.progress !== null && (
+              <div
+                className="ranked-rating-progress"
+                data-rating-change={
+                  value.ratingDelta > 0
+                    ? "gain"
+                    : value.ratingDelta < 0
+                      ? "loss"
+                      : "neutral"
+                }
+              >
+                <progress
+                  max={100}
+                  value={Math.round(model.after.progress * 100)}
+                  aria-label="Progress to next division"
+                />
+                <p>
+                  {model.after.eloToPromotion} Elo to {model.nextRank}
+                </p>
+              </div>
+            )}
+            {model.after.progress === null && <p>Highest competitive rank</p>}
+            {value.policyVersion === 1 && (
+              <p>Historical Elo award (v1), displayed on the current rank scale.</p>
+            )}
+          </div>
         </>
       )}
       {state.kind === "missing" && (
@@ -110,7 +160,7 @@ export function RankedMatchRating({
         </p>
       )}
       <div className="ranked-rating-footer">
-        <span>Solo rating, not competitive RP or matchmaking tiers.</span>
+        <Link href="/ranked/rating-guide">How Elo works</Link>
         <div>
           <Link href="/leaderboard">Leaderboard</Link>
           {state.kind !== "loading" && (

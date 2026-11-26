@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Trophy } from "lucide-react";
+import { CompetitiveRankCard } from "@/components/profile/competitive-rank-card";
 import { useEffect, useState } from "react";
 
 import { showRecentCount, showRecentWinRate } from "@/lib/profile/player-dashboard";
@@ -67,6 +68,8 @@ export function RankedStatsPage() {
         <ShieldCheck size={38} aria-hidden="true" />
       </div>
 
+      <CompetitiveRankCard />
+
       {state.kind === "loading" && <p role="status">Loading verified Ranked stats…</p>}
       {state.kind === "guest" && (
         <p role="status" className="profile-detail-message">
@@ -124,8 +127,8 @@ export function RankedStatsPage() {
           </section>
           <p className="profile-detail-note">
             These totals include all server-verified Intermediate wins and server-recorded
-            terminal losses. Beginner and Expert Ranked are not yet playable; RP and
-            placements are not active.
+            terminal losses. Beginner and Expert Ranked are not yet playable. Ranked Elo
+            is separate from account XP.
           </p>
         </>
       )}

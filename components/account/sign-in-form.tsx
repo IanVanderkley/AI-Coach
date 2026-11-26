@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { usernameContentProblem } from "@/lib/account/username-moderation";
+import { readSignInNotice } from "@/lib/account/auth-link-feedback";
 import {
   authError,
   validEmail,
@@ -22,15 +23,11 @@ export function SignInForm() {
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("passwordChanged"))
-      setMessage("Password updated. Sign in with your new password.");
-    else if (params.has("accountDeleted")) setMessage("Account deleted.");
-    else if (params.has("authError")) {
-      setIsError(true);
-      setMessage(
-        "This email link could not be verified. Request a new link and open it in the browser where you requested it.",
-      );
+    const notice = readSignInNotice(new URLSearchParams(window.location.search));
+    if (notice) {
+      setMode(notice.mode);
+      setMessage(notice.message);
+      setIsError(notice.isError);
     }
   }, []);
   function switchMode(next: typeof mode) {

@@ -29,8 +29,8 @@ export default function LeaderboardPage() {
               Leaderboard<span className="title-period">.</span>
             </h1>
             <p className="leaderboard-subtitle">
-              Elo-style ratings and fastest verified victories. Ranked players appear
-              publicly by default and can choose Anonymous mode in Settings.
+              Competitive Elo standings and fastest verified victories. Ranked players
+              appear publicly by default and can choose Anonymous mode in Settings.
             </p>
             <span className="leaderboard-verification">
               <ShieldCheck size={15} aria-hidden="true" /> Server-verified results

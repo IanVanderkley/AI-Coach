@@ -24,6 +24,7 @@ import {
 import { Navbar } from "@/components/play/navbar";
 import { RankedResultDialog } from "@/components/ranked/ranked-result-dialog";
 import { RankedLadderOverview } from "@/components/ranked/ranked-ladder-overview"; // AI_COACH_RANKED_LADDER_OVERVIEW_V1
+import { RankedLobby } from "@/components/ranked/ranked-lobby";
 import { buildRankedResult } from "@/lib/ranked/result-summary"; // AI_COACH_RANKED_RESULT_DIALOG_V1
 
 type Position = {
@@ -625,6 +626,15 @@ export default function RankedPage() {
   }, [clearQueuedMoves]);
 
   const rankedResult = buildRankedResult(board, dismissedResultMatchId);
+  const showLobby =
+    !loading && (noMatch || (board?.status === "active" && resumeRequired));
+
+  function returnToLobby() {
+    if (starting || submittingMove) return;
+    if (board) setDismissedResultMatchId(board.matchId);
+    setResumeRequired(true);
+    void loadBoard();
+  }
 
   // Build the visible board using only server-provided information.
   const revealed = new Map<string, number>();
@@ -641,7 +651,10 @@ export default function RankedPage() {
     <>
       <Navbar />
 
-      <main className="page-shell" id="main-content">
+      <main
+        className={`page-shell ${showLobby ? styles.lobbyPage : board && !resumeRequired ? styles.gameplayPage : ""}`}
+        id="main-content"
+      >
         <div className="page-heading">
           <div>
             <p className="eyebrow">COMPETE. IMPROVE. CLIMB.</p>
@@ -655,8 +668,6 @@ export default function RankedPage() {
         <p>
           <Link href="/">← Back to Practice</Link>
         </p>
-
-        <RankedLadderOverview />
 
         {loading && (
           <FeedbackNotice
@@ -687,50 +698,56 @@ export default function RankedPage() {
           />
         )}
 
-        {noMatch && !loading && (
-          <section className={styles.launch} aria-label="Ranked match setup">
-            <button
-              type="button"
-              className={styles.playButton}
-              onClick={startMatch}
-              disabled={starting}
-            >
-              {starting ? (
-                <Loader2 className={styles.spinner} size={24} aria-hidden="true" />
-              ) : (
-                <Play size={24} aria-hidden="true" />
+        {showLobby && (
+          <div className={styles.lobbySetup}>
+            <RankedLadderOverview />
+            <div className={styles.lobbyActions}>
+              {noMatch && !loading && (
+                <section className={styles.launch} aria-label="Ranked match setup">
+                  <button
+                    type="button"
+                    className={styles.playButton}
+                    onClick={startMatch}
+                    disabled={starting}
+                  >
+                    {starting ? (
+                      <Loader2 className={styles.spinner} size={24} aria-hidden="true" />
+                    ) : (
+                      <Play size={24} aria-hidden="true" />
+                    )}
+                    <span>
+                      <strong>
+                        {starting ? "STARTING MATCH…" : "PLAY INTERMEDIATE"}
+                      </strong>
+                      <small>Ranked · 16 × 16 · 40 mines</small>
+                    </span>
+                  </button>
+                </section>
               )}
-              <span>
-                <strong>{starting ? "STARTING MATCH…" : "PLAY INTERMEDIATE"}</strong>
-                <small>Ranked · 16 × 16 · 40 mines</small>
-              </span>
-            </button>
-          </section>
-        )}
 
-        {board?.status === "active" && !loading && resumeRequired && (
-          <section className={styles.launch} aria-label="Resume Ranked match">
-            <FeedbackNotice
-              tone="info"
-              title="Unfinished Ranked match"
-              description="Your progress has been saved."
-            />
-            <button
-              type="button"
-              className={styles.playButton}
-              disabled={starting || submittingMove}
-              onClick={async () => {
-                if (await loadBoard()) setResumeRequired(false);
-              }}
-            >
-              <History size={24} aria-hidden="true" />
-              <span>
-                <strong>RESUME MATCH</strong>
-                <small>Ranked · Intermediate</small>
-              </span>
-            </button>
-          </section>
+              {board?.status === "active" && !loading && resumeRequired && (
+                <section className={styles.launch} aria-label="Resume Ranked match">
+                  <p className={styles.savedMatch}>Unfinished match · Progress saved</p>
+                  <button
+                    type="button"
+                    className={styles.playButton}
+                    disabled={starting || submittingMove}
+                    onClick={async () => {
+                      if (await loadBoard()) setResumeRequired(false);
+                    }}
+                  >
+                    <History size={24} aria-hidden="true" />
+                    <span>
+                      <strong>RESUME MATCH</strong>
+                      <small>Ranked · Intermediate</small>
+                    </span>
+                  </button>
+                </section>
+              )}
+            </div>
+          </div>
         )}
+        {showLobby && <RankedLobby />}
 
         {board && !loading && (!resumeRequired || board.status !== "active") && (
           <section className="game-panel">
@@ -922,14 +939,24 @@ export default function RankedPage() {
                     : "You hit a mine. Start a new match when you are ready."
                 }
                 action={
-                  <button
-                    type="button"
-                    data-primary="true"
-                    onClick={startMatch}
-                    disabled={starting}
-                  >
-                    {starting ? "Starting..." : "New Ranked Match"}
-                  </button>
+                  <div className="finished-result-actions">
+                    <button
+                      type="button"
+                      className="finished-result-reopen"
+                      onClick={() => setDismissedResultMatchId(null)}
+                      disabled={starting}
+                    >
+                      View results
+                    </button>
+                    <button
+                      type="button"
+                      data-primary="true"
+                      onClick={returnToLobby}
+                      disabled={starting}
+                    >
+                      Return to Ranked lobby
+                    </button>
+                  </div>
                 }
               />
             )}
@@ -939,6 +966,7 @@ export default function RankedPage() {
       <RankedResultDialog
         result={rankedResult}
         busy={starting}
+        onReturnLobby={returnToLobby}
         onDismiss={() => {
           if (board) setDismissedResultMatchId(board.matchId);
         }}

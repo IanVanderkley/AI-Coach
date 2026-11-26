@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "node scripts/run-local.mjs --dev",
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "format": "prettier . --write",

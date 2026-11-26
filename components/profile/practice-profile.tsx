@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RankedHistory } from "@/components/profile/ranked-history"; // AI_COACH_RANKED_HISTORY_V1
 import { PlayerModeCard } from "@/components/profile/player-mode-card";
 import { ProfileLevelCard } from "@/components/profile/profile-level-card";
+import { CompetitiveRankCard } from "@/components/profile/competitive-rank-card";
 import { PracticeDifficultyStats } from "@/components/profile/practice-difficulty-stats";
 import {
   parseRankedLifetimeResponse,
@@ -155,6 +156,8 @@ export function PracticeProfile() {
           </div>
         </div>
       </div>
+
+      <CompetitiveRankCard />
 
       <section
         className="player-dashboard-overview"
