@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Trophy } from "lucide-react";
+import { CompetitiveRankCard } from "@/components/profile/competitive-rank-card";
 import { useEffect, useState } from "react";
 
 import { showRecentCount, showRecentWinRate } from "@/lib/profile/player-dashboard";
@@ -66,6 +67,8 @@ export function RankedStatsPage() {
         </div>
         <ShieldCheck size={38} aria-hidden="true" />
       </div>
+
+      <CompetitiveRankCard />
 
       {state.kind === "loading" && <p role="status">Loading verified Ranked stats…</p>}
       {state.kind === "guest" && (
