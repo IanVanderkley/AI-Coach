@@ -10,6 +10,7 @@ import {
   type RankedMatchRating,
 } from "@/lib/leaderboard/match-rating";
 import { RankEmblem } from "@/components/ranked/rank-emblem";
+import { FeedbackNotice } from "@/components/ui/feedback-notice";
 import { rankResultModel } from "@/lib/leaderboard/rank-result";
 
 type RatingState =
@@ -96,6 +97,26 @@ export function RankedMatchRating({
               <strong>{value.ratingAfter.toLocaleString()}</strong>
             </div>
           </div>
+          {value.finalGuessCompensated && (
+            <FeedbackNotice
+              tone="reward"
+              title="Verified final 50/50"
+              description="Only one safe square remained, with two equally possible locations. You earned half of the nominal victory Elo, rounded up."
+              metric={{ value: formatRatingDelta(value.ratingDelta, value.policyVersion), label: "Elo awarded" }}
+              detail={value.ratingAfter === 10000
+                ? "Awards cannot raise rating above 10,000 Elo. This match still counts as a defeat."
+                : "This match still counts as a defeat."}
+            />
+          )}
+          {model.demotionProtected && (
+            <FeedbackNotice
+              tone="protection"
+              title="Demotion prevented"
+              description="Your rating stopped at the division floor. Another ordinary loss from this floor will demote you."
+              metric={{ value: value.ratingAfter.toLocaleString(), label: `${model.after.label} floor` }}
+              detail="Your current rank is retained."
+            />
+          )}
           <div className="ranked-rating-transition" data-transition={model.transition}>
             <p className="ranked-rating-transition-title" role="status">
               {model.transition === "promotion"
@@ -144,10 +165,6 @@ export function RankedMatchRating({
                 </p>
               </div>
             )}
-            {value.finalGuessCompensated && (
-              <p role="status">Verified final 50/50 — half of the nominal victory Elo awarded, subject to the rating ceiling. This match still counts as a defeat.</p>
-            )}
-            {model.demotionProtected && <p role="status">Demotion prevented. Your rating stopped at the division floor. Another loss at this rating will demote you.</p>}
             {model.after.progress === null && <p>Highest competitive rank</p>}
             {value.policyVersion === 1 && (
               <p>Historical Elo award (v1), displayed on the current rank scale.</p>

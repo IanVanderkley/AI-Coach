@@ -23,6 +23,7 @@ import {
 } from "@/lib/ranked/input-queue";
 
 import { Navbar } from "@/components/play/navbar";
+import { BoardControlsGuide } from "@/components/play/board-controls-guide";
 import { RankedResultDialog } from "@/components/ranked/ranked-result-dialog";
 import { RankedLadderOverview } from "@/components/ranked/ranked-ladder-overview"; // AI_COACH_RANKED_LADDER_OVERVIEW_V1
 import { RankedLobby } from "@/components/ranked/ranked-lobby";
@@ -1010,28 +1011,25 @@ export default function RankedPage() {
                 </p>
               )
             ) : (
-              <p className="board-instructions">
-                Reveal: click a covered square · Flag: use Flag mode or right-click ·
-                Chord: click a revealed number when its neighboring flags match. Ranked
-                time includes time away after the first reveal.
-              </p>
+              <BoardControlsGuide mode="ranked" rows={board.rows} columns={board.columns} mines={board.mineCount} />
             )}
 
             {/* Display results after a win or loss. */}
             {board.status !== "active" && (
               <FeedbackNotice
                 tone={board.status === "won" ? "success" : "warning"}
-                title={board.status === "won" ? "Ranked victory" : "Match completed"}
+                title={board.status === "won" ? "Ranked victory" : "Game over"}
                 description={
                   board.status === "won"
                     ? "Your verified win has been recorded."
-                    : "You hit a mine. Start a new match when you are ready."
+                    : "You hit a mine. Your Ranked match has ended."
                 }
                 action={
                   <div className="finished-result-actions">
                     <button
                       type="button"
                       className="finished-result-reopen"
+                      data-primary="true"
                       onClick={() => setDismissedResultMatchId(null)}
                       disabled={starting}
                     >
@@ -1039,7 +1037,6 @@ export default function RankedPage() {
                     </button>
                     <button
                       type="button"
-                      data-primary="true"
                       onClick={returnToLobby}
                       disabled={starting}
                     >

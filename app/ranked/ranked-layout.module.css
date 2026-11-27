@@ -99,9 +99,10 @@
   border-radius: 9px;
   padding: 13px;
   min-width: 0;
+  box-shadow: inset 0 1px 0 #ffffff09, 0 3px 10px #0002;
 }
 .stats svg {
-  color: #b9bfca;
+  color: #ef9ca6;
 }
 .stats dt {
   color: var(--text-secondary, #b9bfca);

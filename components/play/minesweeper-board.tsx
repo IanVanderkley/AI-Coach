@@ -4,7 +4,6 @@ import {
   Bomb,
   Flag,
   FlagTriangleRight,
-  Grid2X2,
   MousePointer2,
   Pause,
   Play,
@@ -24,6 +23,7 @@ import type { DifficultySettings } from "@/lib/game-settings";
 import type { GameplayMove } from "@/lib/coach/types";
 import type { GameCell } from "./board-fixture";
 import { GameStats } from "./game-stats";
+import { BoardControlsGuide } from "./board-controls-guide";
 import { PracticeRecoveryDialog } from "./practice-recovery-dialog";
 import {
   clearPracticeRecovery,
@@ -974,20 +974,7 @@ export function MinesweeperBoard({
         onDismiss={() => setResultsOpen(false)}
       />
 
-      <div className="board-footer">
-        <span className="board-dimensions">
-          <Grid2X2 size={14} aria-hidden="true" /> {rows} × {columns}
-          <span className="footer-divider" />
-          {mines} mines
-        </span>
-        <span className="board-instructions">
-          <MousePointer2 size={14} aria-hidden="true" /> Tap: reveal
-          <span className="footer-divider" />
-          <Flag size={13} aria-hidden="true" /> Right-click or Flag mode: flag
-          <span className="footer-divider" />
-          Chord: tap a number, or hold left + right
-        </span>
-      </div>
+      <BoardControlsGuide mode="practice" rows={rows} columns={columns} mines={mines} />
     </section>
   );
 }
