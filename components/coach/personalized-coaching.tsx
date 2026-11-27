@@ -312,8 +312,7 @@ export function PersonalizedCoaching({
         )}
       </div>
       <p className="verified-note">
-        Track your saved reviews privately. Learning scores never change your rating or
-        XP.
+        Learn from your saved reviews.
       </p>
       <div id="personalized-coaching-body" hidden={!expanded}>
         {status === "loading" ? (
@@ -379,8 +378,7 @@ export function PersonalizedCoaching({
               </label>
             </div>
             <p className="verified-note">
-              {learning.selected.length} of {windowSize} reviewed games available · latest
-              100 saved reports per mode · current analysis version only
+              {learning.selected.length} of {windowSize} saved reviews
             </p>
             {!learning.selected.length ? (
               <p>
@@ -397,6 +395,10 @@ export function PersonalizedCoaching({
                         ? "—"
                         : `${learning.metrics.accuracy}%`}
                     </strong>
+                    {learning.metrics.accuracy !== null && (
+                      <progress className="coach-learning-metric-bar" aria-label="Proven decision accuracy" max={100} value={learning.metrics.accuracy} />
+                    )}
+                    <small>{learning.metrics.good} good · {learning.metrics.mistakes} mistakes</small>
                   </div>
                   <div>
                     <span>Average learning score</span>
@@ -405,14 +407,19 @@ export function PersonalizedCoaching({
                         ? "—"
                         : `${learning.metrics.score}/100`}
                     </strong>
+                    {learning.metrics.score !== null && (
+                      <progress className="coach-learning-metric-bar" aria-label="Average learning score" max={100} value={learning.metrics.score} />
+                    )}
+                    <small>{learning.metrics.graded} graded {learning.metrics.graded === 1 ? "review" : "reviews"}</small>
                   </div>
                   <div>
                     <span>Accuracy change</span>
-                    <strong>
+                    <strong className="coach-learning-change" data-direction={learning.accuracyChange === null ? "unknown" : learning.accuracyChange > 0 ? "up" : learning.accuracyChange < 0 ? "down" : "flat"}>
                       {learning.accuracyChange === null
                         ? "—"
                         : `${learning.accuracyChange > 0 ? "+" : ""}${learning.accuracyChange} pp`}
                     </strong>
+                    <small>{learning.accuracyChange === null ? (learning.selected.length < 10 ? "Needs at least 10 reviews" : "Not enough assessed decisions") : "Recent vs. earlier reviews"}</small>
                   </div>
                 </div>
                 <details
@@ -610,8 +617,11 @@ export function PersonalizedCoaching({
                             {item.outcome === "win" ? "Victory" : "Loss"}
                           </strong>
                           <span>
-                            {new Date(item.completedAt).toLocaleDateString()} ·{" "}
-                            {item.review.score.grade ?? "Ungraded"} · v{item.version}
+                            {new Date(item.completedAt).toLocaleDateString()}
+                          </span>
+                          <span className="coach-learning-report-grade" data-grade={item.review.score.grade ?? "none"}>
+                            <strong>{item.review.score.grade ?? "Ungraded"}</strong>
+                            {item.review.score.score !== null && <small>{item.review.score.score}/100</small>}
                           </span>
                         </div>
                         <p>

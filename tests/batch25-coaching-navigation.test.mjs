@@ -8,7 +8,7 @@ import {
 } from "../lib/settings/coaching-section-preferences.ts";
 const read = (file) => readFileSync(file, "utf8");
 test("section defaults are independent, compact and validated", () => {
-  assert.equal(DEFAULT_COACHING_SECTIONS.replay, false);
+  assert.equal(DEFAULT_COACHING_SECTIONS.replay, true);
   assert.equal(DEFAULT_COACHING_SECTIONS.lessons, false);
   const value = normalizeCoachingSections({
     replay: true,

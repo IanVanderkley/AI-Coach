@@ -174,6 +174,8 @@ export function TeachingProof({
                 <span className="coach-proof-step-number">{index + 1}</span>
                 {lesson.title}
               </h5>
+              <div className="coach-proof-split">
+                <div className="coach-proof-visual">
               <ProofBoard visual={visual} explanation={explanation} />
               <div className="coach-proof-key">
                 <span>Blue number = clue</span>
@@ -181,6 +183,8 @@ export function TeachingProof({
                 <span>✓ = safe</span>
                 <span>M = proven mine</span>
               </div>
+                </div>
+                <div className="coach-proof-copy">
               <p>{lesson.introduction}</p>
               {visual.groups.length > 1 && (
                 <div className="coach-proof-equations">
@@ -199,6 +203,8 @@ export function TeachingProof({
               <p className="coach-proof-habit">
                 <strong>Remember:</strong> {lesson.habit}
               </p>
+                </div>
+              </div>
               <details className="coach-proof-technical" open={technical}>
                 <summary>Exact numbers and coordinates</summary>
                 {describeTechnicalProof(visual, explanation.columns).map((line, i) => (

@@ -1,0 +1,151 @@
+/* Batch 27H.2: visual hierarchy only; board geometry and evidence colors retained. */
+.coach-full-page #coach-replay-workspace {
+  border: 0;
+  background: transparent;
+  padding: clamp(8px, 1.6vw, 18px);
+  margin: 0;
+  min-width: 0;
+}
+.coach-full-page #coach-replay-workspace .verified-heading h3 {
+  font-family: var(--heading-font);
+  font-size: clamp(22px, 2.4vw, 30px);
+  margin: 0;
+}
+.coach-full-page .coach-replay-assessment-note {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin: 6px 0 14px;
+}
+.coach-full-page .coach-replay-assessment-note summary { cursor: pointer; }
+.coach-full-page #coach-replay-workspace .verified-move-nav .coach-replay-nav {
+  background: #252525;
+  border-color: #404040;
+}
+.coach-full-page #coach-replay-workspace .verified-move-nav .coach-replay-nav:hover:not(:disabled) {
+  background: #343434;
+}
+.coach-full-page #coach-replay-workspace .coach-replay-toolbar {
+  padding: 10px;
+  background: #121212;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+.coach-full-page .coach-replay-decision-banner {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  background: #202020;
+  border-radius: 8px;
+}
+.coach-full-page .coach-replay-decision-banner strong { font-size: 18px; }
+.coach-full-page .coach-replay-decision-banner p { margin: 4px 0 0; line-height: 1.6; }
+.coach-full-page .coach-replay-decision-banner[data-decision="good"] strong { color: #9ee5b0; }
+.coach-full-page .coach-replay-decision-banner[data-decision="mistake"] strong { color: #ff939d; }
+.coach-full-page #coach-replay-workspace .coach-review-workspace { grid-template-columns: minmax(0, 1fr); }
+.coach-full-page #coach-replay-workspace .verified-board-panel { min-width: 0; }
+.coach-full-page #coach-replay-workspace .verified-board-panel h4 { margin: 0 0 10px; font-size: 15px; }
+.coach-full-page #coach-replay-workspace .verified-board-scroll { border: 1px solid #303030; border-radius: 10px; }
+.coach-full-page #coach-replay-workspace .verified-boards:not(.single-board) { gap: 14px; }
+.coach-full-page #coach-replay-workspace .coach-replay-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 12px 0;
+  margin: 0;
+  list-style: none;
+}
+.coach-full-page .coach-replay-legend li { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+.coach-full-page .coach-replay-legend li > span {
+  width: 20px; height: 20px; display: grid; place-items: center;
+  box-sizing: border-box; border: 1px solid #777; border-radius: 3px; font-weight: 700;
+}
+.coach-full-page .coach-replay-legend [data-symbol="safe"] { color: #9ee5b0; background: #203c2d; border-color: #80d7a5; }
+.coach-full-page .coach-replay-legend [data-symbol="mine"] { color: #ffb36b; background: #422a1e; border-color: #ffb36b; }
+.coach-full-page .coach-replay-legend [data-symbol="flag"] { color: #ff747d; }
+.coach-full-page .coach-replay-legend [data-symbol="clue"] { color: #b9dbff; border-color: #7eb8ff; }
+.coach-full-page .coach-replay-legend [data-symbol="suggested"] { border: 2px dashed #b6f4ca; }
+.coach-full-page .coach-replay-legend [data-symbol="chosen"] { border: 2px solid #f5f5f5; }
+.coach-full-page .coach-proof-steps {
+  background: #1c1c1c; border-color: #383838; border-radius: 10px;
+}
+.coach-full-page .coach-proof-steps > summary { color: #f1f1f1; font-size: 16px; }
+.coach-full-page .coach-proof-steps .coach-proof-lesson {
+  background: #171717; border: 1px solid #353535; border-radius: 8px;
+}
+.coach-full-page .coach-proof-step-number { background: #b62634; }
+.coach-full-page .coach-proof-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.coach-full-page .coach-proof-split > * { min-width: 0; }
+.coach-full-page .coach-proof-copy { display: grid; gap: 8px; }
+.coach-full-page .coach-proof-copy > p { margin: 0; }
+.coach-full-page .coach-proof-lesson .coach-proof-conclusion {
+  background: #222; border-left: 3px solid #ffaf78;
+}
+.coach-full-page .coach-proof-lesson .coach-proof-conclusion[data-safe="true"] { background: #222; border-left-color: #8ee4af; }
+.coach-full-page .coach-proof-technical summary { color: var(--text-secondary); }
+@media (min-width: 850px) {
+  .coach-full-page .coach-proof-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
+}
+@media (max-width: 760px) {
+  .coach-full-page #coach-replay-workspace .verified-boards { grid-template-columns: minmax(0, 1fr); }
+}
+@media print {
+  .coach-full-page .coach-proof-split { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Batch 27H.2a: fit comparison boards to their real available width. */
+.coach-full-page #coach-replay-workspace .coach-review-board-pane {
+  container: replay-comparison / inline-size;
+}
+.coach-full-page #coach-replay-workspace .verified-boards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+@container replay-comparison (min-width: 800px) {
+  .coach-full-page #coach-replay-workspace .verified-boards[data-comparison="side-by-side"]:not(.single-board) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.coach-full-page #coach-replay-workspace .verified-board-scroll {
+  container-type: inline-size;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  max-height: none;
+  padding: 8px;
+  overflow: auto;
+}
+.coach-full-page #coach-replay-workspace .verified-board {
+  /* 20px row labels + 16px board padding + border + per-column gaps. */
+  --replay-cell-size: clamp(14px, calc((100cqi - 40px - 2px * var(--replay-columns)) / var(--replay-columns)), 36px);
+  grid-template-rows: 20px;
+  grid-auto-rows: var(--replay-cell-size);
+  gap: 2px;
+  padding: 8px;
+  width: max-content;
+  max-width: none;
+  box-sizing: content-box;
+  margin-inline: auto;
+}
+.coach-full-page #coach-replay-workspace .verified-board .verified-cell {
+  width: var(--replay-cell-size);
+  height: var(--replay-cell-size);
+  min-width: var(--replay-cell-size);
+  min-height: var(--replay-cell-size);
+  max-width: var(--replay-cell-size);
+  max-height: var(--replay-cell-size);
+  font-size: clamp(10px, calc(var(--replay-cell-size) * .44), 15px);
+  aspect-ratio: 1;
+  box-sizing: border-box;
+}
+.coach-full-page #coach-replay-workspace .coach-board-coordinate {
+  font-size: clamp(9px, calc(var(--replay-cell-size) * .4), 11px);
+}
+@media print {
+  .coach-full-page #coach-replay-workspace .verified-boards[data-comparison] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -88,6 +88,13 @@ export function CoachConsole() {
   const [reviewTab, setReviewTab] = useState<"review" | "coach">("review");
   const replayScrollRequested = useRef(false);
   const { sections } = useCoachingSections();
+  // The legacy sample runner is a local developer tool, not a player-facing feature.
+  const [showDevSamples, setShowDevSamples] = useState(false);
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      setShowDevSamples(new URLSearchParams(window.location.search).get("devSamples") === "1");
+    }
+  }, []);
   useEffect(() => {
     setPracticeExpanded(readCoachingSections().practice);
   }, []);
@@ -581,12 +588,6 @@ export function CoachConsole() {
                       );
                     })}
                   </ul>
-                  <p className="verified-note">
-                    Showing your saved Practice recordings.{" "}
-                    {autoGrades
-                      ? "Grades are calculated as recordings load; detailed lessons open on request."
-                      : "Grades appear after you review a game."}
-                  </p>
                 </>
               )}
             </div>
@@ -600,47 +601,39 @@ export function CoachConsole() {
               else void openGame(gameRef, undefined, move, true);
             }}
           />
-          <details className="coach-demo-tests" open={sections.samples}>
-            <summary>More tools and sample reports</summary>
-            <p className="verified-note">
-              Earlier experimental reports are separate from verified lessons.
-            </p>
-            <div className="coach-actions">
-              <button
-                type="button"
-                className="coach-btn secondary"
-                disabled={loadingKey !== null}
-                onClick={() => {
-                  const classic = loadLastGame();
-                  if (classic) openDemo("classic", classic.session);
-                  else setError("No classic recording is available.");
-                }}
-              >
-                <History size={15} aria-hidden="true" /> Run classic report (experimental)
-              </button>
-              {SAMPLES.map(({ key, label, session }) => (
+          {showDevSamples && (
+            <details className="coach-demo-tests" open={sections.samples}>
+              <summary>More tools and sample reports</summary>
+              <p className="verified-note">
+                Earlier experimental reports are separate from verified lessons.
+              </p>
+              <div className="coach-actions">
                 <button
-                  key={key}
                   type="button"
                   className="coach-btn secondary"
                   disabled={loadingKey !== null}
-                  onClick={() => openDemo(key, session)}
+                  onClick={() => {
+                    const classic = loadLastGame();
+                    if (classic) openDemo("classic", classic.session);
+                    else setError("No classic recording is available.");
+                  }}
                 >
-                  {label} (demo)
+                  <History size={15} aria-hidden="true" /> Run classic report (experimental)
                 </button>
-              ))}
-            </div>
-          </details>
-          <details className="coach-extra-info" open={sections.accuracy}>
-            <summary>How accurate is this review?</summary>
-            <p className="verified-note">
-              The replay and visual lessons use visible-board evidence. The coaching score
-              is a learning aid, not a Ranked result.{" "}
-              {status?.configured
-                ? "Optional AI focus is available to eligible signed-in users."
-                : "External AI is optional; the rule coach works without it."}
-            </p>
-          </details>
+                {SAMPLES.map(({ key, label, session }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className="coach-btn secondary"
+                    disabled={loadingKey !== null}
+                    onClick={() => openDemo(key, session)}
+                  >
+                    {label} (demo)
+                  </button>
+                ))}
+              </div>
+            </details>
+          )}
         </section>
       ) : (
         <section aria-label="Coaching report" className="coach-selected-review">
@@ -679,32 +672,34 @@ export function CoachConsole() {
                   review
                 </p>
               )}
-              <SaveCoachingReview
-                mode={selection.mode}
-                gameRef={
-                  selection.mode === "ranked"
-                    ? selection.id.slice(7)
-                    : selection.id.startsWith("handoff-")
-                      ? null
-                      : selection.id
-                }
-              />
-              <nav className="coach-review-tabs" aria-label="Game review views">
-                <button
-                  type="button"
-                  aria-pressed={reviewTab === "review"}
-                  onClick={() => setReviewTab("review")}
-                >
-                  Game review
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={reviewTab === "coach"}
-                  onClick={() => setReviewTab("coach")}
-                >
-                  Ask your coach
-                </button>
-              </nav>
+              <div className="coach-review-toolbar">
+                <nav className="coach-review-tabs" aria-label="Game review views">
+                  <button
+                    type="button"
+                    aria-pressed={reviewTab === "review"}
+                    onClick={() => setReviewTab("review")}
+                  >
+                    Game review
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={reviewTab === "coach"}
+                    onClick={() => setReviewTab("coach")}
+                  >
+                    Ask your coach
+                  </button>
+                </nav>
+                <SaveCoachingReview
+                  mode={selection.mode}
+                  gameRef={
+                    selection.mode === "ranked"
+                      ? selection.id.slice(7)
+                      : selection.id.startsWith("handoff-")
+                        ? null
+                        : selection.id
+                  }
+                />
+              </div>
               <div className="coach-review-tab-body" hidden={reviewTab !== "review"}>
                 <ReviewOverview
                   mode={selection.mode}

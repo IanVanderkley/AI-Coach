@@ -30,7 +30,7 @@ export const DEFAULT_COACHING_SECTIONS: CoachingSections = {
   findings: false,
   samples: false,
   accuracy: false,
-  replay: false,
+  replay: true,
   lessons: false,
   score: false,
   aiFocus: false,
