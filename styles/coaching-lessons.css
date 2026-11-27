@@ -212,9 +212,7 @@
 }
 .coach-history-row {
   display: grid;
-  grid-template-columns:
-    auto minmax(0, 1fr) minmax(66px, auto) minmax(70px, auto)
-    76px auto;
+  grid-template-columns: 9px minmax(0, 1fr) 80px 84px 76px 132px;
   align-items: center;
   gap: 14px;
   padding: 12px 16px;
@@ -257,7 +255,9 @@
 .coach-history-score {
   display: grid;
   justify-items: center;
+  align-content: center;
   min-width: 0;
+  min-height: 60px;
 }
 .coach-history-ungraded {
   color: var(--text-muted);
@@ -322,6 +322,26 @@
     grid-column: 2 / -1;
     justify-self: stretch;
   }
+}
+/* Both coaching histories share the same rows, columns and responsive layout. */
+.ranked-history-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.coach-full-page .ranked-history-header-actions .coach-card-count {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.coach-full-page .coach-history-row .coach-history-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.coach-full-page .coach-history-row .coach-history-result > span {
+  overflow-wrap: anywhere;
 }
 .coach-selected-review {
   min-width: 0;
