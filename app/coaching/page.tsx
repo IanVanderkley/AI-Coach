@@ -8,7 +8,7 @@ import "@/styles/batch25-review-workspace.css";
 export const metadata = {
   title: "AI-Coach | Coaching",
   description:
-    "Review a completed Practice game with evidence-based coaching and move replay.",
+    "Review completed Practice and Ranked games with evidence-based coaching and move replay.",
 };
 
 // The Coaching tab. `CoachConsole` does the interactive work; this page only
@@ -29,7 +29,7 @@ export default function CoachingPage() {
               Coaching<span className="title-period">.</span>
             </h1>
             <p className="page-subtitle">
-              Review your Practice decisions with visible-board evidence
+              Review your Practice and Ranked decisions with visible-board evidence
             </p>
           </div>
 
@@ -55,7 +55,7 @@ export default function CoachingPage() {
             Verified conclusions come from board logic. Optional AI can select a verified
             focus.
           </p>
-          <span>Practice review · AI optional</span>
+          <span>Practice and Ranked review · AI optional for Practice</span>
         </footer>
       </main>
     </>

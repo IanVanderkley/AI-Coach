@@ -31,10 +31,12 @@ export function followUpGameKey(game: PracticeSession): string {
 export function VerifiedFollowUp({
   report,
   game,
+  persist = true,
   onReviewMove,
 }: {
   report: EvidenceReport;
   game: PracticeSession;
+  persist?: boolean;
   onReviewMove: (moveNumber: number) => void;
 }) {
   const [momentId, setMomentId] = useState(report.moments[0]?.id ?? "");
@@ -46,7 +48,8 @@ export function VerifiedFollowUp({
   const threadRef = useRef<FollowUpAnswer[]>([]);
   const threadPanelRef = useRef<HTMLDivElement | null>(null);
   const revealLatestRef = useRef(false);
-  const storageKey = STORAGE_PREFIX + followUpGameKey(game);
+  const storageKey =
+    (persist ? STORAGE_PREFIX : "ranked-memory-only.") + followUpGameKey(game);
   const ready = loadedKey === storageKey;
 
   useEffect(() => {
@@ -56,7 +59,7 @@ export function VerifiedFollowUp({
       try {
         restored = restoreFollowUpThread(
           report,
-          window.sessionStorage.getItem(storageKey),
+          persist ? window.sessionStorage.getItem(storageKey) : null,
         );
       } catch {
         // The conversation still works when storage is unavailable.
@@ -81,7 +84,7 @@ export function VerifiedFollowUp({
         : (restored.at(-1)?.momentId ?? report.moments[0]?.id ?? ""),
     );
     setLoadedKey(storageKey);
-  }, [report, storageKey]);
+  }, [report, storageKey, persist]);
 
   useEffect(() => {
     if (!ready || !revealLatestRef.current) return;
@@ -134,7 +137,8 @@ export function VerifiedFollowUp({
     setQuestion("");
     setNotice("");
     try {
-      window.sessionStorage.setItem(storageKey, serializeFollowUpThread(next));
+      if (persist)
+        window.sessionStorage.setItem(storageKey, serializeFollowUpThread(next));
     } catch {
       // Do not interrupt local coaching if tab storage is unavailable.
     }
@@ -148,7 +152,7 @@ export function VerifiedFollowUp({
     setQuestion("");
     setNotice("");
     try {
-      window.sessionStorage.removeItem(storageKey);
+      if (persist) window.sessionStorage.removeItem(storageKey);
     } catch {
       // The in-memory conversation has still been cleared.
     }
@@ -207,8 +211,8 @@ export function VerifiedFollowUp({
           </div>
           <div className="coach-follow-up-thread-meta">
             <span className="follow-up-context">
-              Latest {thread.length} of up to {FOLLOW_UP_THREAD_LIMIT} answers saved in
-              this browser tab.
+              Latest {thread.length} of up to {FOLLOW_UP_THREAD_LIMIT} answers{" "}
+              {persist ? "saved in this browser tab." : "in this review only."}
             </span>
             <button
               type="button"

@@ -252,7 +252,7 @@ export function summarizeEvidenceFrames(
     uncertainActions,
     moments,
     caveat:
-      "Only facts derivable from the board visible before each move are used for coaching. No proof means insufficient evidence, not proof that a guess was unavoidable. Results are from this one Practice game, not a long-term player profile.",
+      "Only facts derivable from the board visible before each move are used for coaching. No proof means insufficient evidence, not proof that a guess was unavoidable. Results are from this one completed game, not a long-term player profile.",
   };
 }
 

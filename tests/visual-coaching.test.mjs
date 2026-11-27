@@ -184,7 +184,7 @@ test("visual workspace receives saved preferences, leads with replay and gates o
   assert.match(console, /preferences=\{preferences\}/);
   assert.match(
     console,
-    /aiAvailable=\{status\?\.configured === true && status\.provider !== null\}/,
+    /aiAvailable=\{\s*selection\.mode === "practice"\s*&&\s*status\?\.configured === true\s*&&\s*status\.provider !== null\s*\}/,
   );
   assert.match(panel, /!aiAvailable \|\| loading/);
   assert.match(panel, /detail === "brief"/);

@@ -6,11 +6,13 @@ import { reviewToneSummary } from "@/lib/coach/review-presentation";
 
 export function ReviewOverview({
   review,
+  mode = "practice",
   preferences,
   focus,
   onReviewMove,
 }: {
   review: ReviewScore;
+  mode?: "practice" | "ranked";
   preferences?: CoachPreferences | null;
   focus?: ReportMoment;
   onReviewMove: (move: number) => void;
@@ -29,7 +31,8 @@ export function ReviewOverview({
         <div>
           <h2>{reviewToneSummary(review, preferences?.coachingStyle)}</h2>
           <p>
-            Practice learning score · based on this recording, not your overall ability.
+            {mode === "ranked" ? "Ranked" : "Practice"} learning score · based on this
+            recording, not your overall ability.
           </p>
         </div>
       </div>

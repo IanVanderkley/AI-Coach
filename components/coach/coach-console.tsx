@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { RankedHistory } from "@/components/profile/ranked-history";
+import { prepareRankedReviewResponse } from "@/lib/ranked/coaching-client";
+import { isRankedRecordingId } from "@/lib/ranked/coaching-recording";
 import {
   ArrowLeft,
   ChevronDown,
@@ -32,6 +34,7 @@ import {
   type PracticeReviewSummary,
 } from "@/lib/practice/repository";
 import { useHistoryGrades } from "@/lib/settings/history-grades";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   scorePracticeReview,
   scorePreparedPracticeReview,
@@ -47,6 +50,7 @@ type ProviderStatus = {
   provider: { id: string; model: string } | null;
 };
 type Selection = {
+  mode: "practice" | "ranked";
   id: string;
   game: PracticeSession;
   review: ReviewScore;
@@ -109,7 +113,9 @@ export function CoachConsole() {
     const url = new URL(window.location.href);
     url.searchParams.delete("gameId");
     url.searchParams.delete("reviewId");
-    if (url.searchParams.get("source") === "practice") url.searchParams.delete("source");
+    url.searchParams.delete("matchId");
+    if (["practice", "ranked"].includes(url.searchParams.get("source") ?? ""))
+      url.searchParams.delete("source");
     if (url.href !== window.location.href)
       window.history.replaceState(window.history.state, "", url);
   }
@@ -141,7 +147,7 @@ export function CoachConsole() {
         const review = scorePreparedPracticeReview(analysis);
         setScores((previous) => ({ ...previous, [id]: review }));
         setReviewed((previous) => ({ ...previous, [id]: true }));
-        setSelection({ id, game, review, analysis });
+        setSelection({ mode: "practice", id, game, review, analysis });
       } catch (reason) {
         if (token === request.current)
           setError(
@@ -154,12 +160,59 @@ export function CoachConsole() {
     [repository],
   );
 
+  const openRankedGame = useCallback(async (matchId: string) => {
+    const token = ++request.current;
+    ++demoRequest.current;
+    setSelection(null);
+    setReplayFocus(null);
+    setResult(null);
+    setLoadingKey(null);
+    setError("");
+    setPendingId(`ranked-${matchId}`);
+    try {
+      if (!isRankedRecordingId(matchId)) throw new Error("Invalid Ranked match ID.");
+      const response = await fetch(
+        `/api/ranked/coaching/recording?matchId=${encodeURIComponent(matchId)}`,
+        { cache: "no-store" },
+      );
+      if (token !== request.current) return;
+      if (!response.ok)
+        throw new Error(
+          response.status === 401
+            ? "Sign in to review Ranked matches."
+            : response.status === 404
+              ? "Completed Ranked match not found."
+              : response.status === 422
+                ? "A complete verified recording is unavailable for this match."
+                : response.status === 429
+                  ? "Too many Ranked requests. Please try again shortly."
+                  : "Ranked coaching is temporarily unavailable.",
+        );
+      const raw: unknown = await response.json();
+      if (token !== request.current) return;
+      const prepared = prepareRankedReviewResponse(raw, matchId);
+      setSelection({ mode: "ranked", id: `ranked-${matchId}`, ...prepared });
+    } catch (reason) {
+      if (token === request.current)
+        setError(
+          reason instanceof Error ? reason.message : "Could not load Ranked review.",
+        );
+    } finally {
+      if (token === request.current) setPendingId(null);
+    }
+  }, []);
+
   useEffect(() => {
     let active = true;
     const params = new URLSearchParams(window.location.search);
     const reviewId = params.get("reviewId");
     const gameId = params.get("gameId");
-    if (params.get("source") === "practice" && reviewId) {
+    if (params.get("source") === "ranked") {
+      const matchId = params.get("matchId");
+      if (params.getAll("matchId").length === 1 && isRankedRecordingId(matchId))
+        void openRankedGame(matchId);
+      else setError("Invalid Ranked match link. Choose a completed match below.");
+    } else if (params.get("source") === "practice" && reviewId) {
       let storage: Storage | null = null;
       try {
         storage = window.sessionStorage;
@@ -205,7 +258,7 @@ export function CoachConsole() {
       ++request.current;
       ++demoRequest.current;
     };
-  }, [repository, openGame]);
+  }, [repository, openGame, openRankedGame]);
 
   useEffect(() => {
     let active = true;
@@ -224,6 +277,25 @@ export function CoachConsole() {
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const client = getSupabaseBrowserClient();
+    if (!client) return;
+    const {
+      data: { subscription },
+    } = client.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_OUT") return;
+      ++request.current;
+      ++demoRequest.current;
+      setSelection(null);
+      setPendingId(null);
+      setReplayFocus(null);
+      setResult(null);
+      setLoadingKey(null);
+      setError("");
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const scoreSnapshot = useRef(scores);
@@ -446,10 +518,10 @@ export function CoachConsole() {
           </div>
           <div className="coach-ranked-history">
             <p className="verified-note">
-              Ranked match history is available here. Replay coaching currently supports
-              Practice only.
+              Review completed Ranked matches using server-recorded gameplay. Your
+              learning score never changes Elo or XP.
             </p>
-            <RankedHistory />
+            <RankedHistory onReviewMatch={openRankedGame} />
           </div>
           <details className="coach-demo-tests">
             <summary>More tools and sample reports</summary>
@@ -485,7 +557,7 @@ export function CoachConsole() {
           <details className="coach-extra-info">
             <summary>How accurate is this review?</summary>
             <p className="verified-note">
-              The replay and visual lessons use visible-board evidence. The Practice score
+              The replay and visual lessons use visible-board evidence. The coaching score
               is a learning aid, not a Ranked result.{" "}
               {status?.configured
                 ? "Optional AI focus is available to eligible signed-in users."
@@ -505,7 +577,7 @@ export function CoachConsole() {
             </button>
             <h2 ref={heading} tabIndex={-1}>
               {selectedReplay
-                ? `${selectedReplay.difficulty} Practice · ${selectedReplay.outcome === "win" ? "Victory" : "Loss"}`
+                ? `${selectedReplay.difficulty} ${selection?.mode === "ranked" ? "Ranked" : "Practice"} · ${selectedReplay.outcome === "win" ? "Victory" : "Loss"}`
                 : pendingId
                   ? "Game review"
                   : "Sample report"}
@@ -524,7 +596,14 @@ export function CoachConsole() {
             </div>
           ) : selectedReplay && selection ? (
             <div key={selection.id}>
+              {selection.mode === "ranked" && (
+                <p className="verified-note">
+                  Server-verified Ranked recording · Completed match · Private learning
+                  review
+                </p>
+              )}
               <ReviewOverview
+                mode={selection.mode}
                 review={selection.review}
                 preferences={preferences}
                 focus={suggestedLesson}
@@ -538,11 +617,16 @@ export function CoachConsole() {
                 focusRequestId={replayFocus?.request}
               />
               <EvidenceCoachPanel
+                mode={selection.mode}
                 game={selectedReplay}
                 analysis={selection.analysis}
                 onReviewMove={chooseReplayMove}
                 preferences={preferences}
-                aiAvailable={status?.configured === true && status.provider !== null}
+                aiAvailable={
+                  selection.mode === "practice" &&
+                  status?.configured === true &&
+                  status.provider !== null
+                }
               />
             </div>
           ) : result ? (

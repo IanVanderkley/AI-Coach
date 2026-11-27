@@ -39,12 +39,14 @@ export function EvidenceCoachPanel({
   onReviewMove,
   preferences,
   aiAvailable = false,
+  mode = "practice",
 }: {
   game: PracticeSession;
   analysis: PracticeAnalysis;
   onReviewMove: (moveNumber: number) => void;
   preferences?: CoachPreferences | null;
   aiAvailable?: boolean;
+  mode?: "practice" | "ranked";
 }) {
   const prepared = useMemo(() => {
     try {
@@ -82,7 +84,14 @@ export function EvidenceCoachPanel({
   }
 
   async function requestAIFocus() {
-    if (!report || !aiAvailable || loading || report.moments.length === 0) return;
+    if (
+      mode === "ranked" ||
+      !report ||
+      !aiAvailable ||
+      loading ||
+      report.moments.length === 0
+    )
+      return;
     const controller = new AbortController();
     pending.current?.abort();
     pending.current = controller;
@@ -133,7 +142,9 @@ export function EvidenceCoachPanel({
     <section className="evidence-report" aria-label="Evidence-based coaching report">
       <div className="evidence-heading">
         <div>
-          <span className="subtle-label">VERIFIED POST-GAME REPORT · PRACTICE</span>
+          <span className="subtle-label">
+            VERIFIED POST-GAME REPORT · {mode === "ranked" ? "RANKED" : "PRACTICE"}
+          </span>
           <h3>
             <BrainCircuit size={22} aria-hidden="true" /> Lessons and follow-up
           </h3>
@@ -181,55 +192,57 @@ export function EvidenceCoachPanel({
         )}
       </div>
 
-      <details className="evidence-focus-tools">
-        <summary>Optional AI focus</summary>
-        <div className="evidence-focus-row">
-          <div>
-            <strong>Choose your next focus</strong>
-            <p>
-              The rule engine selects a starting point. AI can optionally prioritize one
-              of these same verified moments; it cannot invent findings.
-            </p>
+      {mode === "practice" && (
+        <details className="evidence-focus-tools">
+          <summary>Optional AI focus</summary>
+          <div className="evidence-focus-row">
+            <div>
+              <strong>Choose your next focus</strong>
+              <p>
+                The rule engine selects a starting point. AI can optionally prioritize one
+                of these same verified moments; it cannot invent findings.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="evidence-ai-button"
+              disabled={!aiAvailable || loading || report.moments.length === 0}
+              onClick={() => void requestAIFocus()}
+            >
+              {loading ? (
+                <Loader2 size={16} className="coach-spin" aria-hidden="true" />
+              ) : (
+                <Target size={16} aria-hidden="true" />
+              )}
+              {loading
+                ? "Checking focus…"
+                : aiAvailable
+                  ? "Ask AI to choose a focus"
+                  : "AI provider disabled or unavailable"}
+            </button>
           </div>
-          <button
-            type="button"
-            className="evidence-ai-button"
-            disabled={!aiAvailable || loading || report.moments.length === 0}
-            onClick={() => void requestAIFocus()}
-          >
-            {loading ? (
-              <Loader2 size={16} className="coach-spin" aria-hidden="true" />
-            ) : (
-              <Target size={16} aria-hidden="true" />
-            )}
-            {loading
-              ? "Checking focus…"
-              : aiAvailable
-                ? "Ask AI to choose a focus"
-                : "AI provider disabled or unavailable"}
-          </button>
-        </div>
-        {focus && (
-          <p className="evidence-ai-note" aria-live="polite">
-            {isAI
-              ? `AI-selected focus (${focus.selectedBy}${focus.model ? ` · ${focus.model}` : ""})`
-              : "Rule-selected focus"}
-            . {focus.note}
-          </p>
-        )}
-        {error && (
-          <p className="evidence-error" role="alert">
-            <TriangleAlert size={14} aria-hidden="true" /> {error} The verified report is
-            still available.
-          </p>
-        )}
+          {focus && (
+            <p className="evidence-ai-note" aria-live="polite">
+              {isAI
+                ? `AI-selected focus (${focus.selectedBy}${focus.model ? ` · ${focus.model}` : ""})`
+                : "Rule-selected focus"}
+              . {focus.note}
+            </p>
+          )}
+          {error && (
+            <p className="evidence-error" role="alert">
+              <TriangleAlert size={14} aria-hidden="true" /> {error} The verified report
+              is still available.
+            </p>
+          )}
 
-        {!aiAvailable && (
-          <p className="evidence-caveat">
-            Local evidence-based coaching is fully available without an AI provider.
-          </p>
-        )}
-      </details>
+          {!aiAvailable && (
+            <p className="evidence-caveat">
+              Local evidence-based coaching is fully available without an AI provider.
+            </p>
+          )}
+        </details>
+      )}
       {report.moments.length > 0 ? (
         <div className="evidence-moment-list">
           {ordered.map((moment) => (
@@ -298,14 +311,17 @@ export function EvidenceCoachPanel({
         <summary>Ask a follow-up question</summary>
         <VerifiedFollowUp
           key={followUpGameKey(game)}
+          persist={mode === "practice"}
           report={prepared.review!.followUpReport}
           game={game}
           onReviewMove={(displayed) => onReviewMove(displayed + analysis.opening + 1)}
         />
       </details>
       <p className="evidence-caveat">
-        {report.caveat} AI prioritization is optional and only sends verified finding
-        summaries to the provider, not the hidden mine layout.
+        {report.caveat}{" "}
+        {mode === "ranked"
+          ? "Ranked coaching uses the deterministic rule engine; no external AI request is made."
+          : "AI prioritization is optional and only sends verified finding summaries to the provider, not the hidden mine layout."}
       </p>
     </section>
   );
