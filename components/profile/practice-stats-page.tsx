@@ -103,7 +103,7 @@ export function PracticeStatsPage() {
             aria-label="Recorded Practice results"
           >
             <div className="profile-detail-panel-heading">
-              <h2>{tracked ? "Tracked account results" : "Recent saved results"}</h2>
+              <h2>{tracked ? "Lifetime Statistics" : "Recent saved results"}</h2>
               <span>
                 {tracked
                   ? "Account-recorded, not server-verified"
@@ -128,11 +128,6 @@ export function PracticeStatsPage() {
                 <strong>{showRecentWinRate(stats?.winRate)}</strong>
               </div>
             </div>
-            <p className="profile-detail-note">
-              {tracked
-                ? "Tracking includes complete games retained at activation plus subsequent synced results. Games deleted before activation cannot be recovered."
-                : "These numbers only cover saved games in this browser or account. Sign in for persistent tracked account totals."}
-            </p>
           </section>
           <PracticeDifficultyStats
             breakdown={breakdown}

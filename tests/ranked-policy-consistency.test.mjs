@@ -51,8 +51,12 @@ test("legacy cosmetic tiers are retired but historical v1 receipt parsing remain
 });
 test("profile and settings use Elo terminology without changing privacy or XP", () => {
   assert.match(
-    read("components/profile/player-mode-card.tsx"),
-    /Ranked Elo is separate from account XP/,
+    read("components/profile/competitive-rank-card.tsx"),
+    /parseRankedLobbyRating/,
+  );
+  assert.match(
+    read("components/profile/profile-level-card.tsx"),
+    /loadPlayerLevel/,
   );
   assert.doesNotMatch(
     read("components/profile/player-mode-card.tsx"),

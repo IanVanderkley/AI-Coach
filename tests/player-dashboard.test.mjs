@@ -75,7 +75,7 @@ test("the profile overview keeps mode totals and removes individual match lists"
     practice,
     /Recent Practice Matches|practice-session-card|practice-history-body/,
   );
-  assert.match(practice, /not lifetime statistics/);
+  assert.match(practice, /Recent records only/);
 });
 
 test("the Ranked fetch shares its actual state without an extra API request", () => {
@@ -110,10 +110,7 @@ test("the navbar displays only verified account level, not RP or fabricated tota
 test("dashboard distinguishes incomplete recent histories and supports mobile + keyboard", () => {
   assert.match(practice, /games === null \|\| loadError/);
   assert.match(practice, /rankedMatches === null/);
-  assert.match(
-    practice,
-    /latest ten completed Intermediate\s+matches|up to 10 completed Intermediate\s+matches/,
-  );
+  assert.match(practice, /Lifetime recorded results/);
   assert.match(dashboardStyles, /@media \(max-width: 510px\)/);
   assert.match(dashboardStyles, /focus-visible/);
   assert.match(dashboardStyles, /prefers-reduced-motion: reduce/);

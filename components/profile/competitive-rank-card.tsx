@@ -55,11 +55,9 @@ export function CompetitiveRankCard() {
     <section className={styles.card} aria-label="Competitive Ranked progression">
       <div className={styles.heading}>
         <div>
-          <span className="player-dashboard-eyebrow">COMPETITIVE PROGRESSION</span>
           <h2>Ranked career</h2>
         </div>
         <div className={styles.links}>
-          <Link href="/ranked/rating-guide">How Elo works</Link>
           <Link className={styles.play} href="/ranked">
             Play Ranked
           </Link>
@@ -111,12 +109,10 @@ export function CompetitiveRankCard() {
               <span className={styles.label}>HIGHEST RECORDED RANK</span>
               <h3 style={{ color: model.highest.color }}>{model.highest.label}</h3>
               <strong>{saved.highestRating.toLocaleString()} Elo</strong>
-              <span className={styles.caption}>From saved rating history</span>
             </div>
           </div>
           <span className={styles.verified}>
-            <ShieldCheck size={14} aria-hidden="true" /> Saved Ranked rating · Account XP
-            is separate
+            <ShieldCheck size={14} aria-hidden="true" /> Verified rating history
           </span>
         </div>
       )}

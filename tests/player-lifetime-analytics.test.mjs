@@ -157,13 +157,13 @@ test("dashboard preserves recent overall scope but uses Ranked lifetime in mode 
     "distinguish server-verified lifetime records",
   );
   contains(
-    modeCard,
-    /formatRankedDuration\(fastestWinMs\)/,
-    "display fastest official win",
+    contents("components/profile/ranked-stats-page.tsx"),
+    /formatRankedDuration\(stats\.fastestWinMs\)/,
+    "display fastest official win on the full Ranked statistics page",
   );
   contains(
     profile,
-    /Recent saved records, not lifetime statistics/,
+    /Recent records only/,
     "overall snapshot not mislabeled",
   );
 });
@@ -174,7 +174,7 @@ test("difficulty cards show every board size without claiming cloud lifetime or 
   contains(difficulty, /"16 × 30 · 99 mines"/, "Expert board supported");
   contains(
     difficulty,
-    /Older games may have been trimmed/,
+    /scope === "recent"/,
     "Practice limitations explained",
   );
   contains(globalStyles, /profile-difficulty-stats\.css/, "new styles loaded");

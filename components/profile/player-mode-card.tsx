@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ChevronDown, ShieldCheck, Target } from "lucide-react";
 import { useState } from "react";
-import { formatRankedDuration } from "@/lib/ranked/result-summary";
 
 import {
   showRecentCount,
@@ -15,7 +14,6 @@ type PlayerModeCardProps = {
   mode: "ranked" | "practice";
   stats: RecentStats | null;
   scope?: "recent" | "lifetime" | "tracked";
-  fastestWinMs?: number | null;
 };
 
 /** Both mode summaries can be collapsed without unmounting or reloading match history. */
@@ -23,7 +21,6 @@ export function PlayerModeCard({
   mode,
   stats,
   scope = "recent",
-  fastestWinMs = null,
 }: PlayerModeCardProps) {
   const [expanded, setExpanded] = useState(true);
   const ranked = mode === "ranked";
@@ -50,7 +47,7 @@ export function PlayerModeCard({
               {verifiedLifetime
                 ? "SERVER-VERIFIED LIFETIME"
                 : trackedPractice
-                  ? "ACCOUNT-RECORDED TRACKED"
+                  ? "ACCOUNT-RECORDED LIFETIME"
                   : "RECENT RECORDED RESULTS"}
             </span>
             <h3>{label}</h3>
@@ -75,6 +72,11 @@ export function PlayerModeCard({
         <div className="player-mode-main-stat">
           <strong>{showRecentWinRate(stats?.winRate)}</strong>
           <span>Win rate</span>
+          <div className="dashboard-meter-slot">
+            {stats?.winRate != null && (
+              <progress className="dashboard-win-meter" max={100} value={stats.winRate} aria-label={`${label} win rate`} />
+            )}
+          </div>
         </div>
         <div className="player-mode-secondary">
           <div>
@@ -90,21 +92,6 @@ export function PlayerModeCard({
             <span>Losses</span>
           </div>
         </div>
-        {verifiedLifetime && (
-          <p className="player-mode-fastest">
-            Fastest verified win:{" "}
-            {fastestWinMs === null ? "—" : formatRankedDuration(fastestWinMs)}
-          </p>
-        )}
-        <p className="player-mode-context">
-          {verifiedLifetime
-            ? "All recorded, server-verified Intermediate outcomes. Ranked Elo is separate from account XP."
-            : ranked
-              ? "Latest ten server-recorded Intermediate matches; not lifetime statistics."
-              : trackedPractice
-                ? "Retained Practice history at tracking activation plus subsequent account uploads; not server-verified or guaranteed complete before activation."
-                : "Saved Practice records only; browser and account retention limits apply."}
-        </p>
         <div className="player-mode-actions">
           <Link className="player-mode-link" href={historyHref}>
             View recent {label.toLowerCase()} matches
