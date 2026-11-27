@@ -9,7 +9,7 @@ assert.equal(names.length, 1);
 const sql = read(`${dir}/${names[0]}`);
 test("v4 read projections and write header use the same active version", () => {
   assert.equal(ACTIVE_RANK_POLICY_VERSION, 4);
-  assert.match(read("lib/supabase/admin.ts"), /String\(ACTIVE_RANK_POLICY_VERSION\)/);
+  assert.match(read("lib/supabase/admin.ts"), /String\(RANKED_WRITE_CONTRACT_VERSION\)/);
   assert.match(read("app/api/ranked/lobby-rating/route.ts"), /ACTIVE_RANK_POLICY_VERSION,\s*\)/);
   assert.match(read("app/api/leaderboard/route.ts"), /projectPublicStandings\(elo.data, speed.data, PUBLIC_RATING_SYSTEM_V4\)/);
 });

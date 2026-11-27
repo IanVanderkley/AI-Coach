@@ -1,6 +1,6 @@
 -- LOCAL ONLY. Roll back all fixtures. Run as local postgres owner.
 BEGIN;
-SET LOCAL request.headers = '{"x-ai-coach-ranked-policy":"4"}';
+SET LOCAL request.headers = '{"x-ai-coach-ranked-policy":"5"}';
 DO $checks$
 DECLARE
   a uuid := gen_random_uuid();
@@ -16,7 +16,7 @@ DECLARE
   cases integer[][] := ARRAY[[1505,1500],[1500,1488],[5,-5],[-5,-15],[3301,3300],[3300,3275]];
   pair integer[];
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM ranked_internal.release_maintenance WHERE singleton AND required_policy_version=4 AND NOT enabled) THEN RAISE EXCEPTION 'Expected enabled v4 writes (maintenance off)'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM ranked_internal.release_maintenance WHERE singleton AND required_policy_version=5 AND NOT enabled) THEN RAISE EXCEPTION 'Expected enabled v4 writes (maintenance off)'; END IF;
   IF has_function_privilege('anon','ranked_internal.apply_verified_match_rating(uuid)','EXECUTE') OR has_function_privilege('authenticated','ranked_internal.apply_verified_match_rating(uuid)','EXECUTE') OR has_table_privilege('authenticated','public.ranked_elo_events','INSERT') OR has_table_privilege('authenticated','public.ranked_leaderboard_profiles','UPDATE') THEN RAISE EXCEPTION 'Unsafe rating permissions'; END IF;
   INSERT INTO auth.users(id,email_confirmed_at) VALUES(a,now()),(b,now());
   IF (SELECT rating FROM public.ranked_leaderboard_profiles WHERE user_id=a) IS DISTINCT FROM 1500 OR (SELECT rating FROM public.ranked_leaderboard_profiles WHERE user_id=b) IS DISTINCT FROM 1500 THEN RAISE EXCEPTION 'New accounts must start at 1500'; END IF;
@@ -32,7 +32,7 @@ BEGIN
     PERFORM public.start_ranked_match(a);
     RAISE EXCEPTION 'Old policy unexpectedly permitted';
   EXCEPTION WHEN SQLSTATE 'PT503' THEN NULL; END;
-  PERFORM set_config('request.headers','{"x-ai-coach-ranked-policy":"4"}',true);
+  PERFORM set_config('request.headers','{"x-ai-coach-ranked-policy":"5"}',true);
   FOREACH pair SLICE 1 IN ARRAY cases LOOP
     before_rating := pair[1]; after_rating := pair[2];
     UPDATE public.ranked_leaderboard_profiles SET rating=before_rating WHERE user_id=a;

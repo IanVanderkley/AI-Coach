@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
-import { ACTIVE_RANK_POLICY_VERSION } from "@/lib/leaderboard/active-rank-policy";
+import { RANKED_WRITE_CONTRACT_VERSION } from "@/lib/leaderboard/active-rank-policy";
 
 // Only backend code should use this client.
 // It has privileged database access and bypasses Row Level Security.
@@ -16,7 +16,7 @@ export function createAdminClient() {
   return createClient(supabaseUrl, secretKey, {
     global: {
       headers: {
-        "x-ai-coach-ranked-policy": String(ACTIVE_RANK_POLICY_VERSION),
+        "x-ai-coach-ranked-policy": String(RANKED_WRITE_CONTRACT_VERSION),
       },
     },
     auth: {

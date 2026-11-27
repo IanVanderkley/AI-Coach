@@ -144,6 +144,9 @@ export function RankedMatchRating({
                 </p>
               </div>
             )}
+            {value.finalGuessCompensated && (
+              <p role="status">Verified final 50/50 — half of the nominal victory Elo awarded, subject to the rating ceiling. This match still counts as a defeat.</p>
+            )}
             {model.demotionProtected && <p role="status">Demotion prevented. Your rating stopped at the division floor. Another loss at this rating will demote you.</p>}
             {model.after.progress === null && <p>Highest competitive rank</p>}
             {value.policyVersion === 1 && (

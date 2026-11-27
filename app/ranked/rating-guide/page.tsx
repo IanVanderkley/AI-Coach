@@ -20,7 +20,7 @@ export default function RatingGuidePage() {
           </tbody></table></div>
           <h2>Demotion protection</h2>
           <p>A loss that would cross a division boundary stops at that division's floor when you start above it. Another loss from the floor demotes you. A win that moves you above a floor restores protection. For example, Gold V at 1,505 loses 5 Elo to reach 1,500, then a further loss deducts 12 Elo to reach Silver I at 1,488.</p>
-          <p>Rewards use the rating immediately before settlement. Actual changes can be smaller than the nominal reward due to demotion protection or the rating ceiling. Existing receipts retain their original awards. Final 50/50 compensation is not yet enabled.</p>
+          <p>Rewards use the rating immediately before settlement. Actual changes can be smaller than the nominal reward due to demotion protection or the rating ceiling. Existing receipts retain their original awards. A direct reveal loss with one safe cell left and exactly two equally possible candidates earns half of the normal tier victory reward (rounded up and capped at 10,000 Elo). The server proves this from visible clues, not flags. Chord losses and other guesses do not qualify. The result remains a defeat.</p>
         </section>
       </main>
     </>
