@@ -31,7 +31,7 @@ export function FeedbackNotice({
 }) {
   const Icon = icons[tone];
   return (
-    <div className={`${styles.notice} ${styles[tone]} ${metric ? styles.withMetric : ""}`}>
+    <div className={`${styles.notice} ${styles[tone]} ${metric ? styles.withMetric : ""}`} data-feedback-tone={tone}>
       <span className={styles.iconTile}>
         <Icon className={styles.icon} size={21} aria-hidden="true" />
       </span>

@@ -179,12 +179,9 @@ export function PracticeResultDialog({
               )}
             </div>
             <div>
-              <p className="practice-result-eyebrow">PRACTICE COMPLETE</p>
               <h2 id="practice-result-title">{isWin ? "Victory!" : "Game over"}</h2>
               <p id="practice-result-subtitle" className="practice-result-subtitle">
-                {isWin
-                  ? "Every safe square revealed. Nicely played."
-                  : "A mine ended this run. Review your decisions and try again."}
+                {result.difficulty} · Practice
               </p>
             </div>
           </div>
@@ -198,8 +195,8 @@ export function PracticeResultDialog({
               )}
               <span>
                 {isPersonalBest
-                  ? `New ${result.difficulty} personal best! Your previous best was ${formatTime(result.personalBest!.previousSeconds!)}.`
-                  : `Congratulations on your first ${result.difficulty} win!`}
+                  ? `New ${result.difficulty} best! Previous: ${formatTime(result.personalBest!.previousSeconds!)}`
+                  : `First ${result.difficulty} win!`}
               </span>
             </div>
           )}
@@ -220,13 +217,11 @@ export function PracticeResultDialog({
                   <strong>{result.flagsOnBoard}</strong>
                 </div>
               </div>
-              <p className="practice-result-difficulty">
-                {result.difficulty} · Practice mode
-                {isWin &&
-                  result.personalBest?.bestSeconds !== null &&
-                  result.personalBest?.bestSeconds !== undefined &&
-                  ` · Browser best: ${formatTime(result.personalBest.bestSeconds)}`}
-              </p>
+              {isWin && result.personalBest?.bestSeconds != null && (
+                <p className="practice-result-difficulty">
+                  Browser best: {formatTime(result.personalBest.bestSeconds)}
+                </p>
+              )}
             </div>
             <MatchXpBar
               saveResult={result.xpSave}
@@ -265,25 +260,29 @@ export function PracticeResultDialog({
           </div>
 
           <div className="practice-result-bottom">
-            <button type="button" onClick={() => void shareSummary()}>
+            <button type="button" title="Share result" onClick={() => void shareSummary()}>
               {shareState === "shared" || shareState === "copied" ? (
                 <Check size={15} aria-hidden="true" />
               ) : (
                 <Share2 size={15} aria-hidden="true" />
               )}
-              {shareState === "shared"
-                ? "Shared!"
-                : shareState === "copied"
-                  ? "Copied to share"
-                  : "Share result"}
+              <span className="sr-only" role="status">
+                {shareState === "shared"
+                  ? "Shared!"
+                  : shareState === "copied"
+                    ? "Copied to share"
+                    : "Share result"}
+              </span>
             </button>
-            <button type="button" onClick={() => void copySummary()}>
+            <button type="button" title="Copy result" onClick={() => void copySummary()}>
               {copyState === "copied" ? (
                 <Check size={15} aria-hidden="true" />
               ) : copyState === "idle" ? (
                 <Clipboard size={15} aria-hidden="true" />
               ) : null}
-              {copyState === "copied" ? "Copied!" : "Copy result"}
+              <span className="sr-only" role="status">
+                {copyState === "copied" ? "Copied!" : "Copy result"}
+              </span>
             </button>
             <button type="button" onClick={onDismiss}>
               View board
@@ -295,10 +294,10 @@ export function PracticeResultDialog({
               above.
             </p>
           )}
-          <p className="practice-result-note">
-            Practice times are saved on this browser, not independently verified world
-            records.
-          </p>
+          <details className="practice-result-note practice-result-about">
+            <summary>About this result</summary>
+            <p>Practice times are saved on this browser, not independently verified world records.</p>
+          </details>
         </div>
       ) : null}
     </dialog>

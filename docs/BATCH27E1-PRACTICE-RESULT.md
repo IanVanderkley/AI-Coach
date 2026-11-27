@@ -1,0 +1,3 @@
+# Batch 27E.1 — Minimal Practice result
+
+Requires 27E installed. Run the installer with `--dry-run` first. The patch keeps the existing dialog, game actions, victory/loss effects, reward receipt validation and save behavior. Only the Practice result layout and displayed copy change. XP is displayed from a matching receipt; missing receipts remain explicitly unknown. Native details controls reveal supporting explanations. Ranked visual redesign is intentionally separate. Check guest, earned XP, ineligible XP, daily cap, unavailable receipt, win, personal best, loss, reopening, share/copy, mobile and reduced motion.

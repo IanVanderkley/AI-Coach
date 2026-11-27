@@ -19,6 +19,10 @@ import "../styles/batch24-gameplay.css";
 import "../styles/ranked-board-review.css";
 import "../styles/play-surface-polish.css";
 import "../styles/game-station-polish.css";
+import "../styles/result-ceremony.css";
+import "../styles/practice-result-minimal.css";
+import "../styles/ranked-result-minimal.css";
+import "../styles/ranked-result-reveal.css";
 import { SiteTooltip } from "@/components/ui/site-tooltip";
 
 // These paths are relative to this file, not the browser URL.

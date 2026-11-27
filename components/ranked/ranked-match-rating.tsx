@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { RankedEloReveal } from "@/components/ranked/ranked-elo-reveal";
 import { BarChart3, RefreshCw, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -81,27 +81,19 @@ export function RankedMatchRating({
       {state.kind === "loading" && <p role="status">Loading saved rating change…</p>}
       {value && model && (
         <>
-          <div className="ranked-rating-summary" role="status">
-            <div>
-              <span>Before</span>
-              <strong>{value.ratingBefore.toLocaleString()}</strong>
-            </div>
-            <div>
-              <span>Change</span>
-              <strong className={value.ratingDelta >= 0 ? "rating-gain" : "rating-loss"}>
-                {formatRatingDelta(value.ratingDelta, value.policyVersion)}
-              </strong>
-            </div>
-            <div>
-              <span>New rating</span>
-              <strong>{value.ratingAfter.toLocaleString()}</strong>
-            </div>
+          <div className="ranked-rating-summary">
+            <RankedEloReveal
+              key={`${matchId}:${value.ratingBefore}:${value.ratingAfter}:${revision}`}
+              before={value.ratingBefore}
+              after={value.ratingAfter}
+              deltaLabel={formatRatingDelta(value.ratingDelta, value.policyVersion)}
+            />
           </div>
           {value.finalGuessCompensated && (
             <FeedbackNotice
               tone="reward"
               title="Verified final 50/50"
-              description="Only one safe square remained, with two equally possible locations. You earned half of the nominal victory Elo, rounded up."
+              description="Half victory Elo, rounded up."
               metric={{ value: formatRatingDelta(value.ratingDelta, value.policyVersion), label: "Elo awarded" }}
               detail={value.ratingAfter === 10000
                 ? "Awards cannot raise rating above 10,000 Elo. This match still counts as a defeat."
@@ -112,9 +104,8 @@ export function RankedMatchRating({
             <FeedbackNotice
               tone="protection"
               title="Demotion prevented"
-              description="Your rating stopped at the division floor. Another ordinary loss from this floor will demote you."
+              description="Another ordinary loss at this floor will demote you."
               metric={{ value: value.ratingAfter.toLocaleString(), label: `${model.after.label} floor` }}
-              detail="Your current rank is retained."
             />
           )}
           <div className="ranked-rating-transition" data-transition={model.transition}>
@@ -123,7 +114,7 @@ export function RankedMatchRating({
                 ? "Promoted!"
                 : model.transition === "demotion"
                   ? "Demoted"
-                  : "Rank after match"}
+                  : "Current rank"}
             </p>
             <div className="ranked-rating-emblems">
               {model.transition !== "unchanged" && (
@@ -180,16 +171,12 @@ export function RankedMatchRating({
           Couldn’t verify this match’s rating change. No points have been assumed.
         </p>
       )}
-      <div className="ranked-rating-footer">
-        <Link href="/ranked/rating-guide">How Elo works</Link>
-        <div>
-          <Link href="/leaderboard">Leaderboard</Link>
-          {(state.kind === "missing" || state.kind === "unavailable") && (
-            <button type="button" onClick={() => setRevision((n) => n + 1)}>
-              <RefreshCw size={13} aria-hidden="true" /> Retry
-            </button>
-          )}
-        </div>
+      <div className="ranked-rating-footer" hidden={state.kind === "ready" || state.kind === "loading"}>
+        {(state.kind === "missing" || state.kind === "unavailable") && (
+          <button type="button" onClick={() => setRevision((n) => n + 1)}>
+            <RefreshCw size={13} aria-hidden="true" /> Retry
+          </button>
+        )}
       </div>
     </section>
   );

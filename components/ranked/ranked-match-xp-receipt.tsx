@@ -66,7 +66,6 @@ export function RankedMatchXpReceipt({
       {state.kind === "earned" && (
         <div className="ranked-match-xp-earned" role="status">
           <strong>+{state.amount.toLocaleString()} XP</strong>
-          <span>{state.amount === 0 ? "Loss did not qualify for XP (15 seconds and 3 distinct reveal/chord positions required)." : state.outcome === "won" ? "Verified victory" : "Verified loss"}</span>
         </div>
       )}
       {state.kind === "missing" && (

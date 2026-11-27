@@ -74,27 +74,13 @@ export function RankedXpProgress({ matchId }: { matchId: string }) {
       )}
       {state.kind === "unavailable" && (
         <p className="ranked-xp-message" role="status">
-          Account XP is unavailable. No reward amount has been assumed.
+          Account XP unavailable.
         </p>
       )}
       {progress && (
         <>
           <div className="ranked-xp-totals">
-            <div>
-              <span>Current level</span>
-              <strong>{progress.level.toLocaleString()}</strong>
-            </div>
-            <div>
-              <span>Lifetime account XP</span>
-              <strong>{progress.totalXp.toLocaleString()} XP</strong>
-            </div>
-          </div>
-          <div className="ranked-xp-progress-heading">
-            <span>Progress to Level {(progress.level + 1).toLocaleString()}</span>
-            <strong>
-              {progress.xpIntoLevel.toLocaleString()} /{" "}
-              {progress.xpPerLevel.toLocaleString()}
-            </strong>
+            <strong>Level {progress.level.toLocaleString()}</strong>
           </div>
           <div
             className="ranked-xp-progress-track"
@@ -106,10 +92,10 @@ export function RankedXpProgress({ matchId }: { matchId: string }) {
           >
             <span style={{ width: `${progress.percent}%` }} />
           </div>
-          <p className="ranked-xp-next">
-            {progress.xpToNextLevel.toLocaleString()} XP until Level{" "}
-            {(progress.level + 1).toLocaleString()}
-          </p>
+          <div className="ranked-xp-progress-heading">
+            <span>{progress.xpIntoLevel.toLocaleString()} / {progress.xpPerLevel.toLocaleString()} XP</span>
+            <span>Level {(progress.level + 1).toLocaleString()}</span>
+          </div>
         </>
       )}
 
