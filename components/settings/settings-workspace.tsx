@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UserRound, MessageSquare, Target, MonitorPlay, ShieldCheck } from "lucide-react";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 import { ReplayTooltipSetting } from "@/components/settings/replay-tooltip-setting";
+import { BoardGuideSetting } from "@/components/settings/board-guide-setting";
 import { AccountManagement } from "@/components/account/account-management";
 import { LeaderboardPrivacy } from "@/components/leaderboard/leaderboard-privacy";
 
@@ -24,7 +25,7 @@ const categories = [
     id: "replay",
     title: "Replay & interface",
     icon: MonitorPlay,
-    description: "Grades and replay controls",
+    description: "Gameplay and replay controls",
   },
   {
     id: "privacy",
@@ -97,8 +98,9 @@ export function SettingsWorkspace({ deletionEnabled }: { deletionEnabled: boolea
       >
         <p className="settings-storage-note">
           Changes here save immediately. Automatic grades follow your account when signed
-          in. Replay view and tooltips are saved in this browser only.
+          in. Board controls, replay view and tooltips are saved in this browser only.
         </p>
+        <BoardGuideSetting />
         <ReplayTooltipSetting />
       </div>
       <div

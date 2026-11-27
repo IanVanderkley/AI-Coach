@@ -398,3 +398,44 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Batch 27C: Ranked HUD only; maintain existing compact sizing and scroll rules. */
+.gameplayPage .difficulty {
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: #252326;
+  box-shadow: inset 0 0 0 1px #40383d;
+  color: #e1d9dc;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.gameplayPage .matchStatus > span {
+  box-shadow: 0 0 6px currentColor;
+}
+.gameplayPage .stats > div {
+  background: linear-gradient(150deg, #292729, #202020 70%);
+  border-color: #433c40;
+  box-shadow: inset 0 1px 0 #ffffff09, 0 2px 7px #0003;
+}
+.gameplayPage .stats dt {
+  color: #bcb5b8;
+  font-weight: 550;
+}
+@media (min-width: 901px) {
+  .gameplayPage .stats > div {
+    grid-template-columns: 27px minmax(0, 1fr);
+    column-gap: 8px;
+  }
+  .gameplayPage .stats svg {
+    width: 27px;
+    height: 27px;
+    padding: 4px;
+    border: 1px solid #624049;
+    border-radius: 7px;
+    background: #302126;
+    color: #ef9ca6;
+  }
+}
+.gameplayPage .controls {
+  box-shadow: inset 0 1px 0 #ffffff08;
+}

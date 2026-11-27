@@ -1,4 +1,7 @@
+"use client";
+
 import { Clock3, Flag, Grid2X2, MousePointer2, ScanLine } from "lucide-react";
+import { useBoardGuide } from "@/lib/settings/board-guide";
 
 /** Shared presentation only: these instructions do not handle board input. */
 export function BoardControlsGuide({ mode, rows, columns, mines }: {
@@ -7,6 +10,8 @@ export function BoardControlsGuide({ mode, rows, columns, mines }: {
   columns: number;
   mines: number;
 }) {
+  const { enabled } = useBoardGuide();
+  if (!enabled) return null;
   const ranked = mode === "ranked";
   return (
     <section className="board-controls-guide" aria-label="Board controls guide">
