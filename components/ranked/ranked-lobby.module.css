@@ -316,3 +316,55 @@
     width: 48px;
   }
 }
+
+/* Batch 27D: rank presentation */
+.lobby {
+  border-color: #3c3639;
+  background: radial-gradient(ellipse at 19% 19%, color-mix(in srgb, var(--rank-accent) 9%, transparent), transparent 45%), #171717;
+  box-shadow: inset 0 1px 0 #ffffff08, 0 8px 24px #0003;
+}
+.heading {
+  border-color: #383438;
+}
+.heading p { color: #ef9ca6; }
+.heading h2 {
+  font-family: var(--heading-font);
+  font-weight: 700;
+}
+.hero {
+  max-width: none;
+  padding: clamp(10px, 2vw, 18px);
+  border: 1px solid #3b3739;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at 13% 50%, color-mix(in srgb, var(--rank-accent) 11%, transparent), transparent 42%), repeating-linear-gradient(135deg, transparent 0 22px, #ffffff03 22px 23px), #1c1c1c;
+}
+.hero > svg {
+  max-width: 100%;
+  filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--rank-accent) 22%, transparent));
+}
+.current { min-width: 0; }
+.current h3 {
+  font-family: var(--heading-font);
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+.elo { font-size: clamp(20px, 2.5vw, 28px); }
+.progress {
+  background: #3b383a;
+  box-shadow: inset 0 1px 3px #0005;
+}
+.peak {
+  border-color: #484143;
+  background: #242224;
+  box-shadow: inset 0 1px 0 #ffffff08;
+}
+.milestones li[data-current="true"] {
+  box-shadow: inset 0 1px 0 #ffffff12;
+}
+/* Keep milestone SVG sizes and track geometry unchanged. */
+@media (max-width: 650px) {
+  .hero { padding: 10px; }
+  .current h3 { font-size: clamp(24px, 6vw, 34px); }
+  .peak { grid-template-columns: auto minmax(0, 1fr) auto; }
+}

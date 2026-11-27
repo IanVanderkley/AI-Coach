@@ -23,7 +23,7 @@ test("station styling preserves individual cells, board dimensions and scroll be
 test("both HUDs use neutral surfaces and retain small-screen and Expert layout guards", () => {
   const css = read("styles/game-station-polish.css");
   const ranked = read("app/ranked/ranked-layout.module.css");
-  const polish = ranked.split("/* Batch 27C:")[1];
+  const polish = ranked.split("/* Batch 27C:")[1]?.split(/\/\* Batch \d+[A-Z](?:\.\d+)?:/)[0];
   assert.ok(polish);
   assert.match(polish, /\.gameplayPage \.stats > div/);
   assert.match(polish, /@media \(min-width: 901px\)/);

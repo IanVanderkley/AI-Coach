@@ -717,7 +717,7 @@ export default function RankedPage() {
             <h1>
               Ranked<span className="title-period">.</span>
             </h1>
-            <p className="page-subtitle">Intermediate · 16 × 16 · 40 mines</p>
+            {!showLobby && <p className="page-subtitle">Intermediate · 16 × 16 · 40 mines</p>}
           </div>
         </div>
 
@@ -783,7 +783,6 @@ export default function RankedPage() {
 
               {board?.status === "active" && !loading && resumeRequired && (
                 <section className={styles.launch} aria-label="Resume Ranked match">
-                  <p className={styles.savedMatch}>Unfinished match · Progress saved</p>
                   <button
                     type="button"
                     className={styles.playButton}
