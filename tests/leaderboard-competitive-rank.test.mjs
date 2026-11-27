@@ -45,7 +45,7 @@ test("leaderboard keeps privacy messaging, Elo guide and responsive emblem rows"
   assert.match(page, /Anonymous mode hides your name and results/);
   assert.match(page, /href="\/settings"/);
   assert.doesNotMatch(board, /How Elo works/);
-  assert.match(read("components/ranked/ranked-lobby.tsx"), /How Elo works/);
+  assert.match(read("components/ranked/ranked-lobby.tsx"), /href="\/faq#ranked">Ranked rules/);
   assert.match(css, /\.leaderboard-competitive-rank/);
   assert.match(css, /grid-template-columns: 64px/);
   assert.match(css, /@media \(max-width: 600px\)/);

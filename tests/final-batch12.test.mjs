@@ -104,7 +104,7 @@ test("result dialog includes real match rating, preserves verified XP, and never
   assert.doesNotMatch(cmp, /How Elo works/);
   assert.match(
     read("components/ranked/ranked-lobby.tsx"),
-    /How Elo works/,
+    /href="\/faq#ranked">Ranked rules/,
   );
   assert.doesNotMatch(dialog, /\+\d+ RP/);
 });

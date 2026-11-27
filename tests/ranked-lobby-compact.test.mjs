@@ -17,7 +17,7 @@ test("queue and difficulty setup precede progression and remain lobby-only", () 
 
 test("lobby keeps rank artwork and links to the separate rating guide without reward previews", () => {
   const lobby = read("components/ranked/ranked-lobby.tsx");
-  assert.match(lobby, /href="\/ranked\/rating-guide"/);
+  assert.match(lobby, /href="\/faq#ranked"/);
   assert.match(lobby, /RANK_DEFINITIONS\.map/);
   assert.doesNotMatch(
     lobby,

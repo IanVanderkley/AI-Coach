@@ -21,7 +21,7 @@ test("rank artwork, server model and milestone geometry remain intact", () => {
   const component = read("components/ranked/ranked-lobby.tsx");
   assert.match(component, /rankedLobbyModel\(value\)/);
   assert.match(component, /RANK_DEFINITIONS\.map/);
-  assert.match(component, /href="\/ranked\/rating-guide"/);
+  assert.match(component, /href="\/faq#ranked"/);
   const css = read("components/ranked/ranked-lobby.module.css").split("/* Batch 27D: rank presentation */")[1];
   assert.match(css, /var\(--rank-accent\)/);
   assert.doesNotMatch(css, /\.track\s*\{|\.milestones li > svg\s*\{/);

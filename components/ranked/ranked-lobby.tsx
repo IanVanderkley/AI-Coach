@@ -50,7 +50,7 @@ export function RankedLobby() {
           <p>COMPETITIVE PROGRESSION</p>
           <h2 id="ranked-lobby-title">Your Ranked journey</h2>
         </div>
-        <Link href="/ranked/rating-guide">How Elo works</Link>
+        <Link href="/faq#ranked">Ranked rules</Link>
       </header>
       {value && model ? (
         <>

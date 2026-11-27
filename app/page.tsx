@@ -167,12 +167,7 @@ export default function Home() {
           </p>
         ) : null}
 
-        <footer className="page-footer">
-          <p>Practice with feedback. Play ranked without live coaching.</p>
-          <span>
-            {settings.rows} × {settings.columns} · {settings.mines} mines
-          </span>
-        </footer>
+        {/* Shared site footer is rendered by RootLayout. */}
       </main>
     </>
   );

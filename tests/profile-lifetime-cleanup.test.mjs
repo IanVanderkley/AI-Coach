@@ -21,5 +21,5 @@ test('Practice scope remains honest without repetitive copy, and Elo guide is in
   assert.match(difficulty, /Recent saved games/);
   assert.doesNotMatch(mode + difficulty, /dashboard-data-details/);
   assert.doesNotMatch(read('components/profile/competitive-rank-card.tsx'), /How Elo works/);
-  assert.match(read('components/ranked/ranked-lobby.tsx'), /How Elo works/);
+  assert.match(read("components/ranked/ranked-lobby.tsx"), /href="\/faq#ranked">Ranked rules/);
 });
