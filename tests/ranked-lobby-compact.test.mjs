@@ -23,7 +23,7 @@ test("lobby keeps rank artwork and links to the separate rating guide without re
     lobby,
     /Potential victory|Potential defeat|model\.win|model\.loss|type="range"/,
   );
-  assert.match(read("app/ranked/rating-guide/page.tsx"), /calculateRankPolicyV3/);
+  assert.match(read("app/ranked/rating-guide/page.tsx"), /RANK_TIERS_V4/);
   assert.match(
     read("app/ranked/ranked-layout.module.css"),
     /\.lobbyActions\s*\{\s*grid-row:\s*1/,

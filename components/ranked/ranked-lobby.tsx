@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { RankEmblem } from "@/components/ranked/rank-emblem";
-import { RANK_DEFINITIONS } from "@/lib/leaderboard/rank-policy";
+import { rankDefinitionsForPolicy } from "@/lib/leaderboard/rank-display";
 import {
   parseRankedLobbyRating,
   rankedLobbyModel,
@@ -38,6 +38,7 @@ export function RankedLobby() {
   }, [revision]);
 
   const model = value ? rankedLobbyModel(value) : null;
+  const RANK_DEFINITIONS = rankDefinitionsForPolicy(value?.policyVersion ?? 3);
   return (
     <section
       className={styles.lobby}
@@ -54,7 +55,7 @@ export function RankedLobby() {
       {value && model ? (
         <>
           <div className={styles.hero}>
-            <RankEmblem rating={value.rating} size={160} decorative />
+            <RankEmblem rating={value.rating} size={160} decorative policyVersion={value.policyVersion} />
             <div className={styles.current}>
               <p className={styles.eyebrow}>CURRENT RANK</p>
               <h3>{model.current.label}</h3>
@@ -82,7 +83,7 @@ export function RankedLobby() {
             </div>
             <div className={styles.peak}>
               <p className={styles.eyebrow}>HIGHEST RECORDED RANK</p>
-              <RankEmblem rating={value.highestRating} size={72} decorative />
+              <RankEmblem rating={value.highestRating} size={72} decorative policyVersion={value.policyVersion} />
               <strong>{model.highest.label}</strong>
               <span>{value.highestRating.toLocaleString()} Elo</span>
             </div>
@@ -108,6 +109,7 @@ export function RankedLobby() {
                   >
                     <RankEmblem
                       rating={rank.min}
+                      policyVersion={value.policyVersion}
                       size={88}
                       showDivision={false}
                       decorative

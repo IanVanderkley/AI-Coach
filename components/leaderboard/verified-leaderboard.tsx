@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { formatRankedDuration } from "@/lib/ranked/result-summary";
 import { competitiveRank } from "@/lib/leaderboard/rank-policy";
+import { displayRank, type RankDisplayVersion } from "@/lib/leaderboard/rank-display";
+import { PUBLIC_RATING_SYSTEM_V4 } from "@/lib/leaderboard/public-standings";
 import { RankEmblem } from "@/components/ranked/rank-emblem";
 import {
   PUBLIC_LEADERBOARD_ENDPOINT,
@@ -26,11 +28,11 @@ function formatDate(value: string) {
   });
 }
 
-function CompetitiveRankCell({ rating }: { rating: number }) {
-  const rank = competitiveRank(rating);
+function CompetitiveRankCell({ rating, policyVersion }: { rating: number; policyVersion: RankDisplayVersion }) {
+  const rank = policyVersion === 4 ? displayRank(rating, 4) : competitiveRank(rating);
   return (
     <span className="leaderboard-competitive-rank">
-      <RankEmblem rating={rating} size={64} decorative />
+      <RankEmblem rating={rating} size={64} decorative policyVersion={policyVersion} />
       <span style={{ color: rank.color }}>{rank.label}</span>
     </span>
   );
@@ -189,7 +191,7 @@ export function VerifiedLeaderboard() {
                           {entry.rating.toLocaleString()}
                         </td>
                         <td>
-                          <CompetitiveRankCell rating={entry.rating} />
+                          <CompetitiveRankCell rating={entry.rating} policyVersion={standings.ratingSystem === PUBLIC_RATING_SYSTEM_V4 ? 4 : 3} />
                         </td>
                         <td>{entry.wins}</td>
                         <td>{entry.losses}</td>

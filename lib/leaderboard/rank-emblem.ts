@@ -1,4 +1,5 @@
-import { competitiveRank, type RankNumeral } from "./rank-policy.ts";
+import type { RankNumeral } from "./rank-policy.ts";
+import { displayRank, type RankDisplayVersion } from "./rank-display.ts";
 
 export const EMBLEM_CANVAS = 640;
 export const EMBLEM_MINE_CENTER = { x: 320, y: 350 } as const;
@@ -37,8 +38,8 @@ export function numeralGeometry(numeral: RankNumeral | null) {
 }
 
 /** Display-only model. The supplied rating must come from the verified account or receipt. */
-export function rankEmblemModel(rating: number, showDivision = true) {
-  const rank = competitiveRank(rating);
+export function rankEmblemModel(rating: number, showDivision = true, version: RankDisplayVersion = 3) {
+  const rank = displayRank(rating, version);
   const division = showDivision ? rank.division : null;
   return {
     name: rank.name,

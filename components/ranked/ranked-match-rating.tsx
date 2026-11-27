@@ -88,7 +88,7 @@ export function RankedMatchRating({
             <div>
               <span>Change</span>
               <strong className={value.ratingDelta >= 0 ? "rating-gain" : "rating-loss"}>
-                {formatRatingDelta(value.ratingDelta)}
+                {formatRatingDelta(value.ratingDelta, value.policyVersion)}
               </strong>
             </div>
             <div>
@@ -108,7 +108,7 @@ export function RankedMatchRating({
               {model.transition !== "unchanged" && (
                 <>
                   <div className="ranked-rating-rank">
-                    <RankEmblem rating={value.ratingBefore} size={112} decorative />
+                    <RankEmblem rating={value.ratingBefore} size={112} decorative policyVersion={value.policyVersion === 4 ? 4 : 3} />
                     <span style={{ color: model.before.color }}>
                       {model.before.label}
                     </span>
@@ -119,7 +119,7 @@ export function RankedMatchRating({
                 </>
               )}
               <div className="ranked-rating-rank ranked-rating-current">
-                <RankEmblem rating={value.ratingAfter} size={144} decorative />
+                <RankEmblem rating={value.ratingAfter} size={144} decorative policyVersion={value.policyVersion === 4 ? 4 : 3} />
                 <strong style={{ color: model.after.color }}>{model.after.label}</strong>
               </div>
             </div>
@@ -144,6 +144,7 @@ export function RankedMatchRating({
                 </p>
               </div>
             )}
+            {model.demotionProtected && <p role="status">Demotion prevented. Your rating stopped at the division floor. Another loss at this rating will demote you.</p>}
             {model.after.progress === null && <p>Highest competitive rank</p>}
             {value.policyVersion === 1 && (
               <p>Historical Elo award (v1), displayed on the current rank scale.</p>
