@@ -21,7 +21,7 @@ import { reviewProofOptions } from "@/lib/coach/review-presentation";
 import type { PracticeAnalysis } from "@/lib/coach/practice-analysis";
 import { explainMove, timelineMove, cellLabel } from "@/lib/coach/teaching-review";
 import { TeachingProof } from "@/components/coach/teaching-proof";
-import { describeReplayRows } from "@/lib/coach/replay-accessibility";
+import { describeReplayRows, nearbyReplayClues, replayKeyboardIndex } from "@/lib/coach/replay-accessibility";
 import { useReplayTooltips } from "@/lib/settings/replay-tooltips";
 import { useReplayView, type ReplayView } from "@/lib/settings/replay-view";
 import type { PracticeSession } from "@/lib/practice/history";
@@ -40,6 +40,9 @@ type BoardViewProps = {
   cells: readonly VisibleCell[];
   columns: number;
   selectedIndex: number;
+  inspectedIndex: number;
+  onInspect: (index: number) => void;
+  showNearbyClues: boolean;
   title: string;
   safeProofs: readonly Proof[];
   mineProofs: readonly Proof[];
@@ -53,6 +56,9 @@ function BoardView({
   cells,
   columns,
   selectedIndex,
+  inspectedIndex,
+  onInspect,
+  showNearbyClues,
   title,
   safeProofs,
   mineProofs,
@@ -67,6 +73,10 @@ function BoardView({
   const mines = new Set(mineProofs.map((p) => p.index));
   const sources = new Set(clues);
   const taught = new Set(targets);
+  const nearby = useMemo(
+    () => new Set(showNearbyClues ? nearbyReplayClues(cells, columns, inspectedIndex) : []),
+    [cells, columns, inspectedIndex, showNearbyClues],
+  );
   const boardStyle: CSSProperties = {
     gridTemplateColumns: `20px repeat(${columns}, var(--replay-cell-size, 36px))`,
     "--replay-columns": columns,
@@ -83,8 +93,8 @@ function BoardView({
         <div
           className="verified-board"
           style={boardStyle}
-          role="img"
-          aria-label={`${title}. ${cells.length / columns} rows, ${columns} columns. ${cellLabel(selectedIndex, columns)} is the chosen square.`}
+          role="group"
+          aria-label={`${title}. ${cells.length / columns} rows, ${columns} columns. Use arrow keys to inspect squares.`}
         >
           <span className="coach-board-coordinate" aria-hidden="true" />
           {Array.from({ length: columns }, (_, col) => (
@@ -109,14 +119,20 @@ function BoardView({
                   ? "player flag"
                   : "covered";
             const selected = index === selectedIndex;
+            const inspected = index === inspectedIndex;
+            const description = `${cellLabel(index, columns)}: ${fact}${proof ? `, ${proof}` : ""}${sources.has(index) ? ", supporting clue" : ""}${nearby.has(index) ? ", nearby clue" : ""}${selected ? ", recorded move" : ""}${inspected ? ", inspected square" : ""}${index === recommendation ? ", suggested reveal" : ""}`;
             return (
               <BoardCell
                 key={index}
                 rowLabel={index % columns === 0 ? Math.floor(index / columns) + 1 : null}
               >
-                <span
+                <button
+                  type="button"
                   className={[
                     "verified-cell",
+                    "verified-interactive-cell",
+                    inspected ? "verified-inspected" : "",
+                    nearby.has(index) ? "verified-nearby-clue" : "",
                     cell.revealed ? "verified-revealed" : "verified-covered",
                     cell.exploded ? "verified-exploded" : "",
                     cell.flagged ? "verified-flagged" : "",
@@ -131,12 +147,22 @@ function BoardView({
                     .filter(Boolean)
                     .join(" ")}
                   data-decision={selected ? decision : undefined}
-                  data-tip={
-                    tooltips
-                      ? `${cellLabel(index, columns)}: ${fact}${proof ? `, ${proof}` : ""}${sources.has(index) ? ", supporting clue" : ""}`
-                      : undefined
-                  }
-                  aria-hidden="true"
+                  data-tip={tooltips ? description : undefined}
+                  aria-label={description}
+                  aria-pressed={inspected}
+                  tabIndex={inspected ? 0 : -1}
+                  data-replay-index={index}
+                  onClick={() => onInspect(index)}
+                  onKeyDown={(event) => {
+                    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+                    const next = replayKeyboardIndex(index, columns, cells.length, event.key);
+                    if (next === null) return;
+                    event.preventDefault();
+                    onInspect(next);
+                    event.currentTarget.closest(".verified-board")
+                      ?.querySelector<HTMLButtonElement>(`[data-replay-index="${next}"]`)
+                      ?.focus();
+                  }}
                 >
                   {cell.exploded || (cell.revealed && number === null)
                     ? "✹"
@@ -149,7 +175,9 @@ function BoardView({
                           : proof === "proven mine"
                             ? "!"
                             : ""}
-                </span>
+                  {nearby.has(index) && <span aria-hidden="true" className="verified-nearby-marker" />}
+                  {inspected && <span aria-hidden="true" className="verified-inspection-marker" />}
+                </button>
               </BoardCell>
             );
           })}
@@ -170,6 +198,8 @@ function BoardView({
               mines,
               sources,
               recommendation,
+              inspectedIndex,
+              nearby,
             ).map((row, index) => (
               <li key={index}>{row}</li>
             ))}
@@ -224,6 +254,7 @@ export function VerifiedReplayPanel({
   );
   const last = Math.max(0, frames.length - 1);
   const [cursor, setCursor] = useState<number | null>(null);
+  const [inspection, setInspection] = useState<{ game: PracticeSession; index: number } | null>(null);
   const { view: preferredView } = useReplayView();
   const [viewOverride, setBoardMode] = useState<ReplayView | null>(null);
   const boardMode = viewOverride ?? preferredView;
@@ -235,6 +266,7 @@ export function VerifiedReplayPanel({
   const current = frames[selectedIndex];
   useEffect(() => {
     setCursor(null);
+    setInspection(null);
     setPlaying(false);
     setBoardMode(null);
     setShowProofs(true);
@@ -290,6 +322,15 @@ export function VerifiedReplayPanel({
     );
   const opening = selectedIndex === 0;
   const chosen = current.move.row * game.columns + current.move.col;
+  const inspected = inspection?.game === game && inspection.index >= 0 && inspection.index < current.after.length
+    ? inspection.index
+    : chosen;
+  const boardCellCount = current.after.length;
+  function inspectSquare(index: number) {
+    if (!Number.isInteger(index) || index < 0 || index >= boardCellCount) return;
+    setPlaying(false);
+    setInspection({ game, index });
+  }
   const recommendation = opening ? null : recommendedReveal(current);
   const decision = opening ? "not-enough-evidence" : current.decision;
   const mode = opening && boardMode === "before" ? "after" : boardMode;
@@ -506,6 +547,15 @@ export function VerifiedReplayPanel({
       </div>
       <div className="coach-review-workspace" data-view={mode}>
         <div className="coach-review-board-pane">
+          <div className="verified-inspection-toolbar">
+            <div>
+              <strong aria-live="polite">Inspecting {cellLabel(inspected, game.columns)}</strong>
+              <p>Choose any square or use the arrow keys. Nearby clues are context, not proof.</p>
+            </div>
+            <button type="button" onClick={() => { setPlaying(false); setInspection(null); }}>
+              Return to recorded move
+            </button>
+          </div>
           <div
             className={`verified-boards ${mode === "compare" ? "" : "single-board"}`}
             data-comparison={game.columns <= 16 ? "side-by-side" : "stacked"}
@@ -516,6 +566,9 @@ export function VerifiedReplayPanel({
                 cells={current.before}
                 columns={game.columns}
                 selectedIndex={chosen}
+                inspectedIndex={inspected}
+                onInspect={inspectSquare}
+                showNearbyClues={showProofs}
                 safeProofs={showProofs ? current.deductions.safe : []}
                 mineProofs={showProofs ? current.deductions.mines : []}
                 recommendation={showProofs ? recommendation : null}
@@ -531,6 +584,9 @@ export function VerifiedReplayPanel({
                 cells={current.after}
                 columns={game.columns}
                 selectedIndex={chosen}
+                inspectedIndex={inspected}
+                onInspect={inspectSquare}
+                showNearbyClues={showProofs}
                 safeProofs={[]}
                 mineProofs={[]}
                 decision={decision}
@@ -544,7 +600,9 @@ export function VerifiedReplayPanel({
             <li><span data-symbol="flag">⚑</span> Player flag</li>
             <li><span data-symbol="clue">2</span> Supporting clue</li>
             <li><span data-symbol="suggested"> </span> Suggested reveal</li>
-            <li><span data-symbol="chosen"> </span> Chosen square</li>
+            <li><span data-symbol="chosen"> </span> Recorded move</li>
+            <li><span data-symbol="inspected"> </span> Inspected square</li>
+            <li><span data-symbol="nearby"> </span> Nearby clue (context)</li>
           </ul>
         </div>
         <div className="coach-review-insight-pane">

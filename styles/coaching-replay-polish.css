@@ -149,3 +149,57 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Batch 28A: interactive inspection, independent of recorded decision styling. */
+#coach-replay-workspace .verified-board button.verified-interactive-cell {
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  position: relative;
+}
+#coach-replay-workspace .verified-board .verified-nearby-marker,
+#coach-replay-workspace .verified-board .verified-inspection-marker {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 2px;
+}
+#coach-replay-workspace .verified-board .verified-nearby-marker {
+  inset: 3px;
+  border: 1px dotted #d8b4fe;
+}
+#coach-replay-workspace .verified-board .verified-inspection-marker {
+  inset: 3px;
+  border: 2px solid #38bdf8;
+}
+#coach-replay-workspace .verified-board button.verified-interactive-cell:focus-visible {
+  outline: 2px solid #facc15;
+  outline-offset: 1px;
+  z-index: 1;
+}
+#coach-replay-workspace .verified-inspection-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+#coach-replay-workspace .verified-inspection-toolbar p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+#coach-replay-workspace .verified-inspection-toolbar button {
+  padding: 8px 12px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #252525;
+  color: #eee;
+}
+#coach-replay-workspace .coach-replay-legend [data-symbol="inspected"] { border: 2px solid #38bdf8; }
+#coach-replay-workspace .coach-replay-legend [data-symbol="nearby"] { border: 1px dotted #d8b4fe; }
