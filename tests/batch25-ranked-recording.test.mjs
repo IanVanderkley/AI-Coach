@@ -278,6 +278,8 @@ test("database received_at is not treated as a monotonic gameplay timestamp", as
 
 test("route uses verified claims, live session guard, rate limit and owner-terminal filtering", () => {
   const route = readFileSync("app/api/ranked/coaching/recording/route.ts", "utf8");
+  const store = readFileSync("lib/ranked/coaching-store.ts", "utf8");
+  assert.match(route, /createRankedRecordingStore\(admin\)/);
   assert.match(route, /client\.auth\.getClaims\(\)/);
   assert.match(route, /readVerifiedRankedSessionId\(data\?\.claims\)/);
   assert.match(route, /"ranked_session_is_active"/);
@@ -289,10 +291,10 @@ test("route uses verified claims, live session guard, rate limit and owner-termi
     route.indexOf("await guardRankedRateLimit") <
       route.indexOf("await readCompletedRankedRecording"),
   );
-  assert.match(route, /\.eq\("user_id", owner\)\s*\.in\("status", \["won", "lost"\]\)/);
+  assert.match(store, /\.eq\("user_id", owner\)\s*\.in\("status", \["won", "lost"\]\)/);
   assert.match(route, /"Cache-Control": "private, no-store"/);
-  assert.match(route, /count: "exact"/);
-  assert.match(route, /count === limit \? data : null/);
+  assert.match(store, /count: "exact"/);
+  assert.match(store, /count === limit \? data : null/);
   assert.match(route, /replayRecordedGame/);
   assert.doesNotMatch(
     route,

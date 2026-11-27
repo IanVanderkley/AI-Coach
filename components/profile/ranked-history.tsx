@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { readCoachingSections } from "@/lib/settings/coaching-sections";
 import { ChevronDown, History, Play, RefreshCw, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -32,6 +33,9 @@ export function RankedHistory({
   const [revision, setRevision] = useState(0);
   // AI_COACH_COLLAPSIBLE_HISTORY_V1
   const [rankedExpanded, setRankedExpanded] = useState(true);
+  useEffect(() => {
+    if (onReviewMatch) setRankedExpanded(readCoachingSections().ranked);
+  }, [onReviewMatch]);
 
   useEffect(() => {
     let live = true;
@@ -121,6 +125,11 @@ export function RankedHistory({
               />
             </button>
           </h2>
+          {onReviewMatch && (
+            <p className="coach-ranked-description">
+              Review completed server-recorded matches.
+            </p>
+          )}
           <p className="profile-history-match-count">
             {state.kind === "ready"
               ? String(matches.length) + " matches"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCoachingSections } from "@/lib/settings/coaching-sections";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BrainCircuit,
@@ -48,6 +49,7 @@ export function EvidenceCoachPanel({
   aiAvailable?: boolean;
   mode?: "practice" | "ranked";
 }) {
+  const { sections } = useCoachingSections();
   const prepared = useMemo(() => {
     try {
       return { review: buildPreparedTeachingReview(analysis), error: null };
@@ -193,7 +195,7 @@ export function EvidenceCoachPanel({
       </div>
 
       {mode === "practice" && (
-        <details className="evidence-focus-tools">
+        <details className="evidence-focus-tools" open={sections.aiFocus}>
           <summary>Optional AI focus</summary>
           <div className="evidence-focus-row">
             <div>
@@ -307,16 +309,7 @@ export function EvidenceCoachPanel({
           will not invent five points just to fill the report.
         </p>
       )}
-      <details className="evidence-focus-tools" open>
-        <summary>Ask a follow-up question</summary>
-        <VerifiedFollowUp
-          key={followUpGameKey(game)}
-          persist={mode === "practice"}
-          report={prepared.review!.followUpReport}
-          game={game}
-          onReviewMove={(displayed) => onReviewMove(displayed + analysis.opening + 1)}
-        />
-      </details>
+
       <p className="evidence-caveat">
         {report.caveat}{" "}
         {mode === "ranked"
@@ -324,5 +317,29 @@ export function EvidenceCoachPanel({
           : "AI prioritization is optional and only sends verified finding summaries to the provider, not the hidden mine layout."}
       </p>
     </section>
+  );
+}
+
+/** Separate conversation view; keeps the existing evidence-only follow-up boundary. */
+export function ReviewConversation({
+  game,
+  analysis,
+  mode,
+  onReviewMove,
+}: {
+  game: PracticeSession;
+  analysis: PracticeAnalysis;
+  mode: "practice" | "ranked";
+  onReviewMove: (move: number) => void;
+}) {
+  const review = useMemo(() => buildPreparedTeachingReview(analysis), [analysis]);
+  return (
+    <VerifiedFollowUp
+      key={followUpGameKey(game)}
+      persist={mode === "practice"}
+      report={review.followUpReport}
+      game={game}
+      onReviewMove={(displayed) => onReviewMove(displayed + analysis.opening + 1)}
+    />
   );
 }

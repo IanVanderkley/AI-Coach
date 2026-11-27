@@ -62,6 +62,24 @@ export function PracticeResultDialog({
     setShareState("idle");
   }, [result]);
 
+  const [savedGame, setSavedGame] = useState<{
+    promise: Promise<string | null>;
+    id: string;
+  } | null>(null);
+  const savePromise = result?.xpSave;
+  useEffect(() => {
+    let current = true;
+    if (savePromise)
+      void savePromise
+        .then((id) => {
+          if (current && id) setSavedGame({ promise: savePromise, id });
+        })
+        .catch(() => {});
+    return () => {
+      current = false;
+    };
+  }, [savePromise]);
+
   const isWin = result?.outcome === "win";
   const isPersonalBest = isWin && result?.personalBest?.kind === "improved";
   const isFirstBest = isWin && result?.personalBest?.kind === "first";
@@ -235,9 +253,11 @@ export function PracticeResultDialog({
             <Link
               className="practice-result-secondary"
               href={
-                result.reviewId
-                  ? `/coaching?source=practice&reviewId=${encodeURIComponent(result.reviewId)}`
-                  : "/coaching?source=practice"
+                savedGame && savedGame.promise === result.xpSave
+                  ? `/coaching?source=practice&gameId=${encodeURIComponent(savedGame.id)}`
+                  : result.reviewId
+                    ? `/coaching?source=practice&reviewId=${encodeURIComponent(result.reviewId)}`
+                    : "/coaching?source=practice"
               }
             >
               <Award size={17} aria-hidden="true" /> Analyze Game

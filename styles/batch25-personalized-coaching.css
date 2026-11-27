@@ -1,0 +1,580 @@
+.coach-personalized {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+}
+.coach-personalized-heading,
+.coach-personalized-heading h2,
+.coach-learning-plan h3,
+.coach-save-review {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+.coach-personalized-heading {
+  justify-content: space-between;
+}
+.coach-personalized-heading h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.coach-personalized [hidden] {
+  display: none !important;
+}
+.coach-learning-filters,
+.coach-learning-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+.coach-learning-filters label,
+.coach-learning-metrics div {
+  display: grid;
+  gap: 0.35rem;
+}
+.coach-learning-filters select {
+  padding: 0.5rem;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+}
+.coach-learning-filters option {
+  color: CanvasText;
+  background: Canvas;
+}
+.coach-learning-metrics div {
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+.coach-learning-metrics strong {
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+}
+.coach-learning-patterns {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.coach-learning-patterns li {
+  padding: 0.65rem;
+  border-bottom: 1px solid currentColor;
+}
+.coach-learning-patterns li button {
+  margin: 0.5rem 0;
+}
+.coach-learning-plan {
+  padding: 0.85rem;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  margin: 0.75rem 0;
+}
+.coach-drill-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.coach-drill-options button[aria-pressed="true"] {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.coach-saved-reports summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.coach-save-review {
+  margin: 0.75rem 0;
+}
+.coach-personalized :focus-visible,
+.coach-save-review :focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.coach-review-is-saved {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.coach-saved-report-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.coach-saved-reports li {
+  overflow-wrap: anywhere;
+}
+.coach-personalized,
+.coach-learning-metrics div,
+.coach-learning-filters label {
+  min-width: 0;
+}
+.coach-learning-filters select {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 520px) {
+  .coach-personalized {
+    padding: 0.75rem;
+  }
+  .coach-personalized-heading {
+    align-items: flex-start;
+  }
+  .coach-saved-report-actions > button,
+  .coach-drill-options > button {
+    flex: 1 1 100%;
+    white-space: normal;
+  }
+  .coach-learning-filters,
+  .coach-learning-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Batch 25D.7: progressive disclosure, breathing room and readable line lengths. */
+.coach-personalized {
+  padding: clamp(16px, 2.5vw, 28px);
+  border-color: var(--line, #777);
+  background: var(--surface);
+  line-height: 1.6;
+}
+.coach-personalized-heading {
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.coach-personalized-heading h2 {
+  font-size: 1.25rem;
+}
+#personalized-coaching-body:not([hidden]) {
+  display: grid;
+  gap: 16px;
+  padding-top: 14px;
+}
+.coach-personalized p {
+  margin: 0;
+  max-width: 76ch;
+  line-height: 1.65;
+}
+.coach-personalized .coach-learning-filters,
+.coach-personalized .coach-learning-metrics {
+  margin: 0;
+  gap: 12px;
+}
+.coach-personalized .coach-learning-metrics > div {
+  padding: 16px;
+  border-color: var(--line, #777);
+  gap: 8px;
+}
+.coach-personalized .coach-learning-metrics strong {
+  font-size: 1.65rem;
+}
+.coach-personalized .coach-learning-plan {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+.coach-learning-focus {
+  padding: clamp(16px, 2.5vw, 24px);
+  border: 1px solid var(--line, #777);
+  border-inline-start: 3px solid #bd3848;
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+  background: var(--surface);
+}
+.coach-learning-focus h3 {
+  font-size: 1.3rem;
+  line-height: 1.3;
+  margin: 0;
+}
+.coach-learning-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+.coach-learning-disclosure,
+.coach-review-disclosure {
+  border: 1px solid var(--line, #777);
+  border-radius: 12px;
+  background: var(--surface);
+  min-width: 0;
+}
+.coach-learning-disclosure > summary,
+.coach-review-disclosure > summary {
+  display: list-item;
+  cursor: pointer;
+  padding: 16px 20px;
+  font-weight: 650;
+  font-size: 1rem;
+  line-height: 1.5;
+  min-height: 44px;
+}
+.coach-learning-disclosure > summary span {
+  display: inline-block;
+  margin-inline-start: 10px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+.coach-learning-disclosure[open] > summary,
+.coach-review-disclosure[open] > summary {
+  border-bottom: 1px solid var(--line, #777);
+}
+.coach-learning-detail,
+.coach-learning-method[open] > p {
+  padding: 16px 20px;
+}
+.coach-learning-detail {
+  display: grid;
+  gap: 16px;
+}
+.coach-drill-options {
+  gap: 10px;
+}
+.coach-drill-options button {
+  min-height: 44px;
+  white-space: normal;
+  text-align: left;
+}
+.coach-drill-feedback {
+  border: 1px solid var(--line, #777);
+  border-inline-start: 3px solid #c99547;
+  padding: 14px;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+}
+.coach-drill-feedback[data-correct="true"] {
+  border-inline-start-color: #379769;
+}
+.coach-training-steps {
+  display: grid;
+  gap: 12px;
+  padding-inline-start: 24px;
+  margin: 0;
+  list-style: decimal;
+}
+.coach-learning-patterns {
+  gap: 12px;
+  margin: 0;
+}
+.coach-learning-detail .coach-learning-patterns > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border: 0;
+  padding: 8px 0;
+}
+.coach-learning-detail .coach-learning-patterns > li p {
+  margin-top: 4px;
+  color: var(--text-secondary);
+}
+.coach-saved-report-list {
+  padding: 16px;
+}
+.coach-saved-report-list > li {
+  border: 1px solid var(--line, #777);
+  border-radius: 10px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+.coach-saved-report-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.coach-saved-report-header > span {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+.coach-saved-report-list button {
+  margin: 0;
+  min-height: 44px;
+}
+.coach-learning-findings {
+  border-top: 1px solid var(--line, #777);
+  padding-top: 8px;
+}
+.coach-learning-findings > summary {
+  padding: 6px 0;
+  color: var(--text-secondary);
+}
+.coach-learning-findings[open] > p {
+  margin: 10px 0;
+}
+.coach-saved-finding {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding-block: 12px;
+}
+.coach-review-stack {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.coach-review-stack > .coach-save-review {
+  margin: 0;
+}
+.coach-review-stack > .coach-review-overview {
+  margin: 0;
+  padding: clamp(16px, 2.5vw, 26px);
+}
+.coach-review-stack .coach-review-overview p {
+  max-width: 70ch;
+  line-height: 1.6;
+}
+.coach-review-disclosure-body {
+  padding: 12px;
+  min-width: 0;
+}
+.coach-review-disclosure-body > :is(.verified-report, .evidence-report) {
+  margin: 0;
+  min-width: 0;
+}
+.coach-review-strength {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line, #777);
+  margin-block: 14px;
+}
+.coach-review-strength p {
+  margin: 0;
+}
+.coach-review-open-button {
+  margin-top: 12px;
+  min-height: 44px;
+}
+.coach-review-stack .evidence-moment-list {
+  gap: 16px;
+}
+.coach-review-stack .evidence-moment {
+  line-height: 1.6;
+}
+.coach-review-stack :is(.evidence-report, .verified-report) p {
+  line-height: 1.6;
+}
+.coach-review-disclosure > summary:focus-visible {
+  outline: 2px solid #ff909e;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .coach-review-disclosure-body {
+    padding: 4px;
+  }
+  .coach-learning-disclosure > summary,
+  .coach-review-disclosure > summary {
+    padding: 14px;
+  }
+  .coach-learning-detail,
+  .coach-learning-method[open] > p {
+    padding: 14px;
+  }
+  .coach-saved-report-list {
+    padding: 10px;
+  }
+  .coach-learning-detail .coach-learning-patterns > li > button {
+    width: 100%;
+  }
+}
+
+.coach-review-disclosure > .coach-replay-disclosure-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 16px 20px;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.coach-replay-disclosure-toggle[aria-expanded="true"] {
+  border-bottom: 1px solid var(--line, #777);
+}
+.coach-replay-disclosure-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.coach-review-stack [hidden] {
+  display: none !important;
+}
+.coach-replay-disclosure-toggle:focus-visible {
+  outline: 2px solid #ff909e;
+  outline-offset: 3px;
+}
+
+/* Batch 25D.8 — unified cards, review navigation and action hierarchy. */
+.coach-full-page .coach-history-screen {
+  display: grid;
+  gap: 16px;
+}
+.coach-full-page .coach-practice-card,
+.coach-full-page .coach-ranked-history > .ranked-history-card,
+.coach-full-page .coach-history-screen > .coach-personalized,
+.coach-full-page .coach-history-screen > details,
+.coach-full-page .coach-conversation-card {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
+  padding: clamp(16px, 2vw, 24px);
+  border: 1px solid var(--line, #444);
+  border-radius: 12px;
+  background: var(--surface);
+  color: inherit;
+}
+.coach-full-page .coach-ranked-history {
+  margin: 0;
+  padding: 0;
+}
+.coach-full-page .coach-practice-card .coach-history-heading,
+.coach-full-page .coach-ranked-history .ranked-history-heading,
+.coach-full-page .coach-personalized-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 8px;
+}
+.coach-full-page .coach-practice-card h2,
+.coach-full-page .coach-ranked-history h2,
+.coach-full-page .coach-personalized-heading h2 {
+  font-size: 1.25rem;
+  line-height: 1.35;
+  margin: 0;
+}
+.coach-full-page .coach-ranked-history .ranked-history-eyebrow {
+  display: none;
+}
+.coach-full-page .coach-ranked-description,
+.coach-full-page .coach-card-count {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 6px 0 0;
+}
+.coach-full-page .coach-personalized-heading > .coach-card-count {
+  margin: 0;
+}
+.coach-full-page .coach-history-screen > details {
+  padding: 0;
+}
+.coach-full-page .coach-history-screen > details > summary {
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 650;
+  padding: 18px 24px;
+  min-height: 48px;
+}
+.coach-full-page .coach-history-screen > details[open] > :not(summary) {
+  margin-inline: 24px;
+  margin-bottom: 16px;
+}
+.coach-full-page .coach-review-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid var(--line, #444);
+  padding-bottom: 10px;
+}
+.coach-full-page .coach-review-tabs button {
+  font: inherit;
+  font-weight: 650;
+  border: 1px solid var(--line, #444);
+  border-radius: 8px;
+  color: inherit;
+  background: var(--surface);
+  padding: 12px 20px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.coach-full-page .coach-review-tabs button[aria-pressed="true"] {
+  background: #ae2434;
+  color: white;
+  border-color: #ae2434;
+}
+.coach-full-page .coach-review-tab-body:not([hidden]) {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.coach-full-page .coach-conversation-card:not([hidden]) {
+  display: grid;
+  gap: 16px;
+}
+.coach-full-page .coach-conversation-card h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+.coach-full-page .coach-conversation-card > p {
+  max-width: 72ch;
+  margin: 0;
+  line-height: 1.6;
+}
+.coach-full-page .coach-review-stack .coach-review-overview {
+  margin: 0;
+}
+.coach-full-page .coach-review-overview .coach-review-focus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+.coach-full-page .coach-review-lesson-copy {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.coach-full-page .coach-review-lesson-copy p {
+  margin: 4px 0 0;
+}
+.coach-full-page .coach-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.coach-full-page .coach-review-actions button {
+  min-height: 44px;
+  white-space: normal;
+}
+.coach-full-page .coach-review-tabs button:focus-visible,
+.coach-full-page .coach-review-actions button:focus-visible {
+  outline: 2px solid #ff909e;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .coach-full-page .coach-review-actions {
+    width: 100%;
+  }
+  .coach-full-page .coach-review-actions button {
+    flex: 1 1 100%;
+  }
+  .coach-full-page .coach-review-tabs button {
+    flex: 1 1 auto;
+  }
+  .coach-full-page .coach-history-screen > details > summary {
+    padding: 16px;
+  }
+}

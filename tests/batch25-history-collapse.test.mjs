@@ -16,7 +16,7 @@ test("collapsing Practice hides the list without unmounting or hiding Ranked his
   const ranked = ui.indexOf('className="coach-ranked-history"');
   assert.ok(body >= 0 && body < rows && rows < ranked);
   assert.match(ui.slice(body, rows), /hidden=\{!practiceExpanded\}/);
-  assert.match(ui.slice(body, ranked), /<\/div>\s*<div\s*$/);
+  assert.match(ui.slice(body, ranked), /<\/div>\s*<\/div>\s*<div\s*$/);
   assert.doesNotMatch(ui, /practiceExpanded\s*&&\s*\(/);
   assert.match(ui.slice(ranked), /<RankedHistory onReviewMatch=\{openRankedGame\} \/>/);
 });

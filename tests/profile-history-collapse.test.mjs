@@ -16,8 +16,8 @@ test("Practice match history appears in Coaching, not the statistics dashboard",
 test("Ranked match history is visible only on the Coaching history screen", () => {
   assert.match(coaching, /<RankedHistory onReviewMatch=\{openRankedGame\} \/>/);
   assert.match(
-    coaching,
-    /Review completed Ranked matches using server-recorded gameplay/,
+    ranked,
+    /onReviewMatch\s*&&[\s\S]*?className="coach-ranked-description"[\s\S]*?Review completed server-recorded matches\./,
   );
   assert.match(practice, /summaryOnly/);
   assert.match(ranked, /if \(summaryOnly\) return null/);

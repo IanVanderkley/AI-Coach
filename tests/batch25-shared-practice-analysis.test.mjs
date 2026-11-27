@@ -140,7 +140,7 @@ test("unresolved post-opening decisions do not create a fabricated grade", () =>
   assert.equal(analysis.report.moments.length, 0);
 });
 
-test("the selected review passes one shared analysis to both visual panels", () => {
+test("the selected review passes one shared analysis to replay, lessons and conversation", () => {
   const source = readFileSync(
     new URL("../components/coach/coach-console.tsx", import.meta.url),
     "utf8",
@@ -154,7 +154,17 @@ test("the selected review passes one shared analysis to both visual panels", () 
     "utf8",
   );
   assert.match(source, /scorePreparedPracticeReview\(analysis\)/);
-  assert.equal((source.match(/analysis=\{selection\.analysis\}/g) ?? []).length, 2);
+  for (const component of [
+    "VerifiedReplayPanel",
+    "EvidenceCoachPanel",
+    "ReviewConversation",
+  ]) {
+    assert.match(
+      source,
+      new RegExp("<" + component + "\\b[^>]*analysis=\\{selection\\.analysis\\}"),
+    );
+  }
+  assert.equal((source.match(/analysis=\{selection\.analysis\}/g) ?? []).length, 3);
   assert.match(panel, /buildPreparedTeachingReview\(analysis\)/);
   assert.doesNotMatch(replay, /replayRecordedGame\(/);
   assert.match(replay, /prioritizeMoments\(analysis\.report, preferences\)/);
