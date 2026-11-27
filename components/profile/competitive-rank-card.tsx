@@ -82,7 +82,7 @@ export function CompetitiveRankCard() {
       {saved && model && (
         <div className={styles.body}>
           <div className={styles.current}>
-            <RankEmblem rating={saved.rating} size={144} decorative />
+            <RankEmblem rating={saved.rating} size={144} decorative policyVersion={saved.policyVersion} />
             <div className={styles.details}>
               <span className={styles.label}>CURRENT RANK</span>
               <h3 style={{ color: model.current.color }}>{model.current.label}</h3>
@@ -106,7 +106,7 @@ export function CompetitiveRankCard() {
             </div>
           </div>
           <div className={styles.highest}>
-            <RankEmblem rating={saved.highestRating} size={108} decorative />
+            <RankEmblem rating={saved.highestRating} size={108} decorative policyVersion={saved.policyVersion} />
             <div className={styles.details}>
               <span className={styles.label}>HIGHEST RECORDED RANK</span>
               <h3 style={{ color: model.highest.color }}>{model.highest.label}</h3>

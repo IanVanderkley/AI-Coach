@@ -2,6 +2,8 @@
 export const PUBLIC_LEADERBOARD_ENDPOINT = "/api/leaderboard";
 export const PUBLIC_LEADERBOARD_LIMIT = 50;
 export const PUBLIC_RATING_SYSTEM = "solo-elo-benchmark-v3" as const;
+export const PUBLIC_RATING_SYSTEM_V4 = "solo-tier-rating-v4" as const;
+export type PublicRatingSystem = typeof PUBLIC_RATING_SYSTEM | typeof PUBLIC_RATING_SYSTEM_V4;
 export const PUBLIC_USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 
 export type EloStanding = {
@@ -22,7 +24,7 @@ export type SpeedStanding = {
 
 export type PublicStandings = {
   source: "server-verified";
-  ratingSystem: typeof PUBLIC_RATING_SYSTEM;
+  ratingSystem: PublicRatingSystem;
   board: "intermediate-16x16-40";
   elo: EloStanding[];
   fastest: SpeedStanding[];
@@ -45,8 +47,10 @@ const validInt = (value: unknown, min: number, max: number): value is number =>
 export function projectPublicStandings(
   eloRows: unknown,
   fastestRows: unknown,
+  ratingSystem: PublicRatingSystem = PUBLIC_RATING_SYSTEM,
 ): PublicStandings {
   if (
+    (ratingSystem !== PUBLIC_RATING_SYSTEM && ratingSystem !== PUBLIC_RATING_SYSTEM_V4) ||
     !Array.isArray(eloRows) ||
     !Array.isArray(fastestRows) ||
     eloRows.length > PUBLIC_LEADERBOARD_LIMIT ||
@@ -60,7 +64,7 @@ export function projectPublicStandings(
     if (
       !isRow(value) ||
       !validUsername(value.username) ||
-      !validInt(value.rating, 100, 10000) ||
+      !validInt(value.rating, ratingSystem === PUBLIC_RATING_SYSTEM_V4 ? -2147483648 : 100, 10000) ||
       !validInt(value.games, 1, 100000000) ||
       !validInt(value.wins, 0, 100000000) ||
       !validInt(value.losses, 0, 100000000) ||
@@ -108,7 +112,7 @@ export function projectPublicStandings(
   });
   return {
     source: "server-verified",
-    ratingSystem: PUBLIC_RATING_SYSTEM,
+    ratingSystem,
     board: "intermediate-16x16-40",
     elo,
     fastest,
@@ -120,7 +124,7 @@ export function parsePublicStandings(value: unknown): PublicStandings {
   if (
     !isRow(value) ||
     value.source !== "server-verified" ||
-    value.ratingSystem !== PUBLIC_RATING_SYSTEM ||
+    (value.ratingSystem !== PUBLIC_RATING_SYSTEM && value.ratingSystem !== PUBLIC_RATING_SYSTEM_V4) ||
     value.board !== "intermediate-16x16-40" ||
     !Array.isArray(value.elo) ||
     !Array.isArray(value.fastest)
@@ -149,5 +153,5 @@ export function parsePublicStandings(value: unknown): PublicStandings {
       finished_at: entry.finishedAt,
     };
   });
-  return projectPublicStandings(eloRows, speedRows);
+  return projectPublicStandings(eloRows, speedRows, value.ratingSystem);
 }

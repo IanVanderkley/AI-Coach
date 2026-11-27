@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/sever";
 import { guardRankedRateLimit } from "@/lib/ranked/api-rate-limit";
 import { projectRankedLobbyRating } from "@/lib/leaderboard/rank-lobby";
+import { ACTIVE_RANK_POLICY_VERSION } from "@/lib/leaderboard/active-rank-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,6 +54,7 @@ export async function GET() {
         profile.data.rating,
         before.data?.rating_before ?? null,
         after.data?.rating_after ?? null,
+        ACTIVE_RANK_POLICY_VERSION,
       ),
       { headers },
     );

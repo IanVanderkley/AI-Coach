@@ -96,6 +96,7 @@ export function CoachConsole() {
   const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
   const [unavailableGrades, setUnavailableGrades] = useState<Record<string, boolean>>({});
   const [scores, setScores] = useState<Record<string, ReviewScore>>({});
+  const [rankedReviewedGrades, setRankedReviewedGrades] = useState<Record<string, ReviewScore>>({});
   const [preferences, setPreferences] = useState<CoachPreferences | null>(null);
   const [status, setStatus] = useState<ProviderStatus | null>(null);
   const [replayFocus, setReplayFocus] = useState<{
@@ -242,6 +243,7 @@ export function CoachConsole() {
         const raw: unknown = await response.json();
         if (token !== request.current) return;
         const prepared = prepareRankedReviewResponse(raw, matchId);
+        setRankedReviewedGrades((previous) => ({ ...previous, [matchId]: prepared.review }));
         setSelection({ mode: "ranked", id: `ranked-${matchId}`, ...prepared });
         setReplayExpanded(showReplay || readCoachingSections().replay);
         replayScrollRequested.current = showReplay;
@@ -348,6 +350,7 @@ export function CoachConsole() {
       data: { subscription },
     } = client.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_OUT") return;
+      setRankedReviewedGrades({});
       ++request.current;
       ++demoRequest.current;
       setSelection(null);
@@ -589,7 +592,7 @@ export function CoachConsole() {
             </div>
           </div>
           <div className="coach-ranked-history">
-            <RankedHistory onReviewMatch={openRankedGame} />
+            <RankedHistory onReviewMatch={openRankedGame} gradeEnabled={gradesReady && autoGrades} manualGrades={rankedReviewedGrades} />
           </div>
           <PersonalizedCoaching
             onReview={(mode, gameRef, move) => {

@@ -1,9 +1,9 @@
 /** Read-only receipt policy. The database, not this module, awards account XP. */
 export function isRankedXpReward(outcome: unknown, amount: unknown): boolean {
   return outcome === "won"
-    ? amount === 125 || amount === 210
+    ? amount === 125 || amount === 210 || amount === 350
     : outcome === "lost"
-      ? amount === 10 || amount === 17
+      ? amount === 10 || amount === 17 || amount === 50 || amount === 0
       : false;
 }
 export type PracticeXpReceipt = {
@@ -29,11 +29,12 @@ export function parsePracticeXpReceipt(value: unknown): PracticeXpReceipt {
   const rewards = { Beginner: [25, 5], Intermediate: [50, 10], Expert: [75, 15] };
   const expected =
     r.reason === "earned" ? rewards[r.difficulty][r.outcome === "win" ? 0 : 1] : 0;
-  if (r.amount !== expected) throw new Error("Invalid Practice XP amount.");
+  if (r.amount !== expected && !(r.reason === "earned" && r.amount === expected * 2))
+    throw new Error("Invalid Practice XP amount.");
   return {
     difficulty: r.difficulty,
     outcome: r.outcome,
     reason: r.reason,
-    amount: expected,
+    amount: r.amount as number,
   };
 }

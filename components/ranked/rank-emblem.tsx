@@ -2,6 +2,7 @@ import { EMBLEM_CANVAS, rankEmblemModel } from "@/lib/leaderboard/rank-emblem";
 
 type RankEmblemProps = {
   rating: number;
+  policyVersion?: 3 | 4;
   size?: number;
   className?: string;
   /** False for tier-only milestones on the rank journey. */
@@ -13,12 +14,15 @@ type RankEmblemProps = {
 /** Original WebP art plus a centred, resolution-independent Roman numeral. */
 export function RankEmblem({
   rating,
+  policyVersion = 3,
   size = 128,
   className,
   showDivision = true,
   decorative = false,
 }: RankEmblemProps) {
-  const emblem = rankEmblemModel(rating, showDivision);
+  const emblem = policyVersion === 4
+    ? rankEmblemModel(rating, showDivision, 4)
+    : rankEmblemModel(rating, showDivision);
   return (
     <svg
       className={className}
