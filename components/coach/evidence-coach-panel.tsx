@@ -1,5 +1,6 @@
 "use client";
 
+import { useCoachingSections } from "@/lib/settings/coaching-sections";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BrainCircuit,
@@ -10,19 +11,18 @@ import {
   TriangleAlert,
 } from "lucide-react";
 
-import {
-  buildTeachingReview,
-  displayMoveNumber,
-  openingIndex,
-} from "@/lib/coach/teaching-review";
-import { TeachingProof } from "@/components/coach/teaching-proof";
+import { buildPreparedTeachingReview } from "@/lib/coach/teaching-review";
+import { explanationLabel } from "@/lib/coach/review-presentation";
 import { VerifiedFollowUp, followUpGameKey } from "@/components/coach/verified-follow-up";
 import type { PracticeSession } from "@/lib/practice/history";
+import type { PracticeAnalysis } from "@/lib/coach/practice-analysis";
 import type { CoachPreferences } from "@/lib/settings/types";
 import {
   coachingLead,
   practicePrompt,
   prioritizeMoments,
+  focusCandidates,
+  focusPreferences,
 } from "@/lib/coach/visual-coaching";
 import Link from "next/link";
 
@@ -36,25 +36,30 @@ type FocusResponse = {
 
 export function EvidenceCoachPanel({
   game,
+  analysis,
   onReviewMove,
   preferences,
   aiAvailable = false,
+  mode = "practice",
 }: {
   game: PracticeSession;
+  analysis: PracticeAnalysis;
   onReviewMove: (moveNumber: number) => void;
   preferences?: CoachPreferences | null;
   aiAvailable?: boolean;
+  mode?: "practice" | "ranked";
 }) {
+  const { sections } = useCoachingSections();
   const prepared = useMemo(() => {
     try {
-      return { review: buildTeachingReview(game), error: null };
+      return { review: buildPreparedTeachingReview(analysis), error: null };
     } catch (error) {
       return {
         review: null,
         error: error instanceof Error ? error.message : "Unable to verify this game.",
       };
     }
-  }, [game]);
+  }, [analysis]);
   const [focus, setFocus] = useState<FocusResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -66,11 +71,11 @@ export function EvidenceCoachPanel({
     setLoading(false);
     setError("");
     return () => pending.current?.abort();
-  }, [game]);
+  }, [game, preferences]);
 
   const report = prepared.review?.report;
   const explanations = prepared.review?.explanations;
-  const displayedNumber = (raw: number) => displayMoveNumber(game.moves, raw);
+  const displayedNumber = (raw: number) => raw - analysis.opening - 1;
   if (!report) {
     return (
       <section className="evidence-report" aria-label="Verified coaching">
@@ -81,7 +86,14 @@ export function EvidenceCoachPanel({
   }
 
   async function requestAIFocus() {
-    if (!report || !aiAvailable || loading || report.moments.length === 0) return;
+    if (
+      mode === "ranked" ||
+      !report ||
+      !aiAvailable ||
+      loading ||
+      report.moments.length === 0
+    )
+      return;
     const controller = new AbortController();
     pending.current?.abort();
     pending.current = controller;
@@ -91,7 +103,10 @@ export function EvidenceCoachPanel({
       const response = await fetch("/api/coach/verified", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(game),
+        body: JSON.stringify({
+          ...game,
+          focusPreferences: focusPreferences(preferences),
+        }),
         signal: controller.signal,
       });
       const body = (await response.json().catch(() => null)) as
@@ -101,7 +116,7 @@ export function EvidenceCoachPanel({
       if (
         !body ||
         (body.focusId !== null &&
-          !report.moments.some((item) => item.id === body.focusId))
+          !focusCandidates(report, preferences).some((item) => item.id === body.focusId))
       ) {
         throw new Error("The AI suggestion was not based on a verified moment.");
       }
@@ -129,9 +144,11 @@ export function EvidenceCoachPanel({
     <section className="evidence-report" aria-label="Evidence-based coaching report">
       <div className="evidence-heading">
         <div>
-          <span className="subtle-label">VERIFIED POST-GAME REPORT · PRACTICE</span>
+          <span className="subtle-label">
+            VERIFIED POST-GAME REPORT · {mode === "ranked" ? "RANKED" : "PRACTICE"}
+          </span>
           <h3>
-            <BrainCircuit size={22} aria-hidden="true" /> Your next Practice lesson
+            <BrainCircuit size={22} aria-hidden="true" /> Lessons and follow-up
           </h3>
         </div>
         <span className="evidence-lock">
@@ -158,7 +175,7 @@ export function EvidenceCoachPanel({
         <div className="coach-preference-summary">
           {preferences ? (
             <>
-              Using {preferences.coachingStyle} tone · {detail} detail ·{" "}
+              Using {preferences.coachingStyle} tone · {explanationLabel(detail)} ·{" "}
               {preferences.experienceLevel} experience
               {preferences.selectedGoals.length
                 ? ` · Goals: ${preferences.selectedGoals.join(", ")}`
@@ -176,72 +193,58 @@ export function EvidenceCoachPanel({
           </p>
         )}
       </div>
-      <details className="evidence-focus-tools">
-        <summary>Decision totals</summary>
-        <div className="evidence-counts">
-          <span>
-            <strong>{report.recordedActions}</strong> review moves (opening excluded)
-          </span>
-          <span>
-            <strong>{report.verifiedMistakes}</strong> verified mistakes
-          </span>
-          <span>
-            <strong>{report.provenGood}</strong> proven good moves
-          </span>
-          <span>
-            <strong>{report.uncertainActions}</strong> insufficient evidence
-          </span>
-        </div>
-      </details>
-      <details className="evidence-focus-tools">
-        <summary>Optional AI focus</summary>
-        <div className="evidence-focus-row">
-          <div>
-            <strong>Choose your next focus</strong>
-            <p>
-              The rule engine selects a starting point. AI can optionally prioritize one
-              of these same verified moments; it cannot invent findings.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="evidence-ai-button"
-            disabled={!aiAvailable || loading || report.moments.length === 0}
-            onClick={() => void requestAIFocus()}
-          >
-            {loading ? (
-              <Loader2 size={16} className="coach-spin" aria-hidden="true" />
-            ) : (
-              <Target size={16} aria-hidden="true" />
-            )}
-            {loading
-              ? "Checking focus…"
-              : aiAvailable
-                ? "Ask AI to choose a focus"
-                : "AI provider disabled or unavailable"}
-          </button>
-        </div>
-        {focus && (
-          <p className="evidence-ai-note" aria-live="polite">
-            {isAI
-              ? `AI-selected focus (${focus.selectedBy}${focus.model ? ` · ${focus.model}` : ""})`
-              : "Rule-selected focus"}
-            . {focus.note}
-          </p>
-        )}
-        {error && (
-          <p className="evidence-error" role="alert">
-            <TriangleAlert size={14} aria-hidden="true" /> {error} The verified report is
-            still available.
-          </p>
-        )}
 
-        {!aiAvailable && (
-          <p className="evidence-caveat">
-            Local evidence-based coaching is fully available without an AI provider.
-          </p>
-        )}
-      </details>
+      {mode === "practice" && (
+        <details className="evidence-focus-tools" open={sections.aiFocus}>
+          <summary>Optional AI focus</summary>
+          <div className="evidence-focus-row">
+            <div>
+              <strong>Choose your next focus</strong>
+              <p>
+                The rule engine selects a starting point. AI can optionally prioritize one
+                of these same verified moments; it cannot invent findings.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="evidence-ai-button"
+              disabled={!aiAvailable || loading || report.moments.length === 0}
+              onClick={() => void requestAIFocus()}
+            >
+              {loading ? (
+                <Loader2 size={16} className="coach-spin" aria-hidden="true" />
+              ) : (
+                <Target size={16} aria-hidden="true" />
+              )}
+              {loading
+                ? "Checking focus…"
+                : aiAvailable
+                  ? "Ask AI to choose a focus"
+                  : "AI provider disabled or unavailable"}
+            </button>
+          </div>
+          {focus && (
+            <p className="evidence-ai-note" aria-live="polite">
+              {isAI
+                ? `AI-selected focus (${focus.selectedBy}${focus.model ? ` · ${focus.model}` : ""})`
+                : "Rule-selected focus"}
+              . {focus.note}
+            </p>
+          )}
+          {error && (
+            <p className="evidence-error" role="alert">
+              <TriangleAlert size={14} aria-hidden="true" /> {error} The verified report
+              is still available.
+            </p>
+          )}
+
+          {!aiAvailable && (
+            <p className="evidence-caveat">
+              Local evidence-based coaching is fully available without an AI provider.
+            </p>
+          )}
+        </details>
+      )}
       {report.moments.length > 0 ? (
         <div className="evidence-moment-list">
           {ordered.map((moment) => (
@@ -280,12 +283,12 @@ export function EvidenceCoachPanel({
                   {explanations?.get(moment.id)?.summary || moment.finding}
                 </p>
               )}
-              <TeachingProof
-                explanation={explanations?.get(moment.id)}
-                fallback={moment.evidence}
-                expanded={detail !== "brief"}
-                technical={detail === "detailed"}
-              />
+              {detail === "detailed" && (
+                <p className="coach-lesson-proof-link">
+                  Full deduction chain and exact coordinates are available in the move
+                  review.
+                </p>
+              )}
               <p>
                 <strong>Use this in your next game:</strong>{" "}
                 {explanations?.get(moment.id)?.nextStep || moment.nextTime}
@@ -295,7 +298,7 @@ export function EvidenceCoachPanel({
                 className="evidence-review-button"
                 onClick={() => onReviewMove(moment.moveNumber)}
               >
-                View board at move {displayedNumber(moment.moveNumber)}
+                Review move {displayedNumber(moment.moveNumber)} and proof
               </button>
             </article>
           ))}
@@ -306,21 +309,37 @@ export function EvidenceCoachPanel({
           will not invent five points just to fill the report.
         </p>
       )}
-      <details className="evidence-focus-tools">
-        <summary>Ask a follow-up question</summary>
-        <VerifiedFollowUp
-          key={followUpGameKey(game)}
-          report={prepared.review!.followUpReport}
-          game={game}
-          onReviewMove={(displayed) =>
-            onReviewMove(displayed + openingIndex(game.moves) + 1)
-          }
-        />
-      </details>
+
       <p className="evidence-caveat">
-        {report.caveat} AI prioritization is optional and only sends verified finding
-        summaries to the provider, not the hidden mine layout.
+        {report.caveat}{" "}
+        {mode === "ranked"
+          ? "Ranked coaching uses the deterministic rule engine; no external AI request is made."
+          : "AI prioritization is optional and only sends verified finding summaries to the provider, not the hidden mine layout."}
       </p>
     </section>
+  );
+}
+
+/** Separate conversation view; keeps the existing evidence-only follow-up boundary. */
+export function ReviewConversation({
+  game,
+  analysis,
+  mode,
+  onReviewMove,
+}: {
+  game: PracticeSession;
+  analysis: PracticeAnalysis;
+  mode: "practice" | "ranked";
+  onReviewMove: (move: number) => void;
+}) {
+  const review = useMemo(() => buildPreparedTeachingReview(analysis), [analysis]);
+  return (
+    <VerifiedFollowUp
+      key={followUpGameKey(game)}
+      persist={mode === "practice"}
+      report={review.followUpReport}
+      game={game}
+      onReviewMove={(displayed) => onReviewMove(displayed + analysis.opening + 1)}
+    />
   );
 }

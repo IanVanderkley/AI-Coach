@@ -106,7 +106,8 @@ export function parseVerifiedPracticeRecording(raw: unknown): PracticeSession {
       !isObject(move) ||
       !integer(move.row, 0, rows - 1) ||
       !integer(move.col, 0, columns - 1) ||
-      !["reveal", "flag", "unflag", "chord"].includes(String(move.action)) ||
+      typeof move.action !== "string" ||
+      !["reveal", "flag", "unflag", "chord"].includes(move.action) ||
       !integer(move.atMs, lastTime, durationSeconds * 1000 + 999) ||
       typeof move.afterHash !== "string" ||
       !/^[0-9a-f]{8}$/.test(move.afterHash)

@@ -1,13 +1,35 @@
 "use client";
 
 import Link from "next/link";
+import {
+  readCoachingSections,
+  useCoachingSections,
+} from "@/lib/settings/coaching-sections";
 import { RankedHistory } from "@/components/profile/ranked-history";
-import { ArrowLeft, Clock3, History, Loader2, Play, TriangleAlert } from "lucide-react";
+import {
+  PersonalizedCoaching,
+  SaveCoachingReview,
+} from "@/components/coach/personalized-coaching";
+import { prepareRankedReviewResponse } from "@/lib/ranked/coaching-client";
+import { isRankedRecordingId } from "@/lib/ranked/coaching-recording";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Clock3,
+  History,
+  Loader2,
+  Play,
+  TriangleAlert,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CoachReportView } from "@/components/coach/coach-report-view";
-import { EvidenceCoachPanel } from "@/components/coach/evidence-coach-panel";
+import {
+  EvidenceCoachPanel,
+  ReviewConversation,
+} from "@/components/coach/evidence-coach-panel";
 import { VerifiedReplayPanel } from "@/components/coach/verified-replay-panel";
 import { ReviewOverview } from "@/components/coach/review-overview";
+import { prioritizeMoments } from "@/lib/coach/visual-coaching";
 import { analyzeGameplay, toRuleReport } from "@/lib/coach/analyze";
 import { loadLastGame } from "@/lib/coach/last-game";
 import { loadPracticeReviewHandoff } from "@/lib/practice/review-handoff";
@@ -23,13 +45,28 @@ import {
   type PracticeReviewSummary,
 } from "@/lib/practice/repository";
 import { useHistoryGrades } from "@/lib/settings/history-grades";
-import { scorePracticeReview, type ReviewScore } from "@/lib/coach/review-score";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  scorePracticeReview,
+  scorePreparedPracticeReview,
+  type ReviewScore,
+} from "@/lib/coach/review-score";
+import {
+  preparePracticeAnalysis,
+  type PracticeAnalysis,
+} from "@/lib/coach/practice-analysis";
 
 type ProviderStatus = {
   configured: boolean;
   provider: { id: string; model: string } | null;
 };
-type Selection = { id: string; game: PracticeSession; review: ReviewScore };
+type Selection = {
+  mode: "practice" | "ranked";
+  id: string;
+  game: PracticeSession;
+  review: ReviewScore;
+  analysis: PracticeAnalysis;
+};
 const SAMPLES = [
   { key: "loss", label: "Analyze a loss", session: SAMPLE_LOSS_SESSION },
   { key: "win", label: "Analyze a win", session: SAMPLE_WIN_SESSION },
@@ -43,9 +80,17 @@ export function CoachConsole() {
   const repository = useMemo(() => createPracticeRepository(), []);
   const [games, setGames] = useState<PracticeReviewSummary[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [practiceExpanded, setPracticeExpanded] = useState(true);
   const [historyError, setHistoryError] = useState("");
   const [selection, setSelection] = useState<Selection | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [replayExpanded, setReplayExpanded] = useState(false);
+  const [reviewTab, setReviewTab] = useState<"review" | "coach">("review");
+  const replayScrollRequested = useRef(false);
+  const { sections } = useCoachingSections();
+  useEffect(() => {
+    setPracticeExpanded(readCoachingSections().practice);
+  }, []);
   const [error, setError] = useState("");
   const { enabled: autoGrades, ready: gradesReady } = useHistoryGrades();
   const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
@@ -77,6 +122,9 @@ export function CoachConsole() {
     ++request.current;
     ++demoRequest.current;
     setSelection(null);
+    setReplayExpanded(false);
+    setReviewTab("review");
+    replayScrollRequested.current = false;
     setPendingId(null);
     setReplayFocus(null);
     setResult(null);
@@ -86,26 +134,45 @@ export function CoachConsole() {
     const url = new URL(window.location.href);
     url.searchParams.delete("gameId");
     url.searchParams.delete("reviewId");
-    if (url.searchParams.get("source") === "practice") url.searchParams.delete("source");
+    url.searchParams.delete("matchId");
+    if (["practice", "ranked"].includes(url.searchParams.get("source") ?? ""))
+      url.searchParams.delete("source");
     if (url.href !== window.location.href)
       window.history.replaceState(window.history.state, "", url);
   }
   const chooseReplayMove = useCallback((moveNumber: number) => {
     setReplayFocus((previous) => ({ moveNumber, request: (previous?.request ?? 0) + 1 }));
+    replayScrollRequested.current = true;
+    setReviewTab("review");
+    setReplayExpanded(true);
+  }, []);
+  // Open and mount the replay before focusing a selected teaching move.
+  useEffect(() => {
+    if (!replayExpanded || reviewTab !== "review" || !replayScrollRequested.current)
+      return;
+    replayScrollRequested.current = false;
     const workspace = document.getElementById("coach-replay-workspace");
     workspace?.focus({ preventScroll: true });
     workspace?.scrollIntoView({ block: "start" });
-  }, []);
+  }, [replayExpanded, replayFocus, reviewTab]);
 
   // This function is the only path that generates a main review. It runs after
   // an explicit game selection (or an explicit review link from Play/Profile).
   const openGame = useCallback(
-    async (id: string, handoff?: PracticeSession) => {
+    async (
+      id: string,
+      handoff?: PracticeSession,
+      focusMove?: number,
+      showReplay = false,
+    ) => {
       const token = ++request.current;
       ++demoRequest.current;
       setPendingId(id);
       setError("");
       setSelection(null);
+      setReplayExpanded(false);
+      setReviewTab("review");
+      replayScrollRequested.current = false;
       setReplayFocus(null);
       setResult(null);
       setLoadingKey(null);
@@ -114,10 +181,20 @@ export function CoachConsole() {
         if (token !== request.current) return;
         if (!game)
           throw new Error("This game is no longer available in your recent recordings.");
-        const review = scorePracticeReview(game);
+        const analysis = preparePracticeAnalysis(game);
+        const review = scorePreparedPracticeReview(analysis);
         setScores((previous) => ({ ...previous, [id]: review }));
         setReviewed((previous) => ({ ...previous, [id]: true }));
-        setSelection({ id, game, review });
+        setSelection({ mode: "practice", id, game, review, analysis });
+        setReplayExpanded(showReplay || readCoachingSections().replay);
+        replayScrollRequested.current = showReplay;
+        if (
+          focusMove &&
+          analysis.reviewed.some((frame) => frame.actionNumber === focusMove)
+        ) {
+          setReplayFocus({ moveNumber: focusMove, request: 1 });
+          setReplayExpanded(true);
+        }
       } catch (reason) {
         if (token === request.current)
           setError(
@@ -130,12 +207,74 @@ export function CoachConsole() {
     [repository],
   );
 
+  const openRankedGame = useCallback(
+    async (matchId: string, focusMove?: number, showReplay = false) => {
+      const token = ++request.current;
+      ++demoRequest.current;
+      setSelection(null);
+      setReplayExpanded(false);
+      setReviewTab("review");
+      replayScrollRequested.current = false;
+      setReplayFocus(null);
+      setResult(null);
+      setLoadingKey(null);
+      setError("");
+      setPendingId(`ranked-${matchId}`);
+      try {
+        if (!isRankedRecordingId(matchId)) throw new Error("Invalid Ranked match ID.");
+        const response = await fetch(
+          `/api/ranked/coaching/recording?matchId=${encodeURIComponent(matchId)}`,
+          { cache: "no-store" },
+        );
+        if (token !== request.current) return;
+        if (!response.ok)
+          throw new Error(
+            response.status === 401
+              ? "Sign in to review Ranked matches."
+              : response.status === 404
+                ? "Completed Ranked match not found."
+                : response.status === 422
+                  ? "A complete verified recording is unavailable for this match."
+                  : response.status === 429
+                    ? "Too many Ranked requests. Please try again shortly."
+                    : "Ranked coaching is temporarily unavailable.",
+          );
+        const raw: unknown = await response.json();
+        if (token !== request.current) return;
+        const prepared = prepareRankedReviewResponse(raw, matchId);
+        setSelection({ mode: "ranked", id: `ranked-${matchId}`, ...prepared });
+        setReplayExpanded(showReplay || readCoachingSections().replay);
+        replayScrollRequested.current = showReplay;
+        if (
+          focusMove &&
+          prepared.analysis.reviewed.some((frame) => frame.actionNumber === focusMove)
+        ) {
+          setReplayFocus({ moveNumber: focusMove, request: 1 });
+          setReplayExpanded(true);
+        }
+      } catch (reason) {
+        if (token === request.current)
+          setError(
+            reason instanceof Error ? reason.message : "Could not load Ranked review.",
+          );
+      } finally {
+        if (token === request.current) setPendingId(null);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     let active = true;
     const params = new URLSearchParams(window.location.search);
     const reviewId = params.get("reviewId");
     const gameId = params.get("gameId");
-    if (params.get("source") === "practice" && reviewId) {
+    if (params.get("source") === "ranked") {
+      const matchId = params.get("matchId");
+      if (params.getAll("matchId").length === 1 && isRankedRecordingId(matchId))
+        void openRankedGame(matchId);
+      else setError("Invalid Ranked match link. Choose a completed match below.");
+    } else if (params.get("source") === "practice" && reviewId) {
       let storage: Storage | null = null;
       try {
         storage = window.sessionStorage;
@@ -181,7 +320,7 @@ export function CoachConsole() {
       ++request.current;
       ++demoRequest.current;
     };
-  }, [repository, openGame]);
+  }, [repository, openGame, openRankedGame]);
 
   useEffect(() => {
     let active = true;
@@ -200,6 +339,28 @@ export function CoachConsole() {
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const client = getSupabaseBrowserClient();
+    if (!client) return;
+    const {
+      data: { subscription },
+    } = client.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_OUT") return;
+      ++request.current;
+      ++demoRequest.current;
+      setSelection(null);
+      setReplayExpanded(false);
+      setReviewTab("review");
+      replayScrollRequested.current = false;
+      setPendingId(null);
+      setReplayFocus(null);
+      setResult(null);
+      setLoadingKey(null);
+      setError("");
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const scoreSnapshot = useRef(scores);
@@ -239,6 +400,9 @@ export function CoachConsole() {
     };
   }, [gradesReady, autoGrades, reviewing, historyLoading, games, repository]);
   const selectedReplay = selection?.game ?? null;
+  const suggestedLesson = selection
+    ? prioritizeMoments(selection.analysis.report, preferences)[0]
+    : undefined;
   const analyze = async (key: string, session: GameplaySession) => {
     const token = ++demoRequest.current;
     const payload = preferences ? { ...session, preferences } : session;
@@ -281,6 +445,9 @@ export function CoachConsole() {
   function openDemo(key: string, session: GameplaySession) {
     ++request.current;
     setSelection(null);
+    setReplayExpanded(false);
+    setReviewTab("review");
+    replayScrollRequested.current = false;
     setPendingId(null);
     setReplayFocus(null);
     void analyze(key, session);
@@ -290,115 +457,147 @@ export function CoachConsole() {
     <div className="coach-visual-layout coach-full-page">
       {!reviewing ? (
         <section className="coach-history-screen" aria-labelledby="coach-history-title">
-          <div className="coach-history-heading">
-            <div>
-              <h2 id="coach-history-title" ref={heading} tabIndex={-1}>
-                Recent Practice Matches
-              </h2>
-              <p>
-                Choose a saved game to review your performance and learn from your moves.
-              </p>
+          <div className="coach-practice-card">
+            <div className="coach-history-heading">
+              <div>
+                <h2 id="coach-history-title" ref={heading} tabIndex={-1}>
+                  <button
+                    type="button"
+                    className="profile-history-toggle"
+                    aria-expanded={practiceExpanded}
+                    aria-controls="coach-practice-history-body"
+                    onClick={() => setPracticeExpanded((current) => !current)}
+                  >
+                    <History size={20} aria-hidden="true" /> Recent Practice Matches
+                    <ChevronDown
+                      size={18}
+                      aria-hidden="true"
+                      className={
+                        practiceExpanded
+                          ? "profile-history-chevron"
+                          : "profile-history-chevron is-collapsed"
+                      }
+                    />
+                  </button>
+                </h2>
+                <p>
+                  Choose a saved game to review your performance and learn from your
+                  moves.
+                </p>
+              </div>
+              {!historyLoading && !historyError && (
+                <span>
+                  {games.length} {games.length === 1 ? "match" : "matches"}
+                </span>
+              )}
             </div>
-            {!historyLoading && !historyError && (
-              <span>
-                {games.length} {games.length === 1 ? "match" : "matches"}
-              </span>
+            {error && (
+              <p className="coach-error" role="alert">
+                <TriangleAlert size={15} aria-hidden="true" />
+                {error}
+              </p>
             )}
-          </div>
-          {error && (
-            <p className="coach-error" role="alert">
-              <TriangleAlert size={15} aria-hidden="true" />
-              {error}
-            </p>
-          )}
-          {historyLoading ? (
-            <p role="status">Loading recent games…</p>
-          ) : historyError ? (
-            <p className="coach-error" role="alert">
-              {historyError}
-            </p>
-          ) : !games.length ? (
-            <div className="coach-empty-guide">
-              <p>No saved Practice games yet.</p>
-              <Link className="coach-btn" href="/">
-                Play a Practice game
-              </Link>
-            </div>
-          ) : (
-            <>
-              <ul className="coach-history-list" aria-label="Select a saved game">
-                {games.map((game) => {
-                  const score =
-                    autoGrades || reviewed[game.id] ? scores[game.id] : undefined;
-                  return (
-                    <li className="coach-history-row" key={game.id}>
-                      <span className={`result-dot ${game.outcome}`} aria-hidden="true" />
-                      <div className="coach-history-result">
-                        <strong>
-                          {game.outcome === "win" ? "Win" : "Loss"} · {game.difficulty}
-                        </strong>
-                        <span>
-                          {game.rows} × {game.columns} ·{" "}
-                          {new Date(game.completedAt).toLocaleString()}
-                        </span>
-                      </div>
-                      <span className="coach-history-detail">
-                        <Clock3 size={14} aria-hidden="true" />{" "}
-                        {timeLabel(game.durationSeconds)}
-                      </span>
-                      <span className="coach-history-detail">
-                        {game.moveCount} actions
-                      </span>
-                      <span className="coach-history-score">
-                        {score?.grade ? (
+            <div
+              id="coach-practice-history-body"
+              className="profile-history-body coach-practice-history-body"
+              hidden={!practiceExpanded}
+            >
+              {historyLoading ? (
+                <p role="status">Loading recent games…</p>
+              ) : historyError ? (
+                <p className="coach-error" role="alert">
+                  {historyError}
+                </p>
+              ) : !games.length ? (
+                <div className="coach-empty-guide">
+                  <p>No saved Practice games yet.</p>
+                  <Link className="coach-btn" href="/">
+                    Play a Practice game
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <ul className="coach-history-list" aria-label="Select a saved game">
+                    {games.map((game) => {
+                      const score =
+                        autoGrades || reviewed[game.id] ? scores[game.id] : undefined;
+                      return (
+                        <li className="coach-history-row" key={game.id}>
                           <span
-                            className="grade-badge"
-                            data-grade={score.grade}
-                            aria-label={`Coaching grade ${score.grade}, ${score.score} out of 100`}
+                            className={`result-dot ${game.outcome}`}
+                            aria-hidden="true"
+                          />
+                          <div className="coach-history-result">
+                            <strong>
+                              {game.outcome === "win" ? "Win" : "Loss"} ·{" "}
+                              {game.difficulty}
+                            </strong>
+                            <span>
+                              {game.rows} × {game.columns} ·{" "}
+                              {new Date(game.completedAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <span className="coach-history-detail">
+                            <Clock3 size={14} aria-hidden="true" />{" "}
+                            {timeLabel(game.durationSeconds)}
+                          </span>
+                          <span className="coach-history-detail">
+                            {game.moveCount} actions
+                          </span>
+                          <span className="coach-history-score">
+                            {score?.grade ? (
+                              <span
+                                className="grade-badge"
+                                data-grade={score.grade}
+                                aria-label={`Coaching grade ${score.grade}, ${score.score} out of 100`}
+                              >
+                                <span className="grade-letter">{score.grade}</span>
+                                <span className="grade-score">{score.score}/100</span>
+                              </span>
+                            ) : (
+                              <span className="coach-history-ungraded">
+                                {score
+                                  ? "Not graded"
+                                  : gradesReady && autoGrades
+                                    ? unavailableGrades[game.id]
+                                      ? "Unavailable"
+                                      : "Grading…"
+                                    : "Not reviewed"}
+                              </span>
+                            )}
+                          </span>
+                          <button
+                            type="button"
+                            className="practice-review-link coach-history-action"
+                            onClick={() => void openGame(game.id)}
+                            aria-label={`Review ${game.difficulty} ${game.outcome === "win" ? "win" : "loss"} from ${new Date(game.completedAt).toLocaleString()}`}
                           >
-                            <span className="grade-letter">{score.grade}</span>
-                            <span className="grade-score">{score.score}/100</span>
-                          </span>
-                        ) : (
-                          <span className="coach-history-ungraded">
-                            {score
-                              ? "Not graded"
-                              : gradesReady && autoGrades
-                                ? unavailableGrades[game.id]
-                                  ? "Unavailable"
-                                  : "Grading…"
-                                : "Not reviewed"}
-                          </span>
-                        )}
-                      </span>
-                      <button
-                        type="button"
-                        className="practice-review-link coach-history-action"
-                        onClick={() => void openGame(game.id)}
-                        aria-label={`Review ${game.difficulty} ${game.outcome === "win" ? "win" : "loss"} from ${new Date(game.completedAt).toLocaleString()}`}
-                      >
-                        <Play size={14} aria-hidden="true" /> Review game
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-              <p className="verified-note">
-                Showing your saved Practice recordings.{" "}
-                {autoGrades
-                  ? "Grades are calculated as recordings load; detailed lessons open on request."
-                  : "Grades appear after you review a game."}
-              </p>
-            </>
-          )}
-          <div className="coach-ranked-history">
-            <p className="verified-note">
-              Ranked match history is available here. Replay coaching currently supports
-              Practice only.
-            </p>
-            <RankedHistory />
+                            <Play size={14} aria-hidden="true" /> Review game
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <p className="verified-note">
+                    Showing your saved Practice recordings.{" "}
+                    {autoGrades
+                      ? "Grades are calculated as recordings load; detailed lessons open on request."
+                      : "Grades appear after you review a game."}
+                  </p>
+                </>
+              )}
+            </div>
           </div>
-          <details className="coach-demo-tests">
+          <div className="coach-ranked-history">
+            <RankedHistory onReviewMatch={openRankedGame} />
+          </div>
+          <PersonalizedCoaching
+            onReview={(mode, gameRef, move) => {
+              if (mode === "ranked") void openRankedGame(gameRef, move, true);
+              else void openGame(gameRef, undefined, move, true);
+            }}
+          />
+          <details className="coach-demo-tests" open={sections.samples}>
             <summary>More tools and sample reports</summary>
             <p className="verified-note">
               Earlier experimental reports are separate from verified lessons.
@@ -429,10 +628,10 @@ export function CoachConsole() {
               ))}
             </div>
           </details>
-          <details className="coach-extra-info">
+          <details className="coach-extra-info" open={sections.accuracy}>
             <summary>How accurate is this review?</summary>
             <p className="verified-note">
-              The replay and visual lessons use visible-board evidence. The Practice score
+              The replay and visual lessons use visible-board evidence. The coaching score
               is a learning aid, not a Ranked result.{" "}
               {status?.configured
                 ? "Optional AI focus is available to eligible signed-in users."
@@ -452,7 +651,7 @@ export function CoachConsole() {
             </button>
             <h2 ref={heading} tabIndex={-1}>
               {selectedReplay
-                ? `${selectedReplay.difficulty} Practice · ${selectedReplay.outcome === "win" ? "Victory" : "Loss"}`
+                ? `${selectedReplay.difficulty} ${selection?.mode === "ranked" ? "Ranked" : "Practice"} · ${selectedReplay.outcome === "win" ? "Victory" : "Loss"}`
                 : pendingId
                   ? "Game review"
                   : "Sample report"}
@@ -470,44 +669,119 @@ export function CoachConsole() {
               your selected game…
             </div>
           ) : selectedReplay && selection ? (
-            <div key={selection.id}>
-              <ReviewOverview review={selection.review} onReviewMove={chooseReplayMove} />
-              <VerifiedReplayPanel
-                game={selectedReplay}
-                focusMoveNumber={replayFocus?.moveNumber}
-                focusRequestId={replayFocus?.request}
-              />
-              <EvidenceCoachPanel
-                game={selectedReplay}
-                onReviewMove={chooseReplayMove}
-                preferences={preferences}
-                aiAvailable={status?.configured === true && status.provider !== null}
-              />
-              <details className="verified-experimental">
-                <summary>Earlier AI coach draft (experimental)</summary>
-                <p>
-                  Older prototype scoring and unverified narrative. Runs only on request
-                  and may use a configured provider.
+            <div key={selection.id} className="coach-review-stack">
+              {selection.mode === "ranked" && (
+                <p className="verified-note">
+                  Server-verified Ranked recording · Completed match · Private learning
+                  review
                 </p>
+              )}
+              <SaveCoachingReview
+                mode={selection.mode}
+                gameRef={
+                  selection.mode === "ranked"
+                    ? selection.id.slice(7)
+                    : selection.id.startsWith("handoff-")
+                      ? null
+                      : selection.id
+                }
+              />
+              <nav className="coach-review-tabs" aria-label="Game review views">
                 <button
                   type="button"
-                  className="coach-btn"
-                  disabled={loadingKey !== null}
-                  onClick={() => void analyze("practice", selectedReplay)}
+                  aria-pressed={reviewTab === "review"}
+                  onClick={() => setReviewTab("review")}
                 >
-                  {loadingKey === "practice"
-                    ? "Preparing draft…"
-                    : "Run experimental report"}
+                  Game review
                 </button>
-                {result && (
-                  <div className="coach-report-panel">
-                    <CoachReportView
-                      report={result.report}
-                      fallbackReason={result.fallbackReason}
+                <button
+                  type="button"
+                  aria-pressed={reviewTab === "coach"}
+                  onClick={() => setReviewTab("coach")}
+                >
+                  Ask your coach
+                </button>
+              </nav>
+              <div className="coach-review-tab-body" hidden={reviewTab !== "review"}>
+                <ReviewOverview
+                  mode={selection.mode}
+                  review={selection.review}
+                  preferences={preferences}
+                  focus={suggestedLesson}
+                  strength={selection.analysis.report.moments.find(
+                    (moment) => moment.kind === "good",
+                  )}
+                  onOpenReplay={() => {
+                    replayScrollRequested.current = true;
+                    setReplayExpanded(true);
+                    if (replayExpanded) {
+                      const workspace = document.getElementById("coach-replay-workspace");
+                      workspace?.focus({ preventScroll: true });
+                      workspace?.scrollIntoView({ block: "start" });
+                      replayScrollRequested.current = false;
+                    }
+                  }}
+                  onAskCoach={() => setReviewTab("coach")}
+                  onReviewMove={chooseReplayMove}
+                />
+                <section className="coach-review-disclosure">
+                  <button
+                    type="button"
+                    className="coach-replay-disclosure-toggle"
+                    aria-expanded={replayExpanded}
+                    aria-controls="coach-replay-disclosure-body"
+                    onClick={() => setReplayExpanded((value) => !value)}
+                  >
+                    <span>Replay and visual proof</span>
+                    <ChevronDown size={18} aria-hidden="true" />
+                  </button>
+                  <div
+                    id="coach-replay-disclosure-body"
+                    className="coach-review-disclosure-body"
+                    hidden={!replayExpanded}
+                  >
+                    {replayExpanded && (
+                      <VerifiedReplayPanel
+                        game={selectedReplay}
+                        analysis={selection.analysis}
+                        preferences={preferences}
+                        focusMoveNumber={replayFocus?.moveNumber}
+                        focusRequestId={replayFocus?.request}
+                      />
+                    )}
+                  </div>
+                </section>
+                <details className="coach-review-disclosure" open={sections.lessons}>
+                  <summary>Detailed lessons</summary>
+                  <div className="coach-review-disclosure-body">
+                    <EvidenceCoachPanel
+                      mode={selection.mode}
+                      game={selectedReplay}
+                      analysis={selection.analysis}
+                      onReviewMove={chooseReplayMove}
+                      preferences={preferences}
+                      aiAvailable={
+                        selection.mode === "practice" &&
+                        status?.configured === true &&
+                        status.provider !== null
+                      }
                     />
                   </div>
-                )}
-              </details>
+                </details>
+              </div>
+              <div className="coach-conversation-card" hidden={reviewTab !== "coach"}>
+                <h2>Ask your coach</h2>
+                <p className="verified-note">
+                  Ask for an explanation of a verified move in this completed game.
+                  Answers use board logic; external AI chat is not enabled.
+                </p>
+                <ReviewConversation
+                  game={selectedReplay}
+                  analysis={selection.analysis}
+                  mode={selection.mode}
+                  onReviewMove={chooseReplayMove}
+                />
+              </div>
             </div>
           ) : result ? (
             <>

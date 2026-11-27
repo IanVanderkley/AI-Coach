@@ -1,30 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, History, RefreshCw, ShieldCheck } from "lucide-react";
+import { readCoachingSections } from "@/lib/settings/coaching-sections";
+import { ChevronDown, History, Play, RefreshCw, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 import type { RankedHistoryEntry } from "@/lib/ranked/history";
+import type { RankedCoachingHistoryEntry } from "@/lib/ranked/coaching-history";
+import { isRankedRecordingId } from "@/lib/ranked/coaching-recording";
 import { formatRankedDuration } from "@/lib/ranked/result-summary";
+
+type HistoryItem = RankedHistoryEntry | RankedCoachingHistoryEntry;
 
 type HistoryState =
   | { kind: "loading" }
   | { kind: "guest" }
   | { kind: "error" }
-  | { kind: "ready"; matches: RankedHistoryEntry[] };
+  | { kind: "ready"; matches: HistoryItem[] };
 
 // AI_COACH_PLAYER_DASHBOARD_V1: share only the same already-validated recent rows with the overview.
 export function RankedHistory({
   onRecentMatches,
   summaryOnly = false,
+  onReviewMatch,
 }: {
   onRecentMatches?: (matches: RankedHistoryEntry[] | null) => void;
   summaryOnly?: boolean;
+  onReviewMatch?: (matchId: string) => void;
 }) {
   const [state, setState] = useState<HistoryState>({ kind: "loading" });
   const [revision, setRevision] = useState(0);
   // AI_COACH_COLLAPSIBLE_HISTORY_V1
   const [rankedExpanded, setRankedExpanded] = useState(true);
+  useEffect(() => {
+    if (onReviewMatch) setRankedExpanded(readCoachingSections().ranked);
+  }, [onReviewMatch]);
 
   useEffect(() => {
     let live = true;
@@ -32,10 +43,10 @@ export function RankedHistory({
     async function load() {
       setState({ kind: "loading" });
       try {
-        const response = await fetch("/api/ranked/history", {
-          cache: "no-store",
-          signal: controller.signal,
-        });
+        const options = { cache: "no-store" as const, signal: controller.signal };
+        const response = onReviewMatch
+          ? await fetch("/api/ranked/coaching/history", options)
+          : await fetch("/api/ranked/history", options);
         if (!live) return;
         if (response.status === 401) {
           setState({ kind: "guest" });
@@ -52,23 +63,36 @@ export function RankedHistory({
         if (live)
           setState({
             kind: "ready",
-            matches: (result as { matches: RankedHistoryEntry[] }).matches,
+            matches: (result as { matches: HistoryItem[] }).matches,
           });
       } catch {
         if (live) setState({ kind: "error" });
       }
     }
     void load();
+    const client = getSupabaseBrowserClient();
+    const subscription = client?.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        live = false;
+        controller.abort();
+        setState({ kind: "guest" });
+      }
+    }).data.subscription;
     return () => {
       live = false;
       controller.abort();
+      subscription?.unsubscribe();
     };
-  }, [revision]);
+  }, [revision, onReviewMatch]);
 
   // Updating dashboard stats never fetches or changes match data.
   useEffect(() => {
-    onRecentMatches?.(state.kind === "ready" ? state.matches : null);
-  }, [state, onRecentMatches]);
+    onRecentMatches?.(
+      state.kind === "ready" && !onReviewMatch
+        ? state.matches.filter((item): item is RankedHistoryEntry => "earnedXp" in item)
+        : null,
+    );
+  }, [state, onRecentMatches, onReviewMatch]);
 
   if (summaryOnly) return null;
 
@@ -101,6 +125,11 @@ export function RankedHistory({
               />
             </button>
           </h2>
+          {onReviewMatch && (
+            <p className="coach-ranked-description">
+              Review completed server-recorded matches.
+            </p>
+          )}
           <p className="profile-history-match-count">
             {state.kind === "ready"
               ? String(matches.length) + " matches"
@@ -185,13 +214,30 @@ export function RankedHistory({
                     </div>
                     <div className="ranked-history-values">
                       <strong>{formatRankedDuration(game.durationMs)}</strong>
-                      {game.earnedXp === null ? (
-                        <span>XP receipt not available</span>
-                      ) : (
-                        <span className="ranked-history-xp">
-                          <ShieldCheck size={13} aria-hidden="true" /> +{game.earnedXp} XP
-                        </span>
-                      )}
+                      {onReviewMatch ? (
+                        "matchId" in game &&
+                        isRankedRecordingId(game.matchId) &&
+                        game.reviewAvailable ? (
+                          <button
+                            type="button"
+                            className="practice-review-link coach-history-action"
+                            onClick={() => onReviewMatch(game.matchId)}
+                          >
+                            <Play size={14} aria-hidden="true" /> Review game
+                          </button>
+                        ) : (
+                          <span>Review unavailable</span>
+                        )
+                      ) : "earnedXp" in game ? (
+                        game.earnedXp === null ? (
+                          <span>XP receipt not available</span>
+                        ) : (
+                          <span className="ranked-history-xp">
+                            <ShieldCheck size={13} aria-hidden="true" /> +{game.earnedXp}{" "}
+                            XP
+                          </span>
+                        )
+                      ) : null}
                     </div>
                   </li>
                 ))}
@@ -199,8 +245,10 @@ export function RankedHistory({
             )}
             <p className="ranked-history-footnote">
               Only your latest ten completed Intermediate matches are considered. These
-              counts are not lifetime stats or RP. XP appears only when a matching
-              database receipt exists.
+              counts are not lifetime stats or RP.{" "}
+              {onReviewMatch
+                ? "Review availability is confirmed when you select a match."
+                : "XP appears only when a matching database receipt exists."}
             </p>
           </>
         )}

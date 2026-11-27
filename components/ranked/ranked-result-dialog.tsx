@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Clipboard, RotateCcw, Share2, Trophy, X } from "lucide-react";
+import { Award, Check, Clipboard, RotateCcw, Share2, Trophy, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
@@ -192,6 +192,13 @@ export function RankedResultDialog({
               <RotateCcw size={17} aria-hidden="true" />
               {busy ? "Starting…" : "Play again"}
             </button>
+            <Link
+              className="ranked-result-secondary"
+              href={`/coaching?source=ranked&matchId=${encodeURIComponent(result.matchId)}`}
+              prefetch={false}
+            >
+              <Award size={17} aria-hidden="true" /> Analyze Game
+            </Link>
             <button
               type="button"
               className="ranked-result-secondary"

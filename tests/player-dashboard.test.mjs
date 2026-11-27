@@ -81,9 +81,9 @@ test("the profile overview keeps mode totals and removes individual match lists"
 test("the Ranked fetch shares its actual state without an extra API request", () => {
   assert.match(
     ranked,
-    /onRecentMatches\?\.\(state\.kind === "ready" \? state\.matches : null\)/,
+    /onRecentMatches\?\.\(\s*state\.kind === "ready" && !onReviewMatch\s*\? state\.matches\.filter\(\(item\): item is RankedHistoryEntry => "earnedXp" in item\)\s*:\s*null\s*,?\s*\)/,
   );
-  assert.match(ranked, /\}, \[state, onRecentMatches\]\)/);
+  assert.match(ranked, /\},\s*\[state, onRecentMatches, onReviewMatch\]\)/);
   assert.match(ranked, /fetch\("\/api\/ranked\/history"/);
   assert.match(ranked, /rankedExpanded/);
 });

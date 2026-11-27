@@ -13,6 +13,7 @@ import {
 import styles from "./ranked-layout.module.css";
 import { FeedbackNotice, type FeedbackTone } from "@/components/ui/feedback-notice";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useGameViewportScroll } from "@/components/play/use-game-viewport-scroll";
 import type { CSSProperties } from "react";
 import {
   appendRankedIntent,
@@ -146,6 +147,15 @@ export default function RankedPage() {
     null,
   );
 
+  const gamePanelRef = useRef<HTMLElement | null>(null);
+  const [gameViewRevision, setGameViewRevision] = useState(0);
+  useGameViewportScroll(
+    gamePanelRef,
+    !loading && !resumeRequired && board?.status === "active"
+      ? `${board.matchId}:${gameViewRevision}`
+      : null,
+  );
+
   // Prevent multiple requests from being sent at the same time.
   const moveInFlight = useRef(false);
   const [queuedMoves, setQueuedMoves] = useState<readonly RankedMoveIntent[]>([]);
@@ -259,6 +269,7 @@ export default function RankedPage() {
       setBoard(null);
       rememberMatchId(null);
       setInputMode("reveal");
+      setGameViewRevision((revision) => revision + 1);
       setResumeRequired(false);
       await loadBoard();
     } catch {
@@ -794,7 +805,7 @@ export default function RankedPage() {
         {showLobby && <RankedLobby />}
 
         {board && !loading && (!resumeRequired || board.status !== "active") && (
-          <section className="game-panel">
+          <section ref={gamePanelRef} className="game-panel">
             <div className={styles.dashboard}>
               <div className={styles.statusRow}>
                 <span className={styles.matchStatus} data-status={board.status}>

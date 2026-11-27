@@ -65,17 +65,27 @@ function draft(frame: ReplayFrame, columns: number): MomentDraft | null {
 
   if (frame.decision === "mistake") {
     if (frame.mistakeType === "unnecessary-guess") {
-      const alternative = frame.deductions.safe.find((proof) => proof.index !== chosen);
+      const alternatives = frame.deductions.safe.filter(
+        (proof) => proof.index !== chosen,
+      );
+      const alternative =
+        alternatives.find((proof) => !frame.before[proof.index].flagged) ??
+        alternatives[0];
       if (!alternative) return null; // Fail closed: no supporting alternative.
+      const alternativeLocation = location(alternative.index, columns);
       return {
         ...base,
         group: "unnecessary-guess",
         kind: "mistake",
         category: "Unnecessary guess",
-        finding: `The chosen square (${where}) was uncertain while a guaranteed-safe move existed elsewhere.`,
-        evidence: `${location(alternative.index, columns)} was guaranteed safe. ${alternative.reason}`,
-        nextTime:
-          "Before opening an uncertain square, scan other visible numbers for a guaranteed-safe move.",
+        finding:
+          frame.move.action === "chord"
+            ? `The chord at ${where} included an uncertain square while a guaranteed-safe alternative existed.`
+            : `The chosen square (${where}) was uncertain while a guaranteed-safe alternative existed.`,
+        evidence: `${alternativeLocation} was guaranteed safe. ${alternative.reason}`,
+        nextTime: frame.before[alternative.index].flagged
+          ? `Remove the flag at ${alternativeLocation} and reveal that proven-safe square before taking an uncertain risk.`
+          : `Reveal the proven-safe square at ${alternativeLocation} before taking an uncertain risk.`,
       };
     }
     if (frame.mistakeType === "revealed-known-mine") {
@@ -174,7 +184,18 @@ export function buildEvidenceReport(game: ReportGame): EvidenceReport {
       "Recorded outcome does not match the replay. No coaching report was generated.",
     );
   }
-  const changed = replay.frames.filter((frame) => frame.changed);
+  return summarizeEvidenceFrames(replay.frames, game.columns, game.moves.length);
+}
+
+/** Project a trusted replay (or an explicitly scoped subset of its frames).
+ * This is not a parser for untrusted frames: callers must replay the recording first.
+ */
+export function summarizeEvidenceFrames(
+  frames: readonly ReplayFrame[],
+  columns: number,
+  recordedActions = frames.length,
+): EvidenceReport {
+  const changed = frames.filter((frame) => frame.changed);
   const verifiedMistakes = changed.filter((frame) => frame.decision === "mistake").length;
   const provenGood = changed.filter((frame) => frame.decision === "good").length;
   const uncertainActions = changed.filter(
@@ -182,8 +203,8 @@ export function buildEvidenceReport(game: ReportGame): EvidenceReport {
   ).length;
 
   const grouped = new Map<string, { first: MomentDraft; occurrences: number }>();
-  for (const frame of replay.frames) {
-    const result = draft(frame, game.columns);
+  for (const frame of frames) {
+    const result = draft(frame, columns);
     if (!result) continue;
     const previous = grouped.get(result.group);
     if (previous) previous.occurrences += 1;
@@ -225,13 +246,13 @@ export function buildEvidenceReport(game: ReportGame): EvidenceReport {
   return {
     headline,
     takeaway,
-    recordedActions: game.moves.length,
+    recordedActions,
     verifiedMistakes,
     provenGood,
     uncertainActions,
     moments,
     caveat:
-      "Only facts derivable from the board visible before each move are used for coaching. No proof means insufficient evidence, not proof that a guess was unavoidable. Results are from this one Practice game, not a long-term player profile.",
+      "Only facts derivable from the board visible before each move are used for coaching. No proof means insufficient evidence, not proof that a guess was unavoidable. Results are from this one completed game, not a long-term player profile.",
   };
 }
 

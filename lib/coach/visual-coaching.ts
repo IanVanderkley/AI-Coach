@@ -22,7 +22,7 @@ const goalCategories: Record<string, readonly string[]> = {
 /** Rank only existing evidence. Mistakes remain ahead of strengths; preferences never change a finding. */
 export function prioritizeMoments(
   report: EvidenceReport,
-  preferences?: CoachPreferences | null,
+  preferences?: Pick<CoachPreferences, "selectedGoals"> | null,
 ): ReportMoment[] {
   const goals = preferences?.selectedGoals ?? [];
   const matches = (moment: ReportMoment) =>
@@ -38,6 +38,56 @@ export function prioritizeMoments(
       b.occurrences - a.occurrences ||
       a.moveNumber - b.moveNumber,
   );
+}
+
+/** Only recognized preference values cross the focus boundary. Free-text goals
+ * remain local; no player-authored instructions are sent to a model. */
+export function focusPreferences(
+  value: unknown,
+): Pick<CoachPreferences, "selectedGoals" | "coachingStyle" | "explanationDetail"> {
+  const source =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
+  const selectedGoals = Array.isArray(source.selectedGoals)
+    ? [
+        ...new Set(
+          source.selectedGoals.filter(
+            (goal): goal is string =>
+              typeof goal === "string" && Object.hasOwn(goalCategories, goal),
+          ),
+        ),
+      ].slice(0, Object.keys(goalCategories).length)
+    : [];
+  const coachingStyle =
+    source.coachingStyle === "direct" || source.coachingStyle === "encouraging"
+      ? source.coachingStyle
+      : "balanced";
+  const explanationDetail =
+    source.explanationDetail === "brief" || source.explanationDetail === "detailed"
+      ? source.explanationDetail
+      : "standard";
+  return { selectedGoals, coachingStyle, explanationDetail };
+}
+
+/** Never let an optional provider replace a proven mistake with praise, or
+ * ignore a relevant saved goal within the same evidence priority tier. */
+export function focusCandidates(
+  report: EvidenceReport,
+  preferences?: Pick<CoachPreferences, "selectedGoals"> | null,
+): ReportMoment[] {
+  const ordered = prioritizeMoments(report, preferences);
+  if (!ordered.length) return [];
+  const tier = ordered.filter((moment) => moment.kind === ordered[0].kind);
+  const goals = preferences?.selectedGoals ?? [];
+  const relevant = tier.filter((moment) =>
+    goals.some(
+      (goal) =>
+        Object.hasOwn(goalCategories, goal) &&
+        goalCategories[goal].includes(moment.category),
+    ),
+  );
+  return relevant.length ? relevant : tier;
 }
 
 export function coachingLead(

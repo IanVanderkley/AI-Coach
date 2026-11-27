@@ -14,8 +14,11 @@ test("Practice match history appears in Coaching, not the statistics dashboard",
   assert.match(coaching, /className="coach-history-list"/);
 });
 test("Ranked match history is visible only on the Coaching history screen", () => {
-  assert.match(coaching, /<RankedHistory \/>/);
-  assert.match(coaching, /Replay\s+coaching\s+currently\s+supports\s+Practice\s+only/);
+  assert.match(coaching, /<RankedHistory onReviewMatch=\{openRankedGame\} \/>/);
+  assert.match(
+    ranked,
+    /onReviewMatch\s*&&[\s\S]*?className="coach-ranked-description"[\s\S]*?Review completed server-recorded matches\./,
+  );
   assert.match(practice, /summaryOnly/);
   assert.match(ranked, /if \(summaryOnly\) return null/);
 });
@@ -36,7 +39,7 @@ test("History relocation does not remove stored games or review actions", () => 
   assert.match(ranked, /ranked-history-summary/);
   assert.match(
     ranked,
-    /onRecentMatches\?\.\(state\.kind === "ready" \? state\.matches : null\)/,
+    /onRecentMatches\?\.\(\s*state\.kind === "ready" && !onReviewMatch\s*\? state\.matches\.filter\(\(item\): item is RankedHistoryEntry => "earnedXp" in item\)\s*:\s*null\s*,?\s*\)/,
   );
 });
 test("Ranked history toggle remains a keyboard-accessible native button", () => {

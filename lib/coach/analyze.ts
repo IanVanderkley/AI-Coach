@@ -363,6 +363,7 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
     avoidableGuesses: 0,
     correctFlags: 0,
     wrongFlags: 0,
+    provenWrongFlags: 0,
     revealsOnKnownMine: 0,
   };
 
@@ -449,20 +450,21 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
         } else {
           counts.wrongFlags += 1;
           const proof = safeProof.get(index);
-          mistakes.push({
-            moveNumber,
-            ...moveRef(index),
-            kind: "wrong-flag",
-            title: "A flag on a safe square",
-            why: proof
-              ? `You flagged ${squareName(index)}, but that square was already proven safe. ${proof.text} Because the square is safe, every number touching this flag now counts one mine too many.`
-              : `You flagged ${squareName(index)}, but that square was safe. A flag is only a claim: the numbers touching it still treat it as a mine, so every later deduction built on this flag is wrong.`,
-            fix: proof
-              ? `Remove the flag and reveal ${squareName(index)}; the clue arithmetic above already proves it is safe.`
-              : "Before placing a flag, find the visible number that forces a mine there. If no number forces one, leave the square unflagged until the logic proves it.",
-            betterMove: null,
-            clues: proof ? proof.clues.map(moveRef) : [],
-          });
+          // The final mine layout can establish an incorrect flag, but only
+          // a pre-move proof establishes a coaching mistake.
+          if (proof) {
+            counts.provenWrongFlags += 1;
+            mistakes.push({
+              moveNumber,
+              ...moveRef(index),
+              kind: "wrong-flag",
+              title: "A flag on a proven-safe square",
+              why: `You flagged ${squareName(index)}, but that square was already proven safe. ${proof.text}`,
+              fix: `Remove the flag and reveal ${squareName(index)}; the clue arithmetic above already proves it is safe.`,
+              betterMove: null,
+              clues: proof.clues.map(moveRef),
+            });
+          }
         }
       }
       cells[index].flagged = true;
@@ -642,8 +644,8 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
             clues: alternativeProof ? alternativeProof.clues.map(moveRef) : [],
           });
         }
-        // A guess with no proven-safe square and no proven mine is forced. The
-        // coach deliberately does not record it as a mistake.
+        // No proof is not proof of a forced guess. Leave unresolved actions
+        // without a proven alternative unclassified.
       }
       const hit = revealSquare(index);
       if (hit && !fatal) {
@@ -681,8 +683,8 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
         avoidableGuesses: counts.avoidableGuesses,
         forcedGuesses: Math.max(0, counts.guesses - counts.avoidableGuesses),
         guessRate:
-          counts.reveals > 0
-            ? Math.round((counts.guesses / counts.reveals) * 100) / 100
+          counts.reveals + counts.chords > 0
+            ? Math.round((counts.guesses / (counts.reveals + counts.chords)) * 100) / 100
             : 0,
         correctFlags: counts.correctFlags,
         wrongFlags: counts.wrongFlags,
@@ -711,7 +713,7 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
     }
     if (metrics && metrics.forcedGuesses > 0) {
       notes.push(
-        `${metrics.forcedGuesses} guess${metrics.forcedGuesses > 1 ? "es were" : " was"} forced — the numbers left no provably safe square at that point.`,
+        `For ${metrics.forcedGuesses} reveal or chord action(s), this solver found no proven-safe alternative. That does not establish that guessing was unavoidable or that the odds were equal.`,
       );
     }
     if (metrics && metrics.avoidableGuesses > 0) {
@@ -744,14 +746,14 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
     if (fatal && fatal.avoidable) score -= 12;
     const avoidable = counts.avoidableGuesses - (fatal && fatal.avoidable ? 1 : 0);
     score -= Math.min(18, Math.max(0, avoidable) * 3);
-    score -= Math.min(16, counts.wrongFlags * 4);
+    score -= Math.min(16, counts.provenWrongFlags * 4);
     if (counts.revealsOnKnownMine > 0) score -= 6;
     score = Math.max(0, Math.min(100, Math.round(score)));
   } else {
     score = 100;
     if (session.outcome === "win") score += 6;
     score -= Math.min(24, Math.max(0, counts.avoidableGuesses) * 3);
-    score -= Math.min(16, counts.wrongFlags * 4);
+    score -= Math.min(16, counts.provenWrongFlags * 4);
     if (counts.revealsOnKnownMine > 0) score -= 6;
     score = Math.max(0, Math.min(100, Math.round(score)));
   }
@@ -763,20 +765,21 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
   const nextSteps: string[] = [];
 
   if (hasMines) {
-    if (counts.logicalReveals > 0 && counts.reveals > 0) {
-      const percent = Math.round((counts.logicalReveals / counts.reveals) * 100);
+    if (counts.logicalReveals > 0 && counts.reveals + counts.chords > 0) {
+      const openingActions = counts.reveals + counts.chords;
+      const percent = Math.round((counts.logicalReveals / openingActions) * 100);
       strengths.push(
-        `You played ${counts.logicalReveals} of ${counts.reveals} reveals on squares the numbers already proved safe (${percent}%).`,
+        `You played ${counts.logicalReveals} of ${openingActions} reveal or chord actions on squares the solver proved safe (${percent}%).`,
       );
     }
     if (counts.correctFlags > 0 && counts.wrongFlags === 0) {
       strengths.push(
-        `Every flag was correct — all ${counts.correctFlags} sat on real mines.`,
+        `All ${counts.correctFlags} flag placements matched actual mines. This outcome alone does not prove the flags were logically justified.`,
       );
     }
     if (counts.chords > 0) {
-      strengths.push(
-        `You chorded ${counts.chords} time${counts.chords > 1 ? "s" : ""}, clearing several squares in one action.`,
+      notes.push(
+        `You performed ${counts.chords} chord action(s). A chord is only a strength when its opened squares were proven safe.`,
       );
     }
     if (counts.avoidableGuesses === 0 && counts.reveals > 0) {
@@ -802,20 +805,24 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
         `The game ended on move ${fatal.moveNumber} at ${positionLabel(fatal.row, fatal.col)}: you clicked there while ${fatal.safeAvailable} provably safe square${fatal.safeAvailable > 1 ? "s were" : " was"} available.${fatalMine ? " The clues had already proven that square was a mine." : fatal.why ? ` ${fatal.why}` : ""}`,
       );
     }
-    if (firstAvoidableGuess) {
-      // Do not repeat the exact same proof the fatal sentence already carried.
-      const repeat =
-        fatal?.moveNumber === firstAvoidableGuess.moveNumber &&
-        Boolean(fatal.why) &&
-        firstAvoidableGuess.why === fatal.why;
+    if (
+      firstAvoidableGuess &&
+      !(fatal?.avoidable && fatal.moveNumber === firstAvoidableGuess.moveNumber)
+    ) {
+      // A fatal avoidable action already has its own improvement.
       improvements.push(
-        `On move ${firstAvoidableGuess.moveNumber} at ${positionLabel(firstAvoidableGuess.row, firstAvoidableGuess.col)} you guessed while ${firstAvoidableGuess.safeAvailable} safe square${firstAvoidableGuess.safeAvailable > 1 ? "s were" : " was"} still visible.${firstAvoidableGuess.why && !repeat ? ` ${firstAvoidableGuess.why}` : ""}`,
+        `On move ${firstAvoidableGuess.moveNumber} at ${positionLabel(firstAvoidableGuess.row, firstAvoidableGuess.col)} you guessed while ${firstAvoidableGuess.safeAvailable} safe square${firstAvoidableGuess.safeAvailable > 1 ? "s were" : " was"} still visible.${firstAvoidableGuess.why ? ` ${firstAvoidableGuess.why}` : ""}`,
       );
     }
-    if (counts.wrongFlags > 0) {
+    if (counts.provenWrongFlags > 0) {
       const firstWrongFlag = mistakes.find((mistake) => mistake.kind === "wrong-flag");
       improvements.push(
-        `${counts.wrongFlags} flag${counts.wrongFlags > 1 ? "s" : ""} went on safe squares — a wrong flag makes every number next to it lie to you.${firstWrongFlag ? ` The first was on move ${firstWrongFlag.moveNumber} at ${positionLabel(firstWrongFlag.row, firstWrongFlag.col)}.` : ""}`,
+        `${counts.provenWrongFlags} flag(s) went on squares the visible clues had already proven safe.${firstWrongFlag ? ` The first was on move ${firstWrongFlag.moveNumber} at ${positionLabel(firstWrongFlag.row, firstWrongFlag.col)}.` : ""}`,
+      );
+    }
+    if (counts.wrongFlags > counts.provenWrongFlags) {
+      notes.push(
+        `${counts.wrongFlags - counts.provenWrongFlags} additional flag placement(s) were incorrect in hindsight, but the solver had not proven those squares safe at the time. They are not graded as proven mistakes.`,
       );
     }
     if (counts.revealsOnKnownMine > 0) {
@@ -840,13 +847,13 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
     }
     if (metrics && metrics.guessRate > 0.5 && counts.guesses > 3) {
       improvements.push(
-        `More than half of your reveals were guesses (${counts.guesses} of ${counts.reveals}).`,
+        `More than half of your reveal or chord actions were not proven safe (${counts.guesses} of ${counts.reveals + counts.chords}).`,
       );
     }
 
     if (firstAvoidableGuess || (fatal && fatal.avoidable)) {
       nextSteps.push(
-        "Before any guess, scan every visible number for one whose mines are already all flagged — its other covered neighbours are safe.",
+        "Before any guess, scan the visible numbers for a proven-safe square. Flags alone do not prove neighboring squares safe.",
       );
     }
     if (counts.wrongFlags > 0) {
@@ -856,7 +863,7 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
     }
     if (counts.chords === 0) {
       nextSteps.push(
-        "Once a number has all its flags, click the number itself to clear the rest of its squares at once.",
+        "Chord only after proving the neighboring flags mark mines and every square the chord will open is safe.",
       );
     }
     if (nextSteps.length === 0) {
@@ -875,18 +882,26 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
   }
   if (improvements.length === 0) {
     improvements.push(
-      "No obvious mistakes in this game; the decisions matched the numbers you could see.",
+      "No additional proven mistakes were identified by this solver; unresolved decisions are not proof of correct or incorrect play.",
     );
   }
 
+  const fatalProvenMine =
+    fatal !== null &&
+    mistakes.some(
+      (mistake) =>
+        mistake.moveNumber === fatal?.moveNumber && mistake.kind === "proven-mine",
+    );
   const keyMoment: CoachKeyMoment | null = fatal
     ? {
         moveNumber: fatal.moveNumber,
         row: fatal.row,
         col: fatal.col,
-        description: fatal.avoidable
-          ? `This click hit a mine while ${fatal.safeAvailable} provably safe square${fatal.safeAvailable > 1 ? "s were" : " was"} still on the board.`
-          : "No provably safe move was left, so this was a genuine coin flip that went wrong.",
+        description: fatalProvenMine
+          ? "This action included a square the visible clues had proven was a mine."
+          : fatal.avoidable
+            ? `This action hit a mine while ${fatal.safeAvailable} provably safe square${fatal.safeAvailable > 1 ? "s were" : " was"} still on the board.`
+            : "The solver found no proven-safe alternative before the loss. The risk and whether a guess was unavoidable remain uncertain.",
         why: fatal.why,
       }
     : firstAvoidableGuess
@@ -918,10 +933,12 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
     headline = "A clean, logical win.";
   } else if (session.outcome === "win") {
     headline = "You won — with a few risky clicks.";
+  } else if (fatalProvenMine) {
+    headline = "The final action included a proven mine.";
   } else if (fatal && fatal.avoidable) {
-    headline = "One avoidable click decided this game.";
+    headline = "One avoidable action decided this game.";
   } else if (fatal) {
-    headline = "A tough finish — the last guess was unavoidable.";
+    headline = "A tough finish with unresolved risk.";
   } else if (session.outcome === "in-progress") {
     headline = "A good start to build on.";
   } else {
@@ -934,8 +951,12 @@ export function analyzeGameplay(session: GameplaySession): CoachAnalysis {
   } else if (fatal && fatal.avoidable) {
     const cleared = Math.round(progress * 100);
     summary = `You cleared ${cleared}% of the safe squares before move ${fatal.moveNumber} hit a mine, even though ${fatal.safeAvailable} provably safe square${fatal.safeAvailable > 1 ? "s were" : " was"} still available.`;
+  } else if (fatalProvenMine) {
+    summary =
+      "The final action included a square proven to contain a mine. Review the visible clues before revealing or chording.";
   } else if (fatal) {
-    summary = `You ran out of certain moves and the final guess cost you the game. That ending was out of your hands.`;
+    summary =
+      "The final action hit a mine. This solver found no proven-safe alternative, but cannot establish that the risk was unavoidable.";
   } else if (session.outcome === "win") {
     summary = `You cleared the board with ${counts.logicalReveals} logically certain reveals and ${counts.guesses} guess${counts.guesses === 1 ? "" : "es"}.`;
   } else {

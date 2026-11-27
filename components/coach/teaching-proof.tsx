@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { TeachingExplanation } from "@/lib/coach/teaching-review";
+import { describeTechnicalProof, proofStepIndices } from "@/lib/coach/proof-presentation";
 import type { ProofVisual } from "@/lib/coach/verified-replay";
 import { describeGroup, describeVisual, proofBounds } from "@/lib/coach/visual-proof";
 
@@ -108,7 +110,12 @@ export function TeachingProof({
   expanded?: boolean;
   technical?: boolean;
 }) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [showAll, setShowAll] = useState(false);
   if (!explanation?.steps.length) return fallback ? <p>{fallback}</p> : null;
+  const stepCount = explanation.steps.length;
+  const currentStep = proofStepIndices(stepCount, stepIndex, false)[0];
+  const visibleSteps = proofStepIndices(stepCount, currentStep, showAll);
   return (
     <details className="coach-proof-steps" open={expanded}>
       <summary>
@@ -119,8 +126,39 @@ export function TeachingProof({
         A number tells you how many mines touch it, including diagonals. A flag is your
         mark; the numbers must confirm it.
       </p>
-      <ol className="coach-proof-lessons">
-        {explanation.steps.map((step, index) => {
+      {stepCount > 1 && (
+        <div className="coach-proof-navigation" aria-label="Deduction steps">
+          <button
+            type="button"
+            disabled={showAll || currentStep === 0}
+            onClick={() => setStepIndex(currentStep - 1)}
+          >
+            Previous step
+          </button>
+          <span role="status">
+            {showAll
+              ? `All ${stepCount} steps`
+              : `Step ${currentStep + 1} of ${stepCount}`}
+          </span>
+          <button
+            type="button"
+            disabled={showAll || currentStep === stepCount - 1}
+            onClick={() => setStepIndex(currentStep + 1)}
+          >
+            Next step
+          </button>
+          <button
+            type="button"
+            aria-pressed={showAll}
+            onClick={() => setShowAll((value) => !value)}
+          >
+            {showAll ? "One step at a time" : "Show all steps"}
+          </button>
+        </div>
+      )}
+      <ol className="coach-proof-lessons" start={showAll ? 1 : currentStep + 1}>
+        {visibleSteps.map((index) => {
+          const step = explanation.steps[index];
           const visual = step.visual;
           if (!visual)
             return (
@@ -163,7 +201,9 @@ export function TeachingProof({
               </p>
               <details className="coach-proof-technical" open={technical}>
                 <summary>Exact numbers and coordinates</summary>
-                <p>{step.text}</p>
+                {describeTechnicalProof(visual, explanation.columns).map((line, i) => (
+                  <p key={i}>{line}</p>
+                ))}
               </details>
             </li>
           );

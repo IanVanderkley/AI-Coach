@@ -60,7 +60,8 @@ test("history picker lists metadata and supports explicit game review", () => {
   assert.match(source, /repository\s*\.\s*listReviewSummaries\(\)/);
   assert.match(source, /onClick=\{\(\) => void openGame\(game\.id\)\}/);
   assert.match(source, /repository\.loadReview\(id\)/);
-  assert.match(source, /scorePracticeReview\(game\)/);
+  assert.match(source, /preparePracticeAnalysis\(game\)/);
+  assert.match(source, /scorePreparedPracticeReview\(analysis\)/);
   assert.match(source, /params\.get\("source"\) === "practice"/);
   assert.ok(source.indexOf("<ReviewOverview") < source.indexOf("<VerifiedReplayPanel"));
   assert.doesNotMatch(source, /repository\.listRecent\(/);

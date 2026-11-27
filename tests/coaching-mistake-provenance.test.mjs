@@ -89,7 +89,7 @@ test("an avoidable fatal guess names the clues and the safe square", () => {
   assert.equal(report.mistakes[0].why, mistake.why);
 });
 
-test("a forced guess is never blamed as a mistake", () => {
+test("an unresolved guess is never blamed as a proven mistake", () => {
   const analysis = analyzeGameplay(
     overlappingCluesGame([...opening, { row: 0, col: 0, action: "reveal" }], "loss"),
   );
@@ -97,7 +97,8 @@ test("a forced guess is never blamed as a mistake", () => {
   assert.equal(analysis.metrics.forcedGuesses, 2);
   assert.equal(analysis.metrics.avoidableGuesses, 0);
   assert.deepEqual(analysis.mistakes, []);
-  assert.match(analysis.keyMoment?.description ?? "", /coin flip/);
+  assert.match(analysis.keyMoment?.description ?? "", /remain uncertain/);
+  assert.doesNotMatch(analysis.keyMoment?.description ?? "", /coin flip|50%/);
 });
 
 test("a flag on a proven-safe square explains the contradiction", () => {
@@ -116,6 +117,58 @@ test("a flag on a proven-safe square explains the contradiction", () => {
   assert.match(mistake.why, /row 2, column 2/);
   assert.ok(mistake.clues.length > 0, "the proving clues should be listed");
   assert.match(mistake.fix, /Remove the flag/);
+});
+
+test("incorrect but unproven flag is hindsight, not a graded mistake", () => {
+  const wrong = analyzeGameplay(
+    overlappingCluesGame([...opening, { row: 0, col: 1, action: "flag" }], "in-progress"),
+  );
+  const right = analyzeGameplay(
+    overlappingCluesGame([...opening, { row: 0, col: 0, action: "flag" }], "in-progress"),
+  );
+  assert.equal(wrong.metrics.wrongFlags, 1);
+  assert.equal(right.metrics.correctFlags, 1);
+  assert.equal(wrong.score, right.score);
+  assert.deepEqual(wrong.mistakes, []);
+  assert.ok(wrong.notes.some((note) => note.includes("incorrect in hindsight")));
+});
+
+test("proven safe flag is penalized while an unresolved flag is not", () => {
+  const withoutFlag = analyzeGameplay(overlappingCluesGame(overlapping, "in-progress"));
+  const flagged = analyzeGameplay(
+    overlappingCluesGame(
+      [...overlapping, { row: 2, col: 0, action: "flag" }],
+      "in-progress",
+    ),
+  );
+  assert.equal(flagged.mistakes.length, 1);
+  assert.ok(flagged.score < withoutFlag.score);
+});
+
+test("fatal avoidable guess is not duplicated in the improvement summary", () => {
+  const analysis = analyzeGameplay(
+    overlappingCluesGame([...overlapping, { row: 0, col: 0, action: "reveal" }], "loss"),
+  );
+  assert.equal(analysis.improvements.filter((line) => /move 3/i.test(line)).length, 1);
+});
+
+test("reveal and chord actions share the guess-rate denominator", () => {
+  const analysis = analyzeGameplay(
+    overlappingCluesGame(
+      [
+        ...opening,
+        { row: 0, col: 0, action: "flag" },
+        { row: 1, col: 1, action: "chord" },
+      ],
+      "win",
+    ),
+  );
+  assert.equal(analysis.metrics.chords, 1);
+  assert.equal(
+    analysis.metrics.guessRate,
+    analysis.metrics.guesses / (analysis.metrics.reveals + analysis.metrics.chords),
+  );
+  assert.ok(analysis.metrics.guessRate <= 1);
 });
 
 test("without a mine layout no invented mistake explanations are produced", () => {

@@ -75,13 +75,13 @@ export type CoachMetrics = {
   chords: number;
   /** Reveals that were provably safe before the click. */
   logicalReveals: number;
-  /** Reveals that were not provably safe (includes forced guesses). */
+  /** Reveal/chord actions that were not provably safe. */
   guesses: number;
   /** Guesses made while a provably safe square was still available. */
   avoidableGuesses: number;
-  /** Guesses made when no provably safe square was left — no choice existed. */
+  /** Legacy field name: actions for which the solver found no proven-safe alternative, not proof of an unavoidable guess. */
   forcedGuesses: number;
-  /** Guesses ÷ reveals, rounded to two decimals. */
+  /** Guesses divided by reveal + chord actions, rounded to two decimals. */
   guessRate: number;
   correctFlags: number;
   wrongFlags: number;
@@ -136,8 +136,9 @@ export type CoachMistake = {
 /** The report the client renders. Both the rule coach and the AI coach fill it. */
 export type CoachReport = {
   headline: string;
-  grade: CoachGrade;
-  score: number;
+  /** Checkpointed reviews have no grade when no post-opening decision can be proven. */
+  grade: CoachGrade | null;
+  score: number | null;
   summary: string;
   strengths: string[];
   improvements: string[];

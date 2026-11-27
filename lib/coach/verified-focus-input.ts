@@ -1,5 +1,5 @@
-import { buildEvidenceReport, type EvidenceReport } from "./evidence-report.ts";
-import { parseVerifiedPracticeRecording } from "./verified-brief.ts";
+import type { EvidenceReport } from "./evidence-report.ts";
+import { prepareVerifiedAnalysis } from "./verified-analysis.ts";
 
 /**
  * The AI-focus endpoint must validate the same checkpoint-stamped recording
@@ -15,26 +15,6 @@ export type VerifiedFocusInput =
   | { ok: false; status: 400 | 422; error: string };
 
 export function prepareVerifiedFocusInput(raw: unknown): VerifiedFocusInput {
-  let game;
-  try {
-    game = parseVerifiedPracticeRecording(raw);
-  } catch {
-    return {
-      ok: false,
-      status: 400,
-      error:
-        "The Practice recording is missing or invalid, or a move checkpoint is absent.",
-    };
-  }
-
-  try {
-    return { ok: true, report: buildEvidenceReport(game) };
-  } catch {
-    return {
-      ok: false,
-      status: 422,
-      error:
-        "The Practice recording did not match its visible-board checkpoints or final outcome.",
-    };
-  }
+  const prepared = prepareVerifiedAnalysis(raw);
+  return prepared.ok ? { ok: true, report: prepared.analysis.report } : prepared;
 }

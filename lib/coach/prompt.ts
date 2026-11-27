@@ -16,7 +16,7 @@ export const COACH_SYSTEM_PROMPT = [
   "- Be concrete: name the move number and the square when the brief points to one.",
   "- For every improvement, explain WHY the move was wrong, not just what happened.",
   "- Use the supplied clue arithmetic to justify the mistake, and name the safer square when one is given.",
-  "- If the brief calls a guess forced, do not blame the player for it.",
+  "- No proven-safe alternative found does not prove an unavoidable guess or equal odds. Never blame unresolved decisions as proven mistakes.",
   "- Sound like a calm human coach, not a robot. No emojis. No markdown.",
   "- Plain English.",
   "Answer with JSON only, using exactly these keys:",
@@ -44,7 +44,7 @@ const EXPERIENCE_LINES: Record<CoachPreferences["experienceLevel"], string> = {
   new: "Assume a new player: explain any Minesweeper term the first time you use it.",
   some: "Assume the player knows the basics but not advanced patterns.",
   experienced:
-    "Assume an experienced player: use standard terms such as chord and forced guess without explanation.",
+    "Assume an experienced player: use standard terms such as chord and constraint deduction without explanation.",
 };
 
 const COMPETITIVE_LINES: Record<CoachPreferences["competitiveness"], string> = {
@@ -128,7 +128,7 @@ export function buildCoachPrompt(
       "COMPUTED METRICS",
       `- Certain (logic) reveals: ${m.logicalReveals} of ${m.reveals}`,
       `- Guesses: ${m.guesses} (avoidable: ${m.avoidableGuesses})`,
-      `- Flags: ${m.correctFlags} correct, ${m.wrongFlags} wrong`,
+      `- Flag outcomes: ${m.correctFlags} matched mines, ${m.wrongFlags} did not; these are hindsight counts, not proof of decision quality.`,
       `- Chords used: ${m.chords}`,
       `- Opening click: ${m.openingCell}`,
     );
