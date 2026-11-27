@@ -24,6 +24,7 @@ import "../styles/result-ceremony.css";
 import "../styles/practice-result-minimal.css";
 import "../styles/ranked-result-minimal.css";
 import "../styles/ranked-result-reveal.css";
+import "../styles/leaderboard-podium.css";
 import { SiteTooltip } from "@/components/ui/site-tooltip";
 
 // These paths are relative to this file, not the browser URL.

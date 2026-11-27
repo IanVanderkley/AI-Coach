@@ -41,8 +41,11 @@ test("rank art is derived from saved public Elo without changing board order or 
 
 test("leaderboard keeps privacy messaging, Elo guide and responsive emblem rows", () => {
   const css = read("styles/leaderboard-polish.css");
-  assert.match(board, /Anonymous mode hides your name and results/);
-  assert.match(board, /href="\/ranked\/rating-guide"/);
+  const page = read("app/leaderboard/page.tsx");
+  assert.match(page, /Anonymous mode hides your name and results/);
+  assert.match(page, /href="\/settings"/);
+  assert.doesNotMatch(board, /How Elo works/);
+  assert.match(read("components/ranked/ranked-lobby.tsx"), /How Elo works/);
   assert.match(css, /\.leaderboard-competitive-rank/);
   assert.match(css, /grid-template-columns: 64px/);
   assert.match(css, /@media \(max-width: 600px\)/);
