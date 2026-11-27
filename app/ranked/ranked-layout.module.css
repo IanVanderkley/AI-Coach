@@ -207,6 +207,18 @@
   flex-wrap: wrap;
   gap: 6px;
 }
+.flagLimitNotice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #ff9299;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.flagLimitNotice svg {
+  flex-shrink: 0;
+}
 .cancelQueue {
   color: #f5ce83;
   background: transparent;

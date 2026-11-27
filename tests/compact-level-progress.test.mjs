@@ -31,12 +31,12 @@ test("verified receipt refreshes navbar and compact profile progress without gra
   assert.match(profile, /if \(!progress\) return null/);
 });
 
-test("play and resume are centered and the mines counter stays server-derived", () => {
+test("play and resume are centered and the remaining flags counter stays server-derived", () => {
   const css = read("app/ranked/ranked-layout.module.css");
   const page = read("app/ranked/page.tsx");
   assert.match(css, /\.launch\s*\{[^}]*margin:\s*24px auto;/);
-  assert.match(page, /<dt>Mines left<\/dt>/);
+  assert.match(page, /<dt>Flags remaining<\/dt>/);
   assert.match(page, /Math\.max\(0, board\.mineCount - board\.flagCount\)/);
-  assert.doesNotMatch(page, /Mines left \(estimate\)/);
+  assert.doesNotMatch(page, /Flags remaining \(estimate\)/);
   assert.equal((page.match(/expectedMoveCount: board\.moveCount/g) ?? []).length, 3);
 });

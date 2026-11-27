@@ -21,6 +21,7 @@ import {
   takeRankedIntent,
   type RankedMoveIntent,
 } from "@/lib/ranked/input-queue";
+import { isRankedFlagLimitReached, blocksRankedFlagPlacement } from "@/lib/ranked/flag-limit";
 
 import { Navbar } from "@/components/play/navbar";
 import { BoardControlsGuide } from "@/components/play/board-controls-guide";
@@ -401,6 +402,11 @@ export default function RankedPage() {
     if (board.revealedCells.some((cell) => cell.row === row && cell.column === column)) {
       return;
     }
+
+    // Both immediate and queued toggles arrive here with the confirmed board.
+    // An over-budget placement is not a move: do not set a pending revision,
+    // send an RPC, clear queued input, or recover the board. Unflags still work.
+    if (blocksRankedFlagPlacement(board, row, column)) return;
 
     moveInFlight.current = true;
     activeMoveRef.current = { matchId: board.matchId, row, column, action: "flag" };
@@ -839,7 +845,7 @@ export default function RankedPage() {
                 </div>
                 <div>
                   <Bomb size={17} aria-hidden="true" />
-                  <dt>Mines left</dt>
+                  <dt>Flags remaining</dt>
                   <dd>{Math.max(0, board.mineCount - board.flagCount)}</dd>
                 </div>
               </dl>
@@ -871,6 +877,11 @@ export default function RankedPage() {
             {/* Fixed minimum height avoids jumping the board during input. */}
             <div className={styles.moveQueueStatus}>
               <span role="status" aria-live="polite">
+                {isRankedFlagLimitReached(board) && (
+                  <span className={styles.flagLimitNotice}>
+                    <Flag size={14} aria-hidden="true" /> Flag limit reached. Remove a flag to place another.
+                  </span>
+                )}
                 {submittingMove && (
                   <>
                     <Loader2 size={14} aria-hidden="true" /> Syncing move…
