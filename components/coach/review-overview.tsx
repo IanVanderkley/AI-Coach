@@ -1,4 +1,3 @@
-import { useCoachingSections } from "@/lib/settings/coaching-sections";
 import {
   CheckCircle2,
   Target,
@@ -30,11 +29,10 @@ export function ReviewOverview({
   onAskCoach: () => void;
   onReviewMove: (move: number) => void;
 }) {
-  const { sections } = useCoachingSections();
   const focusMove = focus?.moveNumber ?? review.focusMove;
   return (
     <article className="coach-review-overview" aria-label="Post-game feedback">
-      <p className="subtle-label">POST-GAME FEEDBACK</p>
+      <h2 className="coach-overview-title">Game performance</h2>
       <div className="coach-review-headline">
         <div className="grade-badge" data-grade={review.grade ?? "none"}>
           <span className="grade-letter">{review.grade ?? "—"}</span>
@@ -43,7 +41,7 @@ export function ReviewOverview({
           </span>
         </div>
         <div>
-          <h2>{reviewToneSummary(review, preferences?.coachingStyle)}</h2>
+          <h3>{reviewToneSummary(review, preferences?.coachingStyle)}</h3>
           <p>
             {mode === "ranked" ? "Ranked" : "Practice"} learning score · based on this
             recording, not your overall ability.
@@ -54,9 +52,10 @@ export function ReviewOverview({
         <div>
           <dt>Board cleared</dt>
           <dd>{review.progress}%</dd>
+          <progress className="coach-review-board-progress" aria-label="Board cleared" max={100} value={review.progress} />
         </div>
         <div>
-          <dt>Proven good moves</dt>
+          <dt>Good decisions</dt>
           <dd>{review.good}</dd>
         </div>
         <div>
@@ -113,15 +112,6 @@ export function ReviewOverview({
           </button>
         </div>
       </div>
-      <details open={sections.score}>
-        <summary>How the score is calculated</summary>
-        <p>
-          60% of the score is board completion. 40% is the share of provable decisions
-          that were good. Move 0 and uncertain choices are not graded as decisions. If no
-          later decision can be proved, no score is shown. This is a learning aid, not an
-          official rank.
-        </p>
-      </details>
     </article>
   );
 }

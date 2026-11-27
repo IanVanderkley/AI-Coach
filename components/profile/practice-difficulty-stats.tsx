@@ -29,12 +29,11 @@ export function PracticeDifficultyStats({
     >
       <div className="practice-difficulty-header">
         <div>
-          <span className="player-dashboard-eyebrow">PRACTICE PERFORMANCE</span>
-          <h2 id="practice-difficulty-title">By difficulty</h2>
+          <h2 id="practice-difficulty-title">Practice statistics by difficulty</h2>
         </div>
-        <span className="practice-difficulty-scope">
-          {scope === "tracked" ? "Tracked account games" : "Recent saved games"}
-        </span>
+        {scope === "recent" && (
+          <span className="practice-difficulty-scope">Recent saved games</span>
+        )}
       </div>
       <div className="practice-difficulty-grid">
         {(["Beginner", "Intermediate", "Expert"] as const).map((difficulty) => {
@@ -48,6 +47,11 @@ export function PracticeDifficultyStats({
               <div className="practice-difficulty-rate">
                 <strong>{showRecentWinRate(summary?.stats.winRate)}</strong>
                 <span>Win rate</span>
+                <div className="dashboard-meter-slot">
+                  {summary?.stats.winRate != null && (
+                    <progress className="dashboard-win-meter" max={100} value={summary.stats.winRate} aria-label={`${difficulty} win rate`} />
+                  )}
+                </div>
               </div>
               <div className="practice-difficulty-details">
                 <span>
@@ -65,11 +69,6 @@ export function PracticeDifficultyStats({
           );
         })}
       </div>
-      <p className="player-dashboard-honesty">
-        {scope === "tracked"
-          ? "Account-recorded Practice results include retained history at tracking activation and future uploads. Older games may have been trimmed before tracking; results are not server-verified."
-          : "These are self-recorded Practice games currently saved to this account or browser, not verified lifetime results. Older games may have been trimmed."}
-      </p>
     </section>
   );
 }

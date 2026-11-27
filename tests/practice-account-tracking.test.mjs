@@ -190,15 +190,16 @@ test("dashboard upgrades only available tracked account data, not guest or unava
     ui,
     /combineRecentStats\(accountPracticeTracking\.overall, rankedLifetime\)/,
   );
-  assert.match(ui, /Tracked account results/);
-  assert.match(ui, /not server-verified/);
+  assert.match(ui, /Lifetime recorded results/);
+  assert.match(ui, /Recent records only/);
   assert.match(ui, /<RankedHistory onRecentMatches=\{setRankedMatches\}/);
 });
 
 test("mode and difficulty cards keep tracked and recent Practice scopes explicit", () => {
-  assert.match(modeCard, /ACCOUNT-RECORDED TRACKED/);
+  assert.match(modeCard, /ACCOUNT-RECORDED LIFETIME/);
   assert.match(modeCard, /"tracked"/);
-  assert.match(difficulty, /Tracked account games/);
-  assert.match(difficulty, /scope === "tracked"/);
+  assert.match(difficulty, /Practice statistics by difficulty/);
+  assert.match(difficulty, /scope === "recent"/);
+  assert.match(difficulty, /scope\?: "recent" \| "tracked"/);
   assert.match(ui, /scope=\{accountPracticeTracking \? "tracked" : "recent"\}/);
 });

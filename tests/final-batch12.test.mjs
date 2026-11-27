@@ -101,7 +101,11 @@ test("result dialog includes real match rating, preserves verified XP, and never
   assert.match(cmp, /ratingDelta/);
   assert.match(cmp, /ratingAfter/);
   assert.match(cmp, /state\.kind === "missing"/);
-  assert.match(cmp, /How Elo works/);
+  assert.doesNotMatch(cmp, /How Elo works/);
+  assert.match(
+    read("components/ranked/ranked-lobby.tsx"),
+    /href="\/faq#ranked">Ranked rules/,
+  );
   assert.doesNotMatch(dialog, /\+\d+ RP/);
 });
 

@@ -1,0 +1,38 @@
+/* Batch 27H.3: visual learning progress; no analysis or persistence changes. */
+.coaching-page .coach-personalized .coach-learning-filters {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #141414;
+}
+.coaching-page .coach-learning-filters label { font-size: 13px; color: var(--text-secondary); }
+.coaching-page .coach-learning-filters select { min-height: 44px; background: #242424; border: 1px solid #414141; border-radius: 8px; color: var(--text); }
+.coaching-page .coach-personalized .coach-learning-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+.coaching-page .coach-personalized .coach-learning-metrics > div { background: #141414; border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; align-items: stretch; }
+.coaching-page .coach-learning-metrics > div > span { color: var(--text-secondary); font-size: 13px; }
+.coaching-page .coach-personalized .coach-learning-metrics strong { font-family: var(--heading-font); font-size: clamp(28px, 3vw, 38px); line-height: 1.2; }
+.coaching-page .coach-learning-metrics small { color: var(--text-muted); font-size: 12px; margin-top: auto; }
+.coaching-page .coach-learning-metric-bar { appearance: none; display: block; width: 100%; height: 7px; border: 0; border-radius: 99px; background: #333; accent-color: var(--red); overflow: hidden; }
+.coaching-page .coach-learning-metric-bar::-webkit-progress-bar { background: #333; border-radius: 99px; }
+.coaching-page .coach-learning-metric-bar::-webkit-progress-value { background: var(--red); border-radius: 99px; }
+.coaching-page .coach-learning-metric-bar::-moz-progress-bar { background: var(--red); border-radius: 99px; }
+.coaching-page .coach-learning-change[data-direction="up"] { color: #9ee5b0; }
+.coaching-page .coach-learning-change[data-direction="down"] { color: #ff929b; }
+.coaching-page .coach-learning-change[data-direction="unknown"] { color: var(--text-muted); }
+.coaching-page .coach-learning-focus { background: #1d1d1d; border-left: 3px solid var(--red); gap: 12px; }
+.coaching-page .coach-learning-focus h3 { font-family: var(--heading-font); font-size: clamp(22px, 2.6vw, 30px); }
+.coaching-page .coach-learning-kicker svg { color: var(--red); }
+.coaching-page .coach-learning-disclosure > summary { color: var(--text); }
+.coaching-page .coach-drill-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); }
+.coaching-page .coach-drill-options > button { justify-content: flex-start; padding: 12px 14px; }
+.coaching-page .coach-drill-options > button[aria-pressed="true"] { outline: 2px solid var(--red); outline-offset: 1px; }
+.coaching-page .coach-saved-report-list > li { background: #141414; }
+.coaching-page .coach-saved-report-header { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; }
+.coaching-page .coach-saved-report-header .coach-learning-report-grade { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #414141; border-radius: 8px; padding: 6px 10px; color: var(--text); background: #222; }
+.coaching-page .coach-learning-report-grade[data-grade="S"], .coaching-page .coach-learning-report-grade[data-grade="A"] { color: #9ee5b0; }
+.coaching-page .coach-learning-report-grade[data-grade="D"] { color: #ff929b; }
+.coaching-page .coach-learning-report-grade small { color: var(--text-secondary); }
+@media (max-width: 650px) {
+  .coaching-page .coach-personalized :is(.coach-learning-filters, .coach-learning-metrics) { grid-template-columns: minmax(0,1fr); }
+  .coaching-page .coach-saved-report-header { grid-template-columns: minmax(0,1fr) auto; }
+  .coaching-page .coach-saved-report-header > span:not(.coach-learning-report-grade) { grid-column: 1; grid-row: 2; }
+  .coaching-page .coach-learning-report-grade { grid-column: 2; grid-row: 1 / span 2; }
+}

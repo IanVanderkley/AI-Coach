@@ -1,6 +1,5 @@
 "use client";
 
-import { Flag, Grid2X2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { GameCoachReport } from "@/components/coach/game-coach-report";
@@ -94,23 +93,6 @@ export default function Home() {
             <h1>
               Minesweeper<span className="title-period">.</span>
             </h1>
-            <p className="page-subtitle">Learn how to really play</p>
-          </div>
-
-          <div
-            className="session-info"
-            aria-label={`${settings.label} board: ${settings.rows} by ${settings.columns}, ${settings.mines} mines`}
-          >
-            <span className="difficulty-label">{settings.label}</span>
-            <div>
-              <span>
-                <Grid2X2 size={14} aria-hidden="true" /> {settings.rows} ×{" "}
-                {settings.columns}
-              </span>
-              <span>
-                <Flag size={14} aria-hidden="true" /> {settings.mines} mines
-              </span>
-            </div>
           </div>
         </div>
 
@@ -120,7 +102,7 @@ export default function Home() {
           </div>
 
           <fieldset className="practice-difficulty-picker">
-            <legend>Board difficulty</legend>
+            <legend className="sr-only">Board difficulty</legend>
             <div className="practice-difficulty-options">
               {(["beginner", "intermediate", "expert"] as const).map((next) => {
                 const option = DIFFICULTY_SETTINGS[next];
@@ -185,12 +167,7 @@ export default function Home() {
           </p>
         ) : null}
 
-        <footer className="page-footer">
-          <p>Practice with feedback. Play ranked without live coaching.</p>
-          <span>
-            {settings.rows} × {settings.columns} · {settings.mines} mines
-          </span>
-        </footer>
+        {/* Shared site footer is rendered by RootLayout. */}
       </main>
     </>
   );

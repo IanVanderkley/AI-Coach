@@ -1,0 +1,78 @@
+/* Batch 27E.1 — minimalist Practice result. Ranked remains unchanged. */
+.practice-result-dialog {
+  width: min(94vw, 500px);
+  border-color: #414141;
+  box-shadow: 0 26px 90px #000c;
+  background: #171717;
+}
+.practice-result-dialog:focus { outline: none; }
+.practice-result-dialog:focus-visible { outline: 2px solid #a7636b; outline-offset: 2px; }
+.practice-result-dialog .practice-result-inner { padding: 27px 24px 17px; }
+.practice-result-dialog .practice-result-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0 24px;
+  margin: 0 0 16px;
+}
+.practice-result-dialog .practice-result-header .practice-result-emblem {
+  width: 80px;
+  height: 80px;
+  margin: 0;
+}
+.practice-result-dialog .practice-result-header h2 {
+  font-size: clamp(32px, 6vw, 45px);
+  text-transform: uppercase;
+  letter-spacing: .015em;
+  line-height: 1.05;
+  margin: 0 0 5px;
+}
+.practice-result-dialog .practice-result-header .practice-result-subtitle { color: var(--text-secondary); }
+.practice-result-dialog .practice-result-inner .practice-record-burst { top: 67px; left: 50%; }
+.practice-result-dialog .practice-result-details { display: grid; grid-template-columns: minmax(0, 1fr); gap: 11px; margin-bottom: 14px; }
+.practice-result-dialog .practice-result-metrics {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.practice-result-dialog .practice-result-metrics > div { padding: 6px 3px 12px; gap: 5px; }
+.practice-result-dialog .practice-result-metrics > div + div { border-left: 1px solid #343434; }
+.practice-result-dialog .practice-result-metrics strong { order: -1; font-size: clamp(25px, 6vw, 34px); }
+.practice-result-dialog .practice-result-metrics span { font-size: 12px; }
+.practice-result-dialog .practice-result-achievement { border: 0; border-inline-start: 2px solid #eac779; background: #222; padding: 8px 10px; }
+.practice-result-dialog .match-xp-compact {
+  border: 0;
+  border-top: 1px solid #383838;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 14px 2px 0;
+  gap: 5px;
+}
+.practice-result-dialog .match-xp-compact-heading { margin-bottom: 2px; }
+.practice-result-dialog .match-xp-compact-heading strong { color: #f5f5f5; font-size: 15px; }
+.practice-result-dialog .match-xp-compact-heading .practice-xp-earned { color: var(--text-secondary); }
+.practice-result-dialog .match-xp-compact-heading .practice-xp-earned[data-earned="true"] { color: #aee0b8; }
+.practice-result-dialog .match-xp-compact-disclaimer { margin: 1px 0 0; font-size: 12px; }
+.practice-result-dialog :is(.practice-xp-details, .practice-result-about) { color: var(--text-secondary); font-size: 11px; }
+.practice-result-dialog :is(.practice-xp-details, .practice-result-about) summary { cursor: pointer; width: fit-content; padding: 4px 0; }
+.practice-result-dialog .practice-result-about summary { margin-inline: auto; }
+.practice-result-dialog :is(.practice-xp-details, .practice-result-about) p { margin: 4px 0 0; line-height: 1.5; }
+.practice-result-dialog .practice-result-actions { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+.practice-result-dialog .practice-result-actions > * { min-height: 44px; font-size: 14px; }
+.practice-result-dialog .practice-result-bottom { align-items: center; margin-top: 9px; gap: 9px; }
+.practice-result-dialog .practice-result-bottom button { min-width: 44px; min-height: 40px; justify-content: center; padding: 8px; border-radius: 7px; }
+.practice-result-dialog .practice-result-bottom button:hover { background: #262626; }
+.practice-result-dialog :is(button, a, summary):focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@media (max-width: 390px) {
+  .practice-result-dialog .practice-result-inner { padding: 24px 15px 14px; }
+  .practice-result-dialog .practice-result-header { padding-inline: 20px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .practice-result-dialog .practice-xp-earned[data-earned="true"] { animation: result-reward-arrive 650ms ease-out both; }
+}

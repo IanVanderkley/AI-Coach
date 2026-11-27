@@ -1,0 +1,3 @@
+# Ranked result Elo reveal
+
+Requires 27E.3. Count from verified ratingBefore to ratingAfter over 1.1 seconds; show signed delta once complete. Reduced-motion mode settles immediately; reopening a result replays the visual count but never writes a rating. Rank progress and emblem always show the final verified state. The XP bar fills the available width; unsupported CSS subgrid browsers stack the reward above the full-width bar. Removed inline Elo guide and leaderboard links, keeping retry actions. The lobby and finished-board buttons are red, and profile is an accessible person icon. No Practice, database, reward or gameplay changes. Test win, ordinary loss, promotion, demotion, protection, 50/50, zero/missing XP, keyboard, reduced motion and narrow viewports.

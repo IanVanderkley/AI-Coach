@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 const read = (file) => readFileSync(file, "utf8");
-test("review starts with summary and collapsed replay and lessons; collapsed replay unmounts", () => {
+test("review keeps summary and configurable replay and lessons; collapsed replay unmounts", () => {
   const ui = read("components/coach/coach-console.tsx");
   assert.match(ui, /\[replayExpanded, setReplayExpanded\] = useState\(false\)/);
   assert.match(ui, /aria-expanded=\{replayExpanded\}/);

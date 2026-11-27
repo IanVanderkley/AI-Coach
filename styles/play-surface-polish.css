@@ -1,0 +1,147 @@
+/* Shared gameplay guide and reward surfaces. No changes to cells or input behavior. */
+.board-controls-guide {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 640px;
+  min-width: 0;
+  margin: 12px auto 0;
+  padding: 13px;
+  border: 1px solid var(--ui-secondary-border, #414141);
+  border-radius: var(--ui-card-radius, 12px);
+  background: var(--surface, #171717);
+  box-shadow: inset 0 1px 0 #ffffff06, 0 5px 18px #0002;
+  text-align: left;
+}
+.board-guide-heading, .board-guide-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.board-guide-heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 11px;
+}
+.board-guide-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  height: 36px;
+  border: 1px solid #68404a;
+  border-radius: 8px;
+  background: #2c2023;
+  color: #f29aa5;
+}
+.board-guide-title h3 {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--heading-font);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.15;
+}
+.board-guide-mode, .board-guide-dimensions {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.board-guide-dimensions {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #202020;
+  padding: 5px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.board-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+.board-guide-item, .board-guide-clock {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #202020;
+  padding: 11px;
+}
+.board-guide-item > svg, .board-guide-clock > svg {
+  flex-shrink: 0;
+  color: #f29aa5;
+  margin-top: 1px;
+}
+.board-guide-item strong, .board-guide-clock strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+.board-guide-item p, .board-guide-clock p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.board-guide-clock {
+  margin-top: 8px;
+  border-inline-start: 2px solid #a94a59;
+  background: #1c1c1c;
+  padding: 9px 11px;
+}
+.board-guide-clock > div {
+  min-width: 0;
+}
+@media (max-width: 420px) {
+  .board-controls-guide { padding: 10px; }
+  .board-guide-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Restore the charcoal/red visual hierarchy for all three Ranked reward panels.
+   Semantic gain/loss colors and rank artwork stay untouched. */
+.ranked-result-dialog :is(.ranked-rating-receipt, .ranked-match-xp-receipt, .ranked-xp-panel),
+.practice-result-dialog .match-xp-compact {
+  background: #1d1d1d;
+  border-color: #3e3638;
+  border-radius: var(--ui-card-radius, 12px);
+  box-shadow: inset 0 1px 0 #ffffff08, 0 4px 12px #0002;
+}
+.ranked-result-dialog .ranked-rating-summary > div {
+  background: #262426;
+  border-color: #454043;
+}
+.ranked-result-dialog .ranked-rating-summary span,
+.ranked-result-dialog .ranked-match-xp-earned span,
+.ranked-result-dialog .ranked-match-xp-receipt p {
+  color: var(--text-secondary);
+}
+.ranked-result-dialog .ranked-rating-heading,
+.ranked-result-dialog .ranked-match-xp-heading,
+.ranked-result-dialog .ranked-xp-heading > span:first-child,
+.practice-result-dialog .match-xp-compact-heading strong {
+  color: #ffc1c9;
+}
+.ranked-result-dialog .ranked-rating-heading > span:first-child svg,
+.ranked-result-dialog .ranked-match-xp-heading > span:first-child svg,
+.ranked-result-dialog .ranked-xp-heading > span:first-child svg {
+  color: #ef8c98;
+}
+.ranked-result-dialog .ranked-match-xp-earned strong { color: #f5f5f5; }
+.ranked-result-dialog .ranked-rating-arrow { color: var(--text-secondary); }
+.ranked-result-dialog .ranked-rating-footer :is(a, button) { color: #ffc1c9; }
+.ranked-result-dialog .ranked-rating-footer :is(a, button):focus-visible { outline-color: #ffc1c9; }
+.ranked-result-dialog .ranked-rating-progress progress { background: #383438; }
+.ranked-result-dialog .ranked-rating-progress progress::-webkit-progress-bar { background: #383438; }
+.ranked-result-dialog .ranked-xp-progress-track,
+.practice-result-dialog .match-xp-compact-track { background: #3b3034; }
+
+/* Small depth detail on Practice metrics; no hover effects on static information. */
+.practice-page .practice-metrics .stat {
+  box-shadow: inset 0 1px 0 #ffffff09, 0 3px 10px #0002;
+}
+.practice-page .practice-metrics .stat > svg { color: #ef9ca6; }

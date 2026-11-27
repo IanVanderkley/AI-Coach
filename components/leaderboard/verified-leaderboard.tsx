@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { Clock3, Medal, RefreshCw, ShieldCheck, Trophy } from "lucide-react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Clock3, Medal, RefreshCw, Trophy } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { formatRankedDuration } from "@/lib/ranked/result-summary";
 import { competitiveRank } from "@/lib/leaderboard/rank-policy";
 import { displayRank, type RankDisplayVersion } from "@/lib/leaderboard/rank-display";
-import { PUBLIC_RATING_SYSTEM_V4 } from "@/lib/leaderboard/public-standings";
+import { PUBLIC_RATING_SYSTEM_V4, PUBLIC_USERNAME_PATTERN } from "@/lib/leaderboard/public-standings";
 import { RankEmblem } from "@/components/ranked/rank-emblem";
 import {
   PUBLIC_LEADERBOARD_ENDPOINT,
@@ -38,17 +38,66 @@ function CompetitiveRankCell({ rating, policyVersion }: { rating: number; policy
   );
 }
 
+function LeaderboardPodium({ standings, tab, ownName }: {
+  standings: PublicStandings;
+  tab: "elo" | "fastest";
+  ownName: string | null;
+}) {
+  const version: RankDisplayVersion = standings.ratingSystem === PUBLIC_RATING_SYSTEM_V4 ? 4 : 3;
+  const leaders = standings[tab].slice(0, 3);
+  return (
+    <section className="leaderboard-podium" aria-label={tab === "elo" ? "Top Elo players" : "Fastest victories"}>
+      {leaders.map((entry) => (
+        <article key={entry.rank} className="leaderboard-podium-place" data-place={entry.rank} data-own={entry.username === ownName}>
+          <span className="leaderboard-podium-position"><Medal size={17} aria-hidden="true" /> #{entry.rank}</span>
+          {"rating" in entry ? (
+            <>
+              <RankEmblem rating={entry.rating} size={112} decorative policyVersion={version} />
+              <strong className="leaderboard-podium-name">{entry.username}</strong>
+              <span className="leaderboard-podium-rank" style={{ color: displayRank(entry.rating, version).color }}>{displayRank(entry.rating, version).label}</span>
+              <strong className="leaderboard-podium-score">{entry.rating.toLocaleString()} <small>Elo</small></strong>
+            </>
+          ) : (
+            <>
+              <Clock3 className="leaderboard-podium-clock" size={56} aria-hidden="true" />
+              <strong className="leaderboard-podium-name">{entry.username}</strong>
+              <strong className="leaderboard-podium-score">{formatRankedDuration(entry.durationMs)}</strong>
+            </>
+          )}
+          {entry.username === ownName && <span className="leaderboard-you">You</span>}
+        </article>
+      ))}
+    </section>
+  );
+}
+
 /** Both boards are read-only, privacy-filtered, and server-derived. */
 export function VerifiedLeaderboard() {
   const [board, setBoard] = useState<BoardState>({ kind: "loading" });
   const [tab, setTab] = useState<"elo" | "fastest">("elo");
   const controllerRef = useRef<AbortController | null>(null);
+  const [ownName, setOwnName] = useState<string | null>(null);
 
   const loadResults = useCallback(async () => {
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
     setBoard({ kind: "loading" });
+    setOwnName(null);
+    // Optional private lookup never blocks the public standings or reveals hidden players.
+    void (async () => {
+      try {
+        const response = await fetch("/api/leaderboard/preferences", {
+          cache: "no-store", credentials: "same-origin", signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!controller.signal.aborted && data?.isAnonymous === false &&
+            typeof data.username === "string" && PUBLIC_USERNAME_PATTERN.test(data.username)) {
+          setOwnName(data.username);
+        }
+      } catch { /* Public standings are still usable. */ }
+    })();
     try {
       const response = await fetch(PUBLIC_LEADERBOARD_ENDPOINT, {
         cache: "no-store",
@@ -65,7 +114,23 @@ export function VerifiedLeaderboard() {
 
   useEffect(() => {
     void loadResults();
-    return () => controllerRef.current?.abort();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const subscription = getSupabaseBrowserClient()?.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT" || event === "SIGNED_IN" || event === "USER_UPDATED") {
+        controllerRef.current?.abort();
+        setOwnName(null);
+        clearTimeout(timer);
+        timer = setTimeout(() => void loadResults(), 0);
+      }
+    });
+    const refresh = () => void loadResults();
+    window.addEventListener("ai-coach:username-updated", refresh);
+    return () => {
+      clearTimeout(timer);
+      subscription?.data.subscription.unsubscribe();
+      window.removeEventListener("ai-coach:username-updated", refresh);
+      controllerRef.current?.abort();
+    };
   }, [loadResults]);
 
   const standings = board.kind === "ready" ? board.standings : null;
@@ -75,11 +140,7 @@ export function VerifiedLeaderboard() {
     <section className="verified-board" aria-labelledby="verified-board-title">
       <div className="verified-board-heading">
         <div>
-          <span className="verified-board-kicker">
-            <ShieldCheck size={15} aria-hidden="true" /> Server-verified results
-          </span>
           <h2 id="verified-board-title">Ranked standings</h2>
-          <p>Intermediate · 16 × 16 · 40 mines · Up to 50 players per board</p>
         </div>
         <button
           type="button"
@@ -140,11 +201,9 @@ export function VerifiedLeaderboard() {
       )}
       {standings && resultCount > 0 && (
         <>
+          <LeaderboardPodium standings={standings} tab={tab} ownName={ownName} />
           <p className="verified-board-count" role="status">
-            Showing {resultCount} public {resultCount === 1 ? "player" : "players"}.
-            {tab === "elo"
-              ? " Highest rating first. Ranks are determined by Elo rating."
-              : " Fastest verified times first."}
+            {resultCount} public {resultCount === 1 ? "player" : "players"}
           </p>
           <div className="verified-board-overflow">
             <table className="verified-board-table">
@@ -175,7 +234,7 @@ export function VerifiedLeaderboard() {
               <tbody>
                 {tab === "elo"
                   ? standings.elo.map((entry) => (
-                      <tr key={`rating-${entry.rank}-${entry.username}`}>
+                      <tr key={`rating-${entry.rank}-${entry.username}`} data-own={entry.username === ownName}>
                         <td>
                           <span
                             className={`verified-board-rank${entry.rank <= 3 ? ` verified-board-rank-top-${entry.rank}` : ""}`}
@@ -186,7 +245,7 @@ export function VerifiedLeaderboard() {
                             )}
                           </span>
                         </td>
-                        <td className="leaderboard-username">{entry.username}</td>
+                        <td className="leaderboard-username">{entry.username}{entry.username === ownName && <span className="leaderboard-you">You</span>}</td>
                         <td className="leaderboard-rating">
                           {entry.rating.toLocaleString()}
                         </td>
@@ -198,7 +257,7 @@ export function VerifiedLeaderboard() {
                       </tr>
                     ))
                   : standings.fastest.map((entry) => (
-                      <tr key={`speed-${entry.rank}-${entry.username}`}>
+                      <tr key={`speed-${entry.rank}-${entry.username}`} data-own={entry.username === ownName}>
                         <td>
                           <span
                             className={`verified-board-rank${entry.rank <= 3 ? ` verified-board-rank-top-${entry.rank}` : ""}`}
@@ -209,7 +268,7 @@ export function VerifiedLeaderboard() {
                             )}
                           </span>
                         </td>
-                        <td className="leaderboard-username">{entry.username}</td>
+                        <td className="leaderboard-username">{entry.username}{entry.username === ownName && <span className="leaderboard-you">You</span>}</td>
                         <td>
                           <span className="verified-board-time">
                             <Clock3 size={15} aria-hidden="true" />
@@ -228,18 +287,7 @@ export function VerifiedLeaderboard() {
           </div>
         </>
       )}
-      <p className="verified-board-footnote">
-        {tab === "elo"
-          ? "Competitive ranks and divisions reflect saved Elo. This is solo progression, not player-versus-player matchmaking."
-          : "One best server-verified victory per visible player. Times use the server clock."}{" "}
-        {tab === "elo" && (
-          <>
-            <Link href="/ranked/rating-guide">How Elo works</Link>.{" "}
-          </>
-        )}
-        New players are public by default; Anonymous mode hides your name and results.
-        <Link href="/settings">Manage visibility</Link>.
-      </p>
+      {/* Visibility controls live in the page footer; ranking rules remain in the Ranked guide. */}
     </section>
   );
 }

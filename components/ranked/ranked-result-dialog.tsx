@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Award, Check, Clipboard, RotateCcw, Share2, Trophy, X } from "lucide-react";
+import { Award, Check, Clipboard, RotateCcw, Share2, Trophy, UserRound, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
@@ -140,18 +140,15 @@ export function RankedResultDialog({
               )}
             </div>
             <div>
-              <p className="ranked-result-eyebrow">RANKED MATCH COMPLETE</p>
               <h2 id="ranked-result-title">{won ? "Victory!" : "Game over"}</h2>
               <p id="ranked-result-description" className="ranked-result-description">
-                {won
-                  ? "Every safe square cleared. Your victory was confirmed by the Ranked server."
-                  : "A mine ended this run. Your result was confirmed by the Ranked server."}
+                Ranked · Intermediate
               </p>
             </div>
           </div>
           <div className="ranked-result-stats" aria-label="Ranked match statistics">
             <div>
-              <span>Server time</span>
+              <span>Time</span>
               <strong>{formatRankedDuration(result.durationMs)}</strong>
             </div>
             <div>
@@ -159,14 +156,10 @@ export function RankedResultDialog({
               <strong>{result.moveCount}</strong>
             </div>
             <div>
-              <span>Flags on board</span>
+              <span>Flags</span>
               <strong>{result.flagCount}</strong>
             </div>
           </div>
-          <p className="ranked-result-board-label">
-            {result.rows} × {result.columns} · {result.mineCount} mines ·
-            Server-controlled
-          </p>
           <div className="ranked-result-rewards">
             <RankedMatchRating
               key={`rating-${result.matchId}`}
@@ -199,39 +192,35 @@ export function RankedResultDialog({
             >
               <Award size={17} aria-hidden="true" /> Analyze Game
             </Link>
-            <button
-              type="button"
-              className="ranked-result-secondary"
-              onClick={onReturnLobby}
-              disabled={busy}
-            >
-              Return to lobby
-            </button>
-            <Link className="ranked-result-secondary" href="/profile">
-              View profile
-            </Link>
+            <div className="ranked-result-navigation">
+              <button type="button" className="ranked-result-primary" onClick={onReturnLobby} disabled={busy}>
+                Return to lobby
+              </button>
+              <button type="button" className="ranked-result-primary" onClick={onDismiss}>
+                View finished board
+              </button>
+            </div>
           </div>
           <div className="ranked-result-utilities">
+            <Link className="ranked-result-profile-icon" href="/profile" aria-label="View profile" title="View profile">
+              <UserRound size={18} aria-hidden="true" />
+            </Link>
             <div className="ranked-result-sharing" aria-label="Share Ranked match result">
-              <button type="button" onClick={() => void shareResult()}>
+              <button type="button" aria-label="Share result" title="Share result" onClick={() => void shareResult()}>
                 {shareState === "shared" || shareState === "copied" ? (
                   <Check size={16} aria-hidden="true" />
                 ) : (
                   <Share2 size={16} aria-hidden="true" />
                 )}
-                {shareState === "shared"
-                  ? "Shared!"
-                  : shareState === "copied"
-                    ? "Copied to share"
-                    : "Share result"}
+                <span className="sr-only" role="status">{shareState === "shared" ? "Shared!" : shareState === "copied" ? "Copied to share" : ""}</span>
               </button>
-              <button type="button" onClick={() => void copyResult()}>
+              <button type="button" aria-label="Copy result" title="Copy result" onClick={() => void copyResult()}>
                 {copyState === "copied" ? (
                   <Check size={16} aria-hidden="true" />
                 ) : (
                   <Clipboard size={16} aria-hidden="true" />
                 )}
-                {copyState === "copied" ? "Copied!" : "Copy result"}
+                <span className="sr-only" role="status">{copyState === "copied" ? "Copied!" : ""}</span>
               </button>
             </div>
             {(copyState === "unavailable" || shareState === "unavailable") && (
@@ -240,15 +229,8 @@ export function RankedResultDialog({
                 above.
               </p>
             )}
-            <button
-              type="button"
-              className="ranked-result-view-board"
-              onClick={onDismiss}
-            >
-              View finished board
-            </button>
           </div>
-          <p className="ranked-result-note">
+          <p className="ranked-result-note sr-only">
             The match reward comes from a database receipt; the account XP card shows your
             saved lifetime total. Ranked Elo and account XP are separate.
           </p>

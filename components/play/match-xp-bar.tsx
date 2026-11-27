@@ -69,16 +69,20 @@ export function MatchXpBar({
     <section className="match-xp-compact" aria-label="Level progress after Practice game">
       {state.kind === "loading" && <p role="status">Loading account level…</p>}
       {state.kind === "guest" && (
-        <p role="status">Sign in to see your account level and XP progress.</p>
+        <p role="status">Sign in to track XP.</p>
       )}
       {state.kind === "error" && (
-        <p role="status">Account XP is unavailable. Your balance has not changed.</p>
+        <p role="status">Account XP unavailable.</p>
       )}
       {state.kind === "ready" && (
         <>
           <div className="match-xp-compact-heading">
-            <strong>LVL {state.progress.level.toLocaleString()}</strong>
-            <span>Level {(state.progress.level + 1).toLocaleString()}</span>
+            <strong>Level {state.progress.level.toLocaleString()}</strong>
+            {receipt && (
+              <strong className="practice-xp-earned" data-earned={receipt.amount > 0} role="status">
+                +{receipt.amount.toLocaleString()} XP
+              </strong>
+            )}
           </div>
           <div
             className="match-xp-compact-track"
@@ -95,26 +99,14 @@ export function MatchXpBar({
               {state.progress.xpIntoLevel.toLocaleString()} /{" "}
               {state.progress.xpPerLevel.toLocaleString()} XP
             </span>
-            <span>{state.progress.xpToNextLevel.toLocaleString()} XP to go</span>
+            <span>Level {(state.progress.level + 1).toLocaleString()}</span>
           </div>
         </>
       )}
-      {state.kind === "ready" && (
-        <p className="match-xp-compact-disclaimer" role="status">
-          {receipt?.reason === "earned" ? (
-            <strong>+{receipt.amount.toLocaleString()} XP · Practice reward</strong>
-          ) : receipt?.reason === "daily_limit" ? (
-            "Daily Practice XP limit reached. Your result is saved."
-          ) : receipt?.reason === "participation" ? (
-            "This game did not qualify for Practice XP."
-          ) : (
-            "No saved Practice XP receipt for this game."
-          )}
-        </p>
+      {state.kind === "ready" && !receipt && (
+        <p className="match-xp-compact-disclaimer" role="status">No saved Practice XP receipt for this game.</p>
       )}
-      <p className="match-xp-compact-disclaimer">
-        Practice XP counts toward your account level, not competitive rating.
-      </p>
+      {/* Confirmed zero-XP receipts already display their amount above. */}
     </section>
   );
 }

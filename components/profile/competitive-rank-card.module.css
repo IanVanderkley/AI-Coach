@@ -160,3 +160,19 @@
     gap: 9px;
   }
 }
+
+/* Batch 27F.1: shared competitive career surface; rank artwork and data unchanged. */
+.card {
+  margin-bottom: 14px;
+  padding: clamp(14px, 2vw, 20px);
+  background: linear-gradient(145deg, #222123, #181818 65%);
+  border-color: #393639;
+}
+.heading h2 { margin: 0; }
+.body { gap: 10px; margin-top: 12px; }
+.current, .highest { background: #202020; border-color: #393639; padding: 9px 12px; }
+.current { background: repeating-linear-gradient(135deg, transparent 0 21px, #ffffff03 21px 22px), #202020; }
+.current > svg, .highest > svg { flex-shrink: 0; max-width: 36%; }
+.current > svg { filter: drop-shadow(0 0 10px #ffffff20); }
+.details h3 { font-family: var(--heading-font); font-weight: 750; }
+.verified { font-size: 11px; color: #bcbcbc; }

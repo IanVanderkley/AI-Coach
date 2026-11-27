@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+const read = p => readFileSync(p,"utf8");
+test("learning meters use only available real metrics and preserve missing evidence", () => {
+  const ui=read("components/coach/personalized-coaching.tsx");
+  assert.match(ui,/learning\.metrics\.accuracy !== null &&/);
+  assert.match(ui,/value=\{learning\.metrics\.accuracy\}/);
+  assert.match(ui,/learning\.metrics\.score !== null &&/);
+  assert.match(ui,/value=\{learning\.metrics\.score\}/);
+  assert.match(ui,/learning\.selected\.length < 10/);
+  assert.match(ui,/learning\.accuracyChange === null/);
+  assert.match(ui,/summarizeLearning\(reports, mode, actualDifficulty, windowSize\)/);
+});
+test("saved report grades and learning styling use existing data and responsive layout", () => {
+  const ui=read("components/coach/personalized-coaching.tsx");
+  assert.match(ui,/data-grade=\{item\.review\.score\.grade \?\? "none"\}/);
+  assert.match(ui,/item\.review\.score\.score !== null/);
+  assert.match(ui,/open=\{sections\.saved\}/);
+  assert.match(ui,/onReview\(item\.mode, item\.gameRef\)/);
+  assert.match(read("app/coaching/page.tsx"),/coaching-learning-polish\.css/);
+  assert.match(read("styles/coaching-learning-polish.css"),/@media \(max-width: 650px\)/);
+});

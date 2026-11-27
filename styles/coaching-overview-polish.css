@@ -1,0 +1,75 @@
+/* Batch 27H.1: coaching shell and visual overview; only Coaching. */
+.coaching-page { max-width: 1120px; padding-bottom: 64px; min-width: 0; }
+.coaching-page .coaching-page-heading { margin-bottom: 24px; }
+.coaching-page .coaching-page-heading h1 { font-size: clamp(38px, 4vw, 52px); }
+.coaching-page .coach-full-page .coach-review-toolbar {
+  display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between;
+  gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.coaching-page .coach-full-page .coach-review-toolbar .coach-review-tabs { padding: 0; border: 0; }
+.coaching-page .coach-review-toolbar .coach-save-review { margin: 0; }
+.coaching-page .coach-review-stack > .verified-note { margin: 0; }
+.coaching-page .coach-full-page .coach-review-overview {
+  padding: clamp(16px, 2.5vw, 26px); background: #181818;
+  border: 1px solid #343434; border-radius: 12px;
+}
+.coaching-page .coach-overview-title {
+  font-family: var(--heading-font); font-size: 24px; margin: 0 0 18px; font-weight: 700;
+}
+.coaching-page .coach-review-overview .coach-review-headline { gap: 18px; align-items: center; }
+.coaching-page .coach-review-overview .grade-badge {
+  width: 104px; height: 104px; border-radius: 12px; background: #202020;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+}
+.coaching-page .coach-review-overview .grade-letter { font-size: 48px; }
+.coaching-page .coach-review-overview .grade-score { font-size: 13px; }
+.coaching-page .coach-review-headline h3 {
+  font: 650 clamp(20px, 2.4vw, 27px)/1.25 var(--heading-font); margin: 0 0 6px; max-width: 45ch;
+}
+.coaching-page .coach-review-overview .coach-review-metrics { gap: 10px; margin-block: 18px; }
+.coaching-page .coach-review-overview .coach-review-metrics > div {
+  min-width: 0; padding: 14px; border: 1px solid #303030; border-radius: 8px; background: #131313;
+}
+.coaching-page .coach-review-metrics dt { font-size: 12px; color: var(--text-secondary); }
+.coaching-page .coach-review-metrics dd { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.coaching-page .coach-review-metrics > div:nth-child(2) dd { color: #a2d9ac; }
+.coaching-page .coach-review-metrics > div:nth-child(3) dd { color: #ff929b; }
+.coaching-page .coach-review-board-progress {
+  display: block; width: 100%; height: 6px; margin-top: 9px; appearance: none;
+  background: #333; border: 0; border-radius: 8px; overflow: hidden; accent-color: #e83b45;
+}
+.coaching-page .coach-review-board-progress::-webkit-progress-bar { background: #333; border-radius: 8px; }
+.coaching-page .coach-review-board-progress::-webkit-progress-value { background: #e83b45; border-radius: 8px; }
+.coaching-page .coach-review-board-progress::-moz-progress-bar { background: #e83b45; border-radius: 8px; }
+.coaching-page .coach-review-strength { background: #202020; border-inline-start: 3px solid #78ba8c; }
+.coaching-page .coach-review-strength > svg { color: #a2d9ac; flex-shrink: 0; }
+.coaching-page .coach-full-page .coach-review-overview .coach-review-focus {
+  background: #232323; border: 1px solid #393939; border-radius: 8px;
+}
+.coaching-page .coach-review-focus > svg { flex-shrink: 0; }
+.coaching-page .coach-review-navigation h2 { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .coaching-page .coach-review-overview .grade-badge { width: 76px; height: 76px; }
+  .coaching-page .coach-review-overview .grade-letter { font-size: 36px; }
+  .coaching-page .coach-review-overview .coach-review-headline { gap: 12px; }
+  .coaching-page .coach-review-overview .coach-review-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .coaching-page .coach-review-toolbar { align-items: stretch; }
+}
+
+/* Batch 27H.1a: keep refresh inside the expanded Ranked history body. */
+.coaching-page .coach-ranked-history-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 14px;
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.coaching-page .coach-ranked-history-footer .coach-btn.secondary {
+  background: #222;
+  border: 1px solid #3d3d3d;
+  color: var(--text, #f5f5f5);
+}
+.coaching-page .coach-ranked-history-footer .coach-btn.secondary:hover:not(:disabled) {
+  background: #2c2c2c;
+}
+.coaching-page .coach-ranked-history .ranked-history-header-actions { margin: 0; }

@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Pause,
   Play,
-  ShieldCheck,
   SkipBack,
   SkipForward,
 } from "lucide-react";
@@ -69,8 +68,9 @@ function BoardView({
   const sources = new Set(clues);
   const taught = new Set(targets);
   const boardStyle: CSSProperties = {
-    gridTemplateColumns: `24px repeat(${columns}, 36px)`,
-  };
+    gridTemplateColumns: `20px repeat(${columns}, var(--replay-cell-size, 36px))`,
+    "--replay-columns": columns,
+  } as CSSProperties;
   return (
     <div className="verified-board-panel">
       <h4>{title}</h4>
@@ -302,21 +302,10 @@ export function VerifiedReplayPanel({
     >
       <div className="verified-heading">
         <div>
-          <span className="subtle-label">YOUR GAME, MOVE BY MOVE</span>
-          <h3>
-            <ShieldCheck size={21} aria-hidden="true" /> Verified Move Review
-          </h3>
-          <p>
-            {game.outcome === "win" ? "WIN" : "LOSS"} · {game.difficulty} · {game.rows} ×{" "}
-            {game.columns} · {last} review moves
-          </p>
+          <h3>Move review</h3>
         </div>
       </div>
 
-      <p className="verified-note">
-        Move 0 opens the board and is not assessed. Uncertain moves are not automatically
-        mistakes or unavoidable guesses.
-      </p>
       {important.length > 0 && (
         <div className="verified-moments">
           <h4>Key lessons</h4>
@@ -494,9 +483,33 @@ export function VerifiedReplayPanel({
           Show deductions
         </label>
       </div>
+      <div className="verified-decision coach-replay-decision-banner" data-decision={decision}>
+        <strong>
+          {opening
+            ? "Move 0 · Opening reveal"
+            : current.decision === "good"
+              ? "Proven good decision"
+              : current.decision === "mistake"
+                ? "Verified mistake"
+                : "Not enough evidence"}
+        </strong>
+        <span>
+          {current.move.action} at {cellLabel(chosen, game.columns)}
+        </span>
+        <p>
+          {opening
+            ? "This reveal establishes the starting board. It is excluded from the coaching assessment."
+            : current.changed
+              ? explanation?.summary || current.explanation
+              : "This action did not change the visible board."}
+        </p>
+      </div>
       <div className="coach-review-workspace" data-view={mode}>
         <div className="coach-review-board-pane">
-          <div className={`verified-boards ${mode === "compare" ? "" : "single-board"}`}>
+          <div
+            className={`verified-boards ${mode === "compare" ? "" : "single-board"}`}
+            data-comparison={game.columns <= 16 ? "side-by-side" : "stacked"}
+          >
             {mode !== "after" && (
               <BoardView
                 title={`Before move ${selectedIndex}`}
@@ -525,33 +538,16 @@ export function VerifiedReplayPanel({
               />
             )}
           </div>
-          <p className="verified-legend">
-            ✓ safe · ! mine · ⚑ player flag · blue numbered clue = proof source · dashed
-            green outline = suggested reveal · solid outline = chosen square.
-          </p>
+          <ul className="verified-legend coach-replay-legend" aria-label="Board symbols">
+            <li><span data-symbol="safe">✓</span> Proven safe</li>
+            <li><span data-symbol="mine">!</span> Proven mine</li>
+            <li><span data-symbol="flag">⚑</span> Player flag</li>
+            <li><span data-symbol="clue">2</span> Supporting clue</li>
+            <li><span data-symbol="suggested"> </span> Suggested reveal</li>
+            <li><span data-symbol="chosen"> </span> Chosen square</li>
+          </ul>
         </div>
         <div className="coach-review-insight-pane">
-          <div className="verified-decision" data-decision={decision}>
-            <strong>
-              {opening
-                ? "Move 0 · Opening reveal"
-                : current.decision === "good"
-                  ? "Proven good decision"
-                  : current.decision === "mistake"
-                    ? "Verified mistake"
-                    : "Not enough evidence"}
-            </strong>
-            <span>
-              {current.move.action} at {cellLabel(chosen, game.columns)}
-            </span>
-            <p>
-              {opening
-                ? "This reveal establishes the starting board. It is excluded from the coaching assessment."
-                : current.changed
-                  ? explanation?.summary || current.explanation
-                  : "This action did not change the visible board."}
-            </p>
-          </div>
           {showProofs && mode !== "after" && recommendation !== null && (
             <p className="verified-note">
               Recommended safe reveal: {cellLabel(recommendation, game.columns)}. The

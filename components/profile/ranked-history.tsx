@@ -208,13 +208,15 @@ export function RankedHistory({
           {onReviewMatch && state.kind === "ready" && (
             <span className="coach-card-count">{matches.length} {matches.length === 1 ? "match" : "matches"}</span>
           )}
-          <button
-            type="button"
-            onClick={() => setRevision((current) => current + 1)}
-            disabled={state.kind === "loading"}
-          >
-            <RefreshCw size={14} aria-hidden="true" /> Refresh
-          </button>
+          {!onReviewMatch && (
+            <button
+              type="button"
+              onClick={() => setRevision((current) => current + 1)}
+              disabled={state.kind === "loading"}
+            >
+              <RefreshCw size={14} aria-hidden="true" /> Refresh
+            </button>
+          )}
         </div>
       </div>
       <div
@@ -330,14 +332,25 @@ export function RankedHistory({
                 ))}
               </ol>
             )}
-            <p className="ranked-history-footnote">
-              Only your latest ten completed Intermediate matches are considered. These
-              counts are not lifetime stats or RP.{" "}
-              {onReviewMatch
-                ? "Grades use verified coaching evidence, not Elo or XP. Refresh to retry unavailable grades."
-                : "XP appears only when a matching database receipt exists."}
-            </p>
+            {!onReviewMatch && (
+              <p className="ranked-history-footnote">
+                Only your latest ten completed Intermediate matches are considered. These
+                counts are not lifetime stats or RP. XP appears only when a matching database receipt exists.
+              </p>
+            )}
           </>
+        )}
+        {onReviewMatch && state.kind !== "guest" && (
+          <div className="coach-ranked-history-footer">
+            <button
+              type="button"
+              className="coach-btn secondary"
+              onClick={() => setRevision((current) => current + 1)}
+              disabled={state.kind === "loading"}
+            >
+              <RefreshCw size={14} aria-hidden="true" /> Refresh matches
+            </button>
+          </div>
         )}
       </div>
     </section>

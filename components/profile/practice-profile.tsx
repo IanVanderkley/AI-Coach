@@ -134,22 +134,13 @@ export function PracticeProfile() {
     <main className="page-shell profile-page player-dashboard-page">
       <div className="profile-heading">
         <div>
-          <p className="eyebrow">YOUR PLAYER OVERVIEW</p>
           <h1>
             Player Dashboard<span className="title-period">.</span>
           </h1>
-          <p className="page-subtitle">
-            Your account progression, results and mode performance in one place.
-          </p>
         </div>
         <div className="profile-heading-side">
           <ProfileLevelCard compact />
           <div className="profile-actions">
-            <span className="preview-badge">
-              {storageMode === "account"
-                ? "Practice synced to your account"
-                : "Practice history on this device"}
-            </span>
             <Link className="profile-play-link" href="/">
               <Gamepad2 size={17} aria-hidden="true" /> Back to Play
             </Link>
@@ -165,12 +156,11 @@ export function PracticeProfile() {
       >
         <div className="player-dashboard-heading">
           <div>
-            <span className="player-dashboard-eyebrow">YOUR PERFORMANCE</span>
-            <h2 id="player-overall-title">Overall snapshot</h2>
+            <h2 id="player-overall-title">Overall Statistics</h2>
           </div>
           <span className="player-dashboard-status">
             <ShieldCheck size={14} aria-hidden="true" />{" "}
-            {trackedOverallStats ? "Tracked account results" : "Recent records only"}
+            {trackedOverallStats ? "Lifetime recorded results" : "Recent records only"}
           </span>
         </div>
         <div className="player-dashboard-metrics">
@@ -193,11 +183,6 @@ export function PracticeProfile() {
             </strong>
           </div>
         </div>
-        <p className="player-dashboard-honesty">
-          {trackedOverallStats
-            ? "Ranked totals include all verified Intermediate outcomes. Practice totals include retained recordings backfilled at tracking activation and complete future account uploads. Games already trimmed before activation cannot be recovered. Practice is client-recorded, not server-verified."
-            : "Recent saved records, not lifetime statistics. Overall numbers appear after both mode histories load successfully. Ranked covers up to 10 completed Intermediate matches; Practice history follows its account or browser retention limit."}
-        </p>
       </section>
 
       <div
@@ -208,7 +193,6 @@ export function PracticeProfile() {
           mode="ranked"
           stats={rankedLifetime}
           scope="lifetime"
-          fastestWinMs={rankedLifetime?.fastestWinMs ?? null}
         />
         <PlayerModeCard
           mode="practice"
@@ -224,11 +208,6 @@ export function PracticeProfile() {
 
       <RankedHistory onRecentMatches={setRankedMatches} summaryOnly />
 
-      <p className="profile-disclaimer">
-        {storageMode === "account"
-          ? "Your account keeps up to 100 recent completed Practice games. Practice records are separate from Ranked results. This is not a lifetime win rate or an improvement claim. Coaching decisions are verified from the recorded board and actions."
-          : "Up to five recent completed games are kept in this browser tab until you close it. They are not synced to an account or used for Ranked. This is not a lifetime win rate or an improvement claim. Coaching decisions are verified from the recorded board and actions."}
-      </p>
     </main>
   );
 }

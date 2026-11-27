@@ -1,10 +1,13 @@
-import { Bot, Sparkles } from "lucide-react";
-
+// Coaching page shell.
 import { CoachConsole } from "@/components/coach/coach-console";
 import { Navbar } from "@/components/play/navbar";
 import "@/styles/profile-history-controls.css";
 import "@/styles/batch25-review-workspace.css";
 import "@/styles/batch25-personalized-coaching.css";
+import "@/styles/coaching-overview-polish.css";
+import "@/styles/coaching-learning-polish.css";
+
+import "@/styles/coaching-replay-polish.css";
 
 export const metadata = {
   title: "AI-Coach | Coaching",
@@ -22,42 +25,13 @@ export default function CoachingPage() {
       </a>
       <Navbar />
 
-      <main className="page-shell" id="main-content">
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">ANALYSE. LEARN. IMPROVE.</p>
-            <h1>
-              Coaching<span className="title-period">.</span>
-            </h1>
-            <p className="page-subtitle">
-              Review your Practice and Ranked decisions with visible-board evidence
-            </p>
-          </div>
-
-          <div className="session-info" aria-label="Coaching API summary">
-            <span className="difficulty-label">Post-game review</span>
-            <div>
-              <span>
-                <Bot size={14} aria-hidden="true" />
-                Verified replay
-              </span>
-              <span>
-                <Sparkles size={14} aria-hidden="true" />
-                AI optional
-              </span>
-            </div>
-          </div>
+      <main className="page-shell coaching-page" id="main-content">
+        <div className="page-heading coaching-page-heading">
+          <h1>Coaching<span className="title-period">.</span></h1>
         </div>
 
         <CoachConsole />
-
-        <footer className="page-footer">
-          <p>
-            Verified conclusions come from board logic. Optional AI can select a verified
-            focus.
-          </p>
-          <span>Practice and Ranked review · AI optional for Practice</span>
-        </footer>
+        {/* Global footer will be supplied by the shared layout. */}
       </main>
     </>
   );

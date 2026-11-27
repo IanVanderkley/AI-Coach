@@ -17,6 +17,16 @@ import "../styles/ui-consistency.css";
 import "../styles/practice-layout.css";
 import "../styles/batch24-gameplay.css";
 import "../styles/ranked-board-review.css";
+import "../styles/play-surface-polish.css";
+import "../styles/game-station-polish.css";
+import "../styles/profile-dashboard-polish.css";
+import "../styles/result-ceremony.css";
+import "../styles/practice-result-minimal.css";
+import "../styles/ranked-result-minimal.css";
+import "../styles/ranked-result-reveal.css";
+import "../styles/leaderboard-podium.css";
+import "../styles/site-help.css";
+import { SiteFooter } from "@/components/ui/site-footer";
 import { SiteTooltip } from "@/components/ui/site-tooltip";
 
 // These paths are relative to this file, not the browser URL.
@@ -54,6 +64,7 @@ export default function RootLayout({
     <html lang="en" className={`${roboto.variable} ${robotoCondensed.variable}`}>
       <body>
         {children}
+        <SiteFooter />
         <SiteTooltip />
       </body>
     </html>
