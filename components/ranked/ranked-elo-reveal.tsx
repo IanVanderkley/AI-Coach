@@ -8,10 +8,12 @@ export function RankedEloReveal({
   before,
   after,
   deltaLabel,
+  onSettled,
 }: {
   before: number;
   after: number;
   deltaLabel: string;
+  onSettled?: () => void;
 }) {
   const [frame, setFrame] = useState(() => eloRevealFrame(before, after, 0));
   useEffect(() => {
@@ -41,6 +43,9 @@ export function RankedEloReveal({
       motion.removeEventListener("change", motionChanged);
     };
   }, [before, after]);
+  useEffect(() => {
+    if (frame.done) onSettled?.();
+  }, [frame.done, onSettled]);
   const tone = after > before ? "gain" : after < before ? "loss" : "neutral";
   return (
     <div className="ranked-elo-reveal" data-tone={tone} data-settled={frame.done}>
