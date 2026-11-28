@@ -16,6 +16,7 @@ import {
 } from "@/lib/coach/practice-analysis";
 import { readPracticeReview } from "@/lib/coach/practice-review-store";
 import { buildSavedReview, type SavedReview } from "@/lib/coach/personalized-review";
+import { collectSkillEvidence } from "@/lib/coach/skill-evidence";
 import { parseReviewSave } from "@/lib/coach/review-request";
 
 export const runtime = "nodejs";
@@ -153,7 +154,7 @@ export async function POST(request: Request) {
       completedAt = result.completedAt;
       practiceGameId = result.gameId;
     }
-    const review = buildSavedReview(analysis);
+    const review = { ...buildSavedReview(analysis), skillEvidence: collectSkillEvidence(analysis) };
     const recordingHash = createHash("sha256")
       .update(JSON.stringify(analysis.game))
       .digest("hex");

@@ -10,3 +10,23 @@
 .coach-learning-trend-table caption { text-align: left; font-weight: 600; padding-block: 0.5rem; }
 .coach-learning-trend-table th, .coach-learning-trend-table td { padding: 0.5rem; border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent); vertical-align: top; }
 .coach-learning-trend-table td { font-variant-numeric: tabular-nums; }
+
+.coach-learning-chart-legend { display: flex; flex-wrap: wrap; gap: 0.9rem; font-weight: 600; font-size: 0.9rem; }
+.coach-learning-trend-chart { color: inherit; }
+.coach-learning-trend-accuracy { color: #e05252; }
+.coach-learning-trend-coverage { color: #4595bf; }
+.coach-learning-history-detail { margin-block: 0.75rem; }
+.coach-learning-history-detail .coach-learning-table-scroll { padding: 0.5rem; }
+.coach-learning-skill-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.75rem; }
+.coach-learning-skill-card { display: grid; gap: 0.4rem; padding: 0.85rem; border: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-radius: 0.6rem; min-width: 0; }
+.coach-learning-skill-card h3, .coach-learning-skill-card p { margin: 0; }
+.coach-learning-skill-card strong { font-size: 1.35rem; }
+.coach-learning-skill-card small { font-size: 0.8rem; }
+@media (max-width: 650px) { .coach-learning-skill-grid { grid-template-columns: minmax(0,1fr); } }
+
+/* Outer native disclosure stays closed until explicitly opened. */
+.coach-learning-more > .coach-learning-more-body { display: grid; gap: 0.75rem; padding: 0.75rem; min-width: 0; }
+.coach-learning-more:not([open]) > .coach-learning-more-body { display: none; }
+.coach-learning-more > summary { cursor: pointer; }
+.coach-learning-more > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+@media (max-width: 650px) { .coach-learning-more > .coach-learning-more-body { padding: 0.5rem; } }

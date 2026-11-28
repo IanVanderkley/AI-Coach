@@ -72,8 +72,22 @@ export function summarizeSkillEvidence(reviews: readonly SkillReview[], mode: Re
   const totals = Object.fromEntries(SKILLS.map(key => [key, { ...empty(), assessedGames: 0, mistakeGames: 0 }])) as Record<Skill, Counts & { assessedGames: number; mistakeGames: number }>;
   let evidenceGames = 0, conflictingGames = 0, invalidGames = 0;
   for (const saved of learning.selected) {
-    const matching = reviews.filter(row => row.saved.gameRef === saved.gameRef && row.saved.mode === saved.mode && row.saved.difficulty === saved.difficulty && row.saved.version === saved.version && Date.parse(row.saved.completedAt) === Date.parse(saved.completedAt));
-    const candidates = matching.flatMap(row => validEvidence(row.evidence, saved) ? [row.evidence] : []);
+    const matching = reviews.filter(row => row.saved && row.saved.gameRef === saved.gameRef && row.saved.mode === saved.mode && row.saved.difficulty === saved.difficulty && row.saved.version === saved.version && Date.parse(row.saved.completedAt) === Date.parse(saved.completedAt));
+    // Reject evidence attached to an invalid or contradictory summary, even if its
+    // counters happen to match the selected valid review.
+    const accepted = matching.filter(row => {
+      const candidate = analyzeLearningReviews([row.saved], mode, difficulty, windowSize).selected[0];
+      if (!candidate || candidate.outcome !== saved.outcome) return false;
+      const a = candidate.review.score, b = saved.review.score;
+      return a.good === b.good && a.mistakes === b.mistakes && a.uncertain === b.uncertain && a.progress === b.progress && a.score === b.score &&
+        Object.keys(saved.review.mistakeMoves).every(key => {
+          const k = key as keyof SavedReview["review"]["mistakeMoves"];
+          const left = candidate.review.mistakeMoves[k], right = saved.review.mistakeMoves[k];
+          return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every(move => right.includes(move));
+        });
+    });
+    if (matching.some(row => row.evidence != null && !accepted.includes(row))) { invalidGames++; continue; }
+    const candidates = accepted.flatMap(row => validEvidence(row.evidence, saved) ? [row.evidence] : []);
     if (matching.some(row => row.evidence != null && !validEvidence(row.evidence, saved))) { invalidGames++; continue; }
     if (!candidates.length) continue;
     if (new Set(candidates.map(signature)).size !== 1) { conflictingGames++; continue; }

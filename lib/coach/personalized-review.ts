@@ -4,6 +4,7 @@ import {
 } from "./practice-analysis.ts";
 import { scorePreparedReview, type ReviewScore } from "./review-score.ts";
 import type { EvidenceReport } from "./evidence-report.ts";
+import type { SkillEvidence } from "./skill-evidence.ts";
 
 export const REVIEW_WINDOWS = [10, 25, 50, 100] as const;
 export const MISTAKE_TYPES = [
@@ -24,6 +25,8 @@ export type SavedReview = {
     score: ReviewScore;
     report: EvidenceReport;
     mistakeMoves: Record<MistakeKey, number[]>;
+    /** Optional versioned counters from the same completed server-side replay. */
+    skillEvidence?: SkillEvidence;
   };
 };
 

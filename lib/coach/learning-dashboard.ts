@@ -1,15 +1,17 @@
 import { analyzeLearningReviews } from "./learning-analytics.ts";
 import { buildLearningTrends } from "./learning-trends.ts";
+import { summarizeSkillEvidence } from "./skill-evidence.ts";
 import { recommendLearning } from "./learning-recommendations.ts";
 import type { ReviewMode, SavedReview } from "./personalized-review.ts";
 
-/** The existing account-scoped reports endpoint returns saved summaries, not
- * action-specific evidence. Do not derive skill percentages from those summaries.
- * All three views use exactly the same validated saved-review cohort. */
+/** All views use the same validated saved-review cohort. Older snapshots lack
+ * optional action-specific evidence and contribute only to overall analytics. */
 export function buildLearningDashboard(reports: readonly SavedReview[], mode: ReviewMode, difficulty: string, windowSize: number) {
   const learning = analyzeLearningReviews(reports, mode, difficulty, windowSize);
   const trends = buildLearningTrends(learning.selected, mode, difficulty, windowSize);
-  const recommendation = recommendLearning(learning.selected.map(saved => ({ saved })), mode, difficulty, windowSize);
+  const skillReviews = reports.filter(saved => saved && typeof saved === "object").map(saved => ({ saved, evidence: saved.review?.skillEvidence }));
+  const skillSummary = summarizeSkillEvidence(skillReviews, mode, difficulty, windowSize);
+  const recommendation = recommendLearning(skillReviews, mode, difficulty, windowSize);
   // Keep the original meter contract, but use the validated, unrounded rate.
   // Both the text and the meter must represent the same observed decisions.
   return {
@@ -19,6 +21,7 @@ export function buildLearningDashboard(reports: readonly SavedReview[], mode: Re
     },
     trends,
     recommendation,
+    skillSummary,
   };
 }
 export type LearningDashboard = ReturnType<typeof buildLearningDashboard>;

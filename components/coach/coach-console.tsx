@@ -467,6 +467,12 @@ export function CoachConsole() {
     <div className="coach-visual-layout coach-full-page">
       {!reviewing ? (
         <section className="coach-history-screen" aria-labelledby="coach-history-title">
+          <PersonalizedCoaching
+            onReview={(mode, gameRef, move) => {
+              if (mode === "ranked") void openRankedGame(gameRef, move, true);
+              else void openGame(gameRef, undefined, move, true);
+            }}
+          />
           <div className="coach-practice-card">
             <div className="coach-history-heading">
               <div>
@@ -595,12 +601,6 @@ export function CoachConsole() {
           <div className="coach-ranked-history">
             <RankedHistory onReviewMatch={openRankedGame} gradeEnabled={gradesReady && autoGrades} manualGrades={rankedReviewedGrades} />
           </div>
-          <PersonalizedCoaching
-            onReview={(mode, gameRef, move) => {
-              if (mode === "ranked") void openRankedGame(gameRef, move, true);
-              else void openGame(gameRef, undefined, move, true);
-            }}
-          />
           {showDevSamples && (
             <details className="coach-demo-tests" open={sections.samples}>
               <summary>More tools and sample reports</summary>

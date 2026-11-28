@@ -18,7 +18,7 @@ import {
 } from "@/lib/coach/personalized-review";
 
 import { buildLearningDashboard, formatLearningPercent, formatLearningChange, trendAvailability } from "@/lib/coach/learning-dashboard";
-import { LearningDashboardDetail } from "./learning-dashboard-detail";
+import { LearningDashboardDetail, LearningDashboardMetrics } from "./learning-dashboard-detail";
 
 import {
   DEFAULT_LEARNING_VIEW,
@@ -425,24 +425,7 @@ export function PersonalizedCoaching({
                       : trendAvailability(trends.comparison)}</small>
                   </div>
                 </div>
-                <LearningDashboardDetail dashboard={dashboard} />
-                <details
-                  className="coach-learning-disclosure coach-learning-method"
-                  open={sections.method}
-                >
-                  <summary>How progress is measured</summary>
-                  <p>
-                    {learning.metrics.good} proven good moves ·{" "}
-                    {learning.metrics.mistakes} proven mistakes ·{" "}
-                    {learning.metrics.uncertain} uncertain moves (excluded from accuracy).
-                  </p>
-                  <p>
-                    Practice evidence is player-recorded; Ranked recordings are
-                    server-verified. Accuracy change compares equal halves of the
-                    available window, with at least five assessed games and 20 assessed decisions per half.{" "}
-                    {learning.metrics.graded} games have a learning score.
-                  </p>
-                </details>
+                <LearningDashboardMetrics dashboard={dashboard} />
                 <div
                   className="coach-learning-plan"
                   key={`${mode}-${actualDifficulty}-${lead?.key ?? "starter"}`}
@@ -487,6 +470,8 @@ export function PersonalizedCoaching({
                             "coach-quick-drill",
                           ) as HTMLDetailsElement | null;
                           if (drill) {
+                            const more = drill.closest<HTMLDetailsElement>("#coach-learning-more");
+                            if (more) more.open = true;
                             drill.open = true;
                             drill
                               .querySelector("summary")
@@ -499,195 +484,218 @@ export function PersonalizedCoaching({
                       </button>
                     </div>
                   </div>
-                  <details
-                    className="coach-learning-disclosure"
-                    id="coach-quick-drill"
-                    open={sections.drill}
-                  >
-                    <summary>
-                      Quick drill <span>{lead ? "1 question" : "General practice · 1 question"}</span>
-                    </summary>
-                    <div className="coach-learning-detail">
-                      <p>{lesson.question}</p>
-                      <div className="coach-drill-options">
-                        {lesson.options.map((option, i) => (
-                          <button
-                            type="button"
-                            className="coach-btn secondary"
-                            key={option}
-                            aria-pressed={answer === i}
-                            onClick={() => setAnswer(i)}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-                      {answer !== null && (
-                        <div
-                          role="status"
-                          className="coach-drill-feedback"
-                          data-correct={answer === lesson.answer}
-                        >
-                          <strong>
-                            {answer === lesson.answer ? "Correct." : "Not quite."}
-                          </strong>
-                          <p>{lesson.explanation}</p>
-                        </div>
-                      )}
-                    </div>
-                  </details>
-                  <details className="coach-learning-disclosure" open={sections.plan}>
-                    <summary>
-                      Your next three games <span>Training plan</span>
-                    </summary>
-                    <div className="coach-learning-detail">
-                      <ol className="coach-training-steps">
-                        <li>Play {recommendation.objective.practiceGames} {actualDifficulty} Practice games.</li>
-                        <li>
-                          {recommendation.objective.habit}
-                        </li>
-                        <li>{recommendation.objective.evaluation}</li>
-                      </ol>
-                      {mode === "ranked" && (
-                        <p className="verified-note">
-                          Practice the lesson outside Ranked. Compare future Ranked
-                          reviews separately.
-                        </p>
-                      )}
-                    </div>
-                  </details>
-                </div>
-                <details className="coach-learning-disclosure" open={sections.patterns}>
-                  <summary>
-                    Mistake patterns{" "}
-                    <span>
-                      {learning.patterns.filter((pattern) => pattern.games > 0).length}{" "}
-                      found
-                    </span>
-                  </summary>
-                  <div className="coach-learning-detail">
-                    {learning.patterns.some((pattern) => pattern.games > 0) ? (
-                      <ul className="coach-learning-patterns">
-                        {learning.patterns
-                          .filter((pattern) => pattern.games > 0)
-                          .map((pattern) => (
-                            <li key={pattern.key}>
-                              <div>
-                                <strong>{LESSONS[pattern.key].title}</strong>
-                                <p>
-                                  {pattern.occurrences}{" "}
-                                  {pattern.occurrences === 1 ? "move" : "moves"} in{" "}
-                                  {pattern.games} {pattern.games === 1 ? "game" : "games"}
-                                  {pattern.games < 2 ? " · not yet recurring" : ""}
-                                </p>
-                              </div>
-                              {pattern.example && (
-                                <button
-                                  type="button"
-                                  className="coach-btn secondary"
-                                  onClick={() =>
-                                    onReview(
-                                      mode,
-                                      pattern.example!.gameRef,
-                                      pattern.example!.move,
-                                    )
-                                  }
-                                >
-                                  Review example
-                                </button>
-                              )}
-                            </li>
-                          ))}
-                      </ul>
-                    ) : (
-                      <p>
-                        No proven mistakes in these reviews. Uncertain decisions are not
-                        assumed safe, and zero mistakes does not establish mastery.
-                      </p>
-                    )}
-                  </div>
-                </details>
-                <details
-                  className="coach-saved-reports coach-learning-disclosure"
-                  open={sections.saved}
-                >
-                  <summary>
-                    Saved reports <span>{learning.selected.length} reviews</span>
-                  </summary>
-                  <ul className="coach-learning-patterns coach-saved-report-list">
-                    {learning.selected.map((item) => (
-                      <li key={item.gameRef}>
-                        <div className="coach-saved-report-header">
-                          <strong>
-                            {item.difficulty} ·{" "}
-                            {item.outcome === "win" ? "Victory" : "Loss"}
-                          </strong>
-                          <span>
-                            {new Date(item.completedAt).toLocaleDateString()}
-                          </span>
-                          <span className="coach-learning-report-grade" data-grade={item.review.score.grade ?? "none"}>
-                            <strong>{item.review.score.grade ?? "Ungraded"}</strong>
-                            {item.review.score.score !== null && <small>{item.review.score.score}/100</small>}
-                          </span>
-                        </div>
-                        <p>
-                          {item.review.report.moments[0]?.category ??
-                            "No proven teaching moment"}
-                        </p>
-                        <div className="coach-saved-report-actions">
-                          <button
-                            type="button"
-                            className="coach-btn secondary"
-                            onClick={() => onReview(item.mode, item.gameRef)}
-                          >
-                            Open replay
-                          </button>
-                          {item.review.report.moments[0] && (
-                            <button
-                              type="button"
-                              className="coach-btn coach-history-action"
-                              onClick={() =>
-                                onReview(
-                                  item.mode,
-                                  item.gameRef,
-                                  item.review.report.moments[0].moveNumber,
-                                )
-                              }
-                            >
-                              Review key move
-                            </button>
-                          )}
-                        </div>
-                        <details
-                          className="coach-learning-findings"
-                          open={sections.findings}
-                        >
-                          <summary>
-                            Saved findings ({item.review.report.moments.length})
-                          </summary>
-                          <p>{item.review.report.takeaway}</p>
-                          {item.review.report.moments.map((moment) => (
-                            <div className="coach-saved-finding" key={moment.id}>
-                              <strong>{moment.category}</strong>
-                              <p>
-                                {moment.finding} {moment.evidence}
-                              </p>
+                  <details className="coach-learning-disclosure coach-learning-more" id="coach-learning-more">
+                    <summary>More learning details <span>Drills, progress &amp; saved reports</span></summary>
+                    <div className="coach-learning-more-body">
+                      <details
+                        className="coach-learning-disclosure"
+                        id="coach-quick-drill"
+                        open={sections.drill}
+                      >
+                        <summary>
+                          Quick drill <span>{lead ? "1 question" : "General practice · 1 question"}</span>
+                        </summary>
+                        <div className="coach-learning-detail">
+                          <p>{lesson.question}</p>
+                          <div className="coach-drill-options">
+                            {lesson.options.map((option, i) => (
                               <button
                                 type="button"
                                 className="coach-btn secondary"
-                                onClick={() =>
-                                  onReview(item.mode, item.gameRef, moment.moveNumber)
-                                }
+                                key={option}
+                                aria-pressed={answer === i}
+                                onClick={() => setAnswer(i)}
                               >
-                                Review move
+                                {option}
                               </button>
+                            ))}
+                          </div>
+                          {answer !== null && (
+                            <div
+                              role="status"
+                              className="coach-drill-feedback"
+                              data-correct={answer === lesson.answer}
+                            >
+                              <strong>
+                                {answer === lesson.answer ? "Correct." : "Not quite."}
+                              </strong>
+                              <p>{lesson.explanation}</p>
                             </div>
+                          )}
+                        </div>
+                      </details>
+                      <details className="coach-learning-disclosure" open={sections.plan}>
+                        <summary>
+                          Your next three games <span>Training plan</span>
+                        </summary>
+                        <div className="coach-learning-detail">
+                          <ol className="coach-training-steps">
+                            <li>Play {recommendation.objective.practiceGames} {actualDifficulty} {mode === "ranked" ? "Ranked" : "Practice"} games.</li>
+                            <li>
+                              {recommendation.objective.habit}
+                            </li>
+                            <li>Save those reviews. {lead ? "Aim for zero verified instances of this mistake; " : "Then "}compare assessed and uncertain decisions.</li>
+                          </ol>
+                          {mode === "ranked" && (
+                            <p className="verified-note">
+                              Practice the lesson outside Ranked. Compare future Ranked
+                              reviews separately.
+                            </p>
+                          )}
+                        </div>
+                      </details>
+                      <LearningDashboardDetail dashboard={dashboard} />
+                      <details
+                        className="coach-learning-disclosure coach-learning-method"
+                        open={sections.method}
+                      >
+                        <summary>How progress is measured</summary>
+                        <p>
+                          {learning.metrics.good} proven good moves ·{" "}
+                          {learning.metrics.mistakes} proven mistakes ·{" "}
+                          {learning.metrics.uncertain} uncertain moves (excluded from accuracy).
+                        </p>
+                        <p>
+                          Practice evidence is player-recorded; Ranked recordings are
+                          server-verified. Accuracy change compares equal halves of the
+                          available window, with at least five assessed games and 20 assessed decisions per half.{" "}
+                          {learning.metrics.graded} games have a learning score.
+                        </p>
+                      </details>
+                      <details className="coach-learning-disclosure" open={sections.patterns}>
+                        <summary>
+                          Mistake patterns{" "}
+                          <span>
+                            {learning.patterns.filter((pattern) => pattern.games > 0).length}{" "}
+                            found
+                          </span>
+                        </summary>
+                        <div className="coach-learning-detail">
+                          {learning.patterns.some((pattern) => pattern.games > 0) ? (
+                            <ul className="coach-learning-patterns">
+                              {learning.patterns
+                                .filter((pattern) => pattern.games > 0)
+                                .map((pattern) => (
+                                  <li key={pattern.key}>
+                                    <div>
+                                      <strong>{LESSONS[pattern.key].title}</strong>
+                                      <p>
+                                        {pattern.occurrences}{" "}
+                                        {pattern.occurrences === 1 ? "move" : "moves"} in{" "}
+                                        {pattern.games} {pattern.games === 1 ? "game" : "games"}
+                                        {pattern.games < 2 ? " · not yet recurring" : ""}
+                                      </p>
+                                    </div>
+                                    {pattern.example && (
+                                      <button
+                                        type="button"
+                                        className="coach-btn secondary"
+                                        onClick={() =>
+                                          onReview(
+                                            mode,
+                                            pattern.example!.gameRef,
+                                            pattern.example!.move,
+                                          )
+                                        }
+                                      >
+                                        Review example
+                                      </button>
+                                    )}
+                                  </li>
+                                ))}
+                            </ul>
+                          ) : (
+                            <p>
+                              No proven mistakes in these reviews. Uncertain decisions are not
+                              assumed safe, and zero mistakes does not establish mastery.
+                            </p>
+                          )}
+                        </div>
+                      </details>
+                      <details
+                        className="coach-saved-reports coach-learning-disclosure"
+                        open={sections.saved}
+                      >
+                        <summary>
+                          Saved reports <span>{learning.selected.length} reviews</span>
+                        </summary>
+                        <ul className="coach-learning-patterns coach-saved-report-list">
+                          {learning.selected.map((item) => (
+                            <li key={item.gameRef}>
+                              <div className="coach-saved-report-header">
+                                <strong>
+                                  {item.difficulty} ·{" "}
+                                  {item.outcome === "win" ? "Victory" : "Loss"}
+                                </strong>
+                                <span>
+                                  {new Date(item.completedAt).toLocaleDateString()}
+                                </span>
+                                <span className="coach-learning-report-grade" data-grade={item.review.score.grade ?? "none"}>
+                                  <strong>{item.review.score.grade ?? "Ungraded"}</strong>
+                                  {item.review.score.score !== null && <small>{item.review.score.score}/100</small>}
+                                </span>
+                              </div>
+                              <p>
+                                {item.review.report.moments[0]?.category ??
+                                  "No proven teaching moment"}
+                              </p>
+                              <div className="coach-saved-report-actions">
+                                <button
+                                  type="button"
+                                  className="coach-btn secondary"
+                                  onClick={() => onReview(item.mode, item.gameRef)}
+                                >
+                                  Open replay
+                                </button>
+                                {item.review.report.moments[0] && (
+                                  <button
+                                    type="button"
+                                    className="coach-btn coach-history-action"
+                                    onClick={() =>
+                                      onReview(
+                                        item.mode,
+                                        item.gameRef,
+                                        item.review.report.moments[0].moveNumber,
+                                      )
+                                    }
+                                  >
+                                    Review key move
+                                  </button>
+                                )}
+                              </div>
+                              <details
+                                className="coach-learning-findings"
+                                open={sections.findings}
+                              >
+                                <summary>
+                                  Saved findings ({item.review.report.moments.length})
+                                </summary>
+                                <p>{item.review.report.takeaway}</p>
+                                {item.review.report.moments.map((moment) => (
+                                  <div className="coach-saved-finding" key={moment.id}>
+                                    <strong>{moment.category}</strong>
+                                    <p>
+                                      {moment.finding} {moment.evidence}
+                                    </p>
+                                    <button
+                                      type="button"
+                                      className="coach-btn secondary"
+                                      onClick={() =>
+                                        onReview(item.mode, item.gameRef, moment.moveNumber)
+                                      }
+                                    >
+                                      Review move
+                                    </button>
+                                  </div>
+                                ))}
+                              </details>
+                            </li>
                           ))}
-                        </details>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
+                        </ul>
+                      </details>
+                    </div>
+                  </details>
+                </div>
               </>
             )}
           </>
