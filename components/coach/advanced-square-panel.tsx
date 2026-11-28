@@ -63,6 +63,7 @@ export function AdvancedSquarePanel({ snapshot, index, columns, onAnalyze, techn
   const result = snapshot ? inspectAdvanced(snapshot,index) : null;
   return <section className="coach-advanced-square" aria-label="Advanced square analysis">
     <h5>Advanced logic and risk</h5>
+    <p aria-live="polite"><strong>Selected square: {cellLabel(index, columns)}</strong></p>
     <p className="coach-square-local-note">The basic analysis above uses the original deduction rules.</p>
     {!snapshot ? <><p>Go beyond basic deductions. Analyze this evidence snapshot without changing the replay or its grade.</p><div className="coach-visual-controls"><button type="button" onClick={onAnalyze}>Analyze risk and advanced logic</button></div></> : !result ? <p role="status">Advanced analysis is unavailable for this evidence. No additional claims are made.</p> : <>
       {result.proof && <><p><strong>Advanced result: {result.proof.classification === "proven-safe" ? "Proven safe" : "Proven mine"}</strong></p>
@@ -71,8 +72,13 @@ export function AdvancedSquarePanel({ snapshot, index, columns, onAnalyze, techn
         {!result.proof && <p><strong>{result.risk.certainty === "safe" ? "Proven safe by exhaustive search" : result.risk.certainty === "mine" ? "Proven mine by exhaustive search" : "Still uncertain"}</strong></p>}
         <div className="coach-advanced-risks"><div>Mine risk <strong>{result.risk.mine}</strong></div><div>Survival chance <strong>{result.risk.survival}</strong></div></div>
         <p>{result.risk.certainty === "safe" ? "No compatible mine layout places a mine here." : result.risk.certainty === "mine" ? "Every compatible mine layout places a mine here." : "Some compatible mine layouts put a mine here, and others do not."}</p>
+        {result.risk.certainty === "uncertain" && <div className="coach-square-local-note">
+          <p>{result.risk.adjacentClues === 0 ? "This square does not touch a revealed clue. All covered squares without a neighboring clue are interchangeable in this probability model, so they share the same mine risk." : "This square touches revealed clues. Its risk comes from the full set of compatible layouts, not just the nearest number."}</p>
+          <p>{result.risk.sameRiskCount === 0 ? "No other covered square has exactly this calculated risk." : `${result.risk.sameRiskCount} other covered ${result.risk.sameRiskCount === 1 ? "square has" : "squares have"} exactly the same calculated risk.`}</p>
+          {result.risk.comparison && <p>For comparison, inspect {cellLabel(result.risk.comparison.index, columns)} on this same move: calculated mine risk {result.risk.comparison.mine}.</p>}
+        </div>}
         <p>Risk assumes all compatible full-board mine layouts are equally likely. Actual generation rules may change these odds. Flags are not evidence.</p>
-        {result.risk.best.length>0&&<p><strong>Lower-risk alternatives:</strong> {result.risk.best.slice(0,4).map(i=>cellLabel(i,columns)).join("; ")}{result.risk.best.length>4?` and ${result.risk.best.length-4} more at the same model risk`:""}. Calculated mine risk: {result.risk.bestMine}. These unflagged squares have the lowest calculated risk among alternatives; lower risk is not necessarily safe.</p>}
+        {result.risk.best.length>0&&<p><strong>{result.risk.bestMine === "0%" ? "Guaranteed safe alternatives:" : "Lower-risk alternatives:"}</strong> {result.risk.best.slice(0,4).map(i=>cellLabel(i,columns)).join("; ")}{result.risk.best.length>4?` and ${result.risk.best.length-4} more at the same model risk`:""}. Calculated mine risk: {result.risk.bestMine}. {result.risk.bestMine === "0%" ? "No compatible layout places a mine in any of these unflagged squares." : "These unflagged squares have the lowest calculated risk among alternatives, but are not guaranteed safe."}</p>}
         <details><summary>Exact compatible layout counts</summary><p>Layouts with a mine: {result.risk.numerator}</p><p>Total compatible layouts: {result.risk.denominator}</p></details>
       </> : <p>Probability search reached its work limit. No incomplete counts or estimated percentages are displayed.</p>}
     </>}

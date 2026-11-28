@@ -22,7 +22,7 @@ test("terminal, inconsistent, revealed and invalid inspection are unavailable",(
  assert.equal(inspect(2,2,1,"2...",1),null);assert.equal(inspect(2,2,1,"1...",0),null);assert.equal(inspect(2,2,1,"1...",99),null);
 });
 test("limited search does not display risk counts",()=>{
- const board=boardOf(".".repeat(81));for(const i of [10,13,16,37,40,43,64,67,70]) board[i]={...board[i],revealed:true,adjacentMines:1};
+ const board=boardOf(".".repeat(81));for(const i of [10,12,14,16,28,30,32,34,46,48,50,52]) board[i]={...board[i],revealed:true,adjacentMines:1};
  const s=analyzeAdvancedSnapshot(9,9,10,board);assert.equal(s.probability.status,"limited");assert.equal(inspectAdvanced(s,0).risk,null);
 });
 test("complete search certifies safe or mine without requiring a rule proof",()=>{
