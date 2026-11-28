@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TrainingPanel, ReviewTrainingPanel } from "@/components/coach/training-panel";
 import {
   readCoachingSections,
   useCoachingSections,
@@ -473,6 +474,7 @@ export function CoachConsole() {
               else void openGame(gameRef, undefined, move, true);
             }}
           />
+          <TrainingPanel />
           <div className="coach-practice-card">
             <div className="coach-history-heading">
               <div>
@@ -722,6 +724,7 @@ export function CoachConsole() {
                   onAskCoach={() => setReviewTab("coach")}
                   onReviewMove={chooseReplayMove}
                 />
+                <ReviewTrainingPanel analysis={selection.analysis} />
                 <section className="coach-review-disclosure">
                   <button
                     type="button"

@@ -2,7 +2,7 @@ import { calculateComponentProbabilities } from "./component-probabilities.ts";
 import { deduceVisibleBoard, type Proof, type VisibleCell } from "./verified-replay.ts";
 
 export const TRAINING_EXERCISE_VERSION = 1;
-export const TRAINING_MAX_SIDE = 8;
+export const TRAINING_MAX_SIDE = 30;
 export type TrainingCell = number | "covered" | "flagged";
 export type TrainingDifficulty = "beginner" | "intermediate" | "advanced";
 export type TrainingClassification = "safe" | "mine" | "uncertain";
@@ -43,7 +43,7 @@ export function parseTrainingExercise(value: unknown): TrainingExercise | null {
   const { id, title, difficulty, rows, columns, mineCount, cells, objective } = value;
   if (typeof id !== "string" || !/^[A-Za-z0-9_-]{1,80}$/.test(id) || typeof title !== "string" || !title.trim() || title.length > 120 ||
       (difficulty !== "beginner" && difficulty !== "intermediate" && difficulty !== "advanced") ||
-      !integer(rows, 2, TRAINING_MAX_SIDE) || !integer(columns, 2, TRAINING_MAX_SIDE) || !integer(mineCount, 0, rows * columns - 1) ||
+      !integer(rows, 2, TRAINING_MAX_SIDE) || !integer(columns, 2, TRAINING_MAX_SIDE) || rows * columns > 480 || !integer(mineCount, 0, rows * columns - 1) ||
       !Array.isArray(cells) || cells.length !== rows * columns) return null;
   // Array.from also visits sparse holes; Array.every alone does not.
   const copied = Array.from(cells);

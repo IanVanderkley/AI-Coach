@@ -9,6 +9,7 @@ import "@/styles/coaching-learning-polish.css";
 
 import "@/styles/coaching-replay-polish.css";
 import "@/styles/batch28e-learning-dashboard.css";
+import "@/styles/batch28f-training.css";
 
 export const metadata = {
   title: "AI-Coach | Coaching",
