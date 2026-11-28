@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { reviewOwnerTransition } from "@/lib/coach/review-owner";
 import { TrainingPanel, ReviewTrainingPanel } from "@/components/coach/training-panel";
 import {
   readCoachingSections,
@@ -113,6 +114,9 @@ export function CoachConsole() {
   } | null>(null);
   const [result, setResult] = useState<CoachResult | null>(null);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
+  const owner = useRef<string | null | undefined>(undefined);
+  const historyEpoch = useRef(0);
+  const [historyRevision, setHistoryRevision] = useState(0);
   const request = useRef(0);
   const demoRequest = useRef(0);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -276,7 +280,10 @@ export function CoachConsole() {
 
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams(window.location.search);
+    const isCurrent = () => active && historyEpoch.current === historyRevision;
+    if (!isCurrent()) return;
+    // Account changes refresh history, but must not reopen an old deep link.
+    const params = new URLSearchParams(historyRevision === 0 ? window.location.search : "");
     const reviewId = params.get("reviewId");
     const gameId = params.get("gameId");
     if (params.get("source") === "ranked") {
@@ -305,7 +312,7 @@ export function CoachConsole() {
     void repository
       .listReviewSummaries()
       .then((recent) => {
-        if (!active) return;
+        if (!isCurrent()) return;
         setGames(recent);
         if (
           request.current === initialRequest &&
@@ -317,47 +324,61 @@ export function CoachConsole() {
           void openGame(recent[0].id);
       })
       .catch(() => {
-        if (active)
+        if (isCurrent())
           setHistoryError(
             "Could not load your recent Practice games. Refresh to try again.",
           );
       })
       .finally(() => {
-        if (active) setHistoryLoading(false);
+        if (isCurrent()) setHistoryLoading(false);
       });
     return () => {
       active = false;
       ++request.current;
       ++demoRequest.current;
     };
-  }, [repository, openGame, openRankedGame]);
+  }, [repository, openGame, openRankedGame, historyRevision]);
 
   useEffect(() => {
     let active = true;
+    const isCurrent = () => active && historyEpoch.current === historyRevision;
     void loadCoachPreferences(createSettingsRepository())
       .then((value) => {
-        if (active) setPreferences(value);
+        if (isCurrent()) setPreferences(value);
       })
       .catch(() => {});
     // Configuration status is not a coaching request; GET does not invoke a provider.
     void fetch("/api/coach")
       .then((response) => (response.ok ? response.json() : null))
       .then((value: ProviderStatus | null) => {
-        if (active) setStatus(value);
+        if (isCurrent()) setStatus(value);
       })
       .catch(() => {});
     return () => {
       active = false;
     };
-  }, []);
+  }, [historyRevision]);
 
   useEffect(() => {
     const client = getSupabaseBrowserClient();
     if (!client) return;
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_OUT") return;
+    } = client.auth.onAuthStateChange((event, session) => {
+      const transition = reviewOwnerTransition(owner.current, event, session?.user.id ?? null);
+      owner.current = transition.owner;
+      if (!transition.reset) return;
+      // Invalidate promises synchronously before React schedules a new render.
+      const revision = ++historyEpoch.current;
+      setGames([]);
+      setHistoryLoading(true);
+      setHistoryError("");
+      setPreferences(null);
+      setScores({});
+      setReviewed({});
+      setUnavailableGrades({});
+      scoreSnapshot.current = {};
+      unavailableSnapshot.current = {};
       setRankedReviewedGrades({});
       ++request.current;
       ++demoRequest.current;
@@ -370,6 +391,7 @@ export function CoachConsole() {
       setResult(null);
       setLoadingKey(null);
       setError("");
+      setHistoryRevision(revision);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -387,19 +409,20 @@ export function CoachConsole() {
   useEffect(() => {
     if (!gradesReady || !autoGrades || reviewing || historyLoading) return;
     let cancelled = false;
+    const isCurrent = () => !cancelled && historyEpoch.current === historyRevision;
     async function populateGrades() {
       for (const item of games) {
-        if (cancelled) return;
+        if (!isCurrent()) return;
         if (scoreSnapshot.current[item.id] || unavailableSnapshot.current[item.id])
           continue;
         try {
           const recording = await repository.loadReview(item.id);
-          if (cancelled) return;
+          if (!isCurrent()) return;
           if (!recording) throw new Error("Missing recording");
           const score = scorePracticeReview(recording);
-          if (!cancelled) setScores((previous) => ({ ...previous, [item.id]: score }));
+          if (isCurrent()) setScores((previous) => ({ ...previous, [item.id]: score }));
         } catch {
-          if (!cancelled)
+          if (isCurrent())
             setUnavailableGrades((previous) => ({ ...previous, [item.id]: true }));
         }
         await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
@@ -409,7 +432,7 @@ export function CoachConsole() {
     return () => {
       cancelled = true;
     };
-  }, [gradesReady, autoGrades, reviewing, historyLoading, games, repository]);
+  }, [gradesReady, autoGrades, reviewing, historyLoading, games, repository, historyRevision]);
   const selectedReplay = selection?.game ?? null;
   const suggestedLesson = selection
     ? prioritizeMoments(selection.analysis.report, preferences)[0]
@@ -600,7 +623,7 @@ export function CoachConsole() {
               )}
             </div>
           </div>
-          <div className="coach-ranked-history">
+          <div className="coach-ranked-history" key={historyRevision}>
             <RankedHistory onReviewMatch={openRankedGame} gradeEnabled={gradesReady && autoGrades} manualGrades={rankedReviewedGrades} />
           </div>
           {showDevSamples && (

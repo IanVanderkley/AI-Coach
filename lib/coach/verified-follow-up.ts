@@ -103,7 +103,7 @@ export function classifyVerifiedQuestion(question: string): QuestionIntent | nul
 
   // We cannot establish counterfactual timelines from a single verified move.
   if (
-    /\b(what if|would (i|it|the|this)|if i (had|did)|hypothetical|predict|chance|probabilit|odds)\b/i.test(
+    /\b(what if|would (i|it|the|this)|if i (had|did)|hypothetical|predict\w*|chance\w*|probabilit\w*|odds|could i have won)\b/i.test(
       text,
     )
   ) {

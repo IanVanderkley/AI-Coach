@@ -42,7 +42,7 @@ export function resolveThreadQuestion(
     return {
       supported: false,
       message:
-        "This replay does not establish probabilities or hypothetical outcomes. Ask about the visible proof or the recommended next move.",
+        "This conversation does not calculate probabilities or hypothetical outcomes. For available square probabilities, inspect the replay; here, ask about the visible proof or the recommended next move.",
     };
   }
   return answerVerifiedFollowUp(report, momentId, question);
