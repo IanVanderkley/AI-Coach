@@ -29,7 +29,9 @@ export default function CoachingPage() {
 
       <main className="page-shell coaching-page" id="main-content">
         <div className="page-heading coaching-page-heading">
-          <h1>Coaching<span className="title-period">.</span></h1>
+          <h1>
+            Coaching<span className="title-period">.</span>
+          </h1>
         </div>
 
         <CoachConsole />

@@ -1,8 +1,23 @@
-import { AlertCircle, Award, CheckCircle2, Info, Loader2, ShieldCheck, TriangleAlert } from "lucide-react";
+import {
+  AlertCircle,
+  Award,
+  CheckCircle2,
+  Info,
+  Loader2,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import styles from "./feedback-notice.module.css";
 
-export type FeedbackTone = "info" | "success" | "warning" | "error" | "loading" | "reward" | "protection";
+export type FeedbackTone =
+  | "info"
+  | "success"
+  | "warning"
+  | "error"
+  | "loading"
+  | "reward"
+  | "protection";
 
 const icons = {
   info: Info,
@@ -31,7 +46,10 @@ export function FeedbackNotice({
 }) {
   const Icon = icons[tone];
   return (
-    <div className={`${styles.notice} ${styles[tone]} ${metric ? styles.withMetric : ""}`} data-feedback-tone={tone}>
+    <div
+      className={`${styles.notice} ${styles[tone]} ${metric ? styles.withMetric : ""}`}
+      data-feedback-tone={tone}
+    >
       <span className={styles.iconTile}>
         <Icon className={styles.icon} size={21} aria-hidden="true" />
       </span>

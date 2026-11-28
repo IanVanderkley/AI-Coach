@@ -17,8 +17,16 @@ import {
   type SavedReview,
 } from "@/lib/coach/personalized-review";
 
-import { buildLearningDashboard, formatLearningPercent, formatLearningChange, trendAvailability } from "@/lib/coach/learning-dashboard";
-import { LearningDashboardDetail, LearningDashboardMetrics } from "./learning-dashboard-detail";
+import {
+  buildLearningDashboard,
+  formatLearningPercent,
+  formatLearningChange,
+  trendAvailability,
+} from "@/lib/coach/learning-dashboard";
+import {
+  LearningDashboardDetail,
+  LearningDashboardMetrics,
+} from "./learning-dashboard-detail";
 import { safeSavedReviewPresentation } from "@/lib/coach/saved-review-safety";
 
 import {
@@ -285,12 +293,17 @@ export function PersonalizedCoaching({
       subscription?.unsubscribe();
     };
   }, [revision, viewReady, mode, actualDifficulty, cohortKey]);
-  const dashboard = useMemo(() => buildLearningDashboard(reports, mode, actualDifficulty, windowSize), [reports, mode, actualDifficulty, windowSize]);
+  const dashboard = useMemo(
+    () => buildLearningDashboard(reports, mode, actualDifficulty, windowSize),
+    [reports, mode, actualDifficulty, windowSize],
+  );
   const { learning, trends, recommendation } = dashboard;
   const lead = recommendation.focus;
   const accuracyChange = trends.comparison.accuracyChange;
   const lesson = LESSONS[lead?.key ?? "unnecessary-guess"];
-  useEffect(() => { setAnswer(null); }, [mode, actualDifficulty, windowSize, lead?.key, revision, status]);
+  useEffect(() => {
+    setAnswer(null);
+  }, [mode, actualDifficulty, windowSize, lead?.key, revision, status]);
   function switchMode(value: ReviewMode) {
     setView((old) => ({ ...old, mode: value }));
     setAnswer(null);
@@ -320,60 +333,59 @@ export function PersonalizedCoaching({
         </h2>
         {cohortReady && (
           <span className="coach-card-count">
-            {reports.length} recent {reports.length === 1 ? "review" : "reviews"} in this selection
+            {reports.length} recent {reports.length === 1 ? "review" : "reviews"} in this
+            selection
           </span>
         )}
       </div>
-      <p className="verified-note">
-        Learn from your saved reviews.
-      </p>
+      <p className="verified-note">Learn from your saved reviews.</p>
       <div id="personalized-coaching-body" hidden={!expanded}>
         {status !== "guest" && (
-            <div className="coach-learning-filters">
-              <label>
-                Mode
-                <select
-                  value={mode}
-                  onChange={(event) => switchMode(event.target.value as ReviewMode)}
-                >
-                  <option value="practice">Practice</option>
-                  <option value="ranked">Ranked</option>
-                </select>
-              </label>
-              <label>
-                Difficulty
-                <select
-                  value={actualDifficulty}
-                  disabled={mode === "ranked"}
-                  onChange={(event) => {
-                    const difficulty = event.target.value;
-                    setView((old) => ({ ...old, difficulty }));
-                    setAnswer(null);
-                  }}
-                >
-                  <option>Beginner</option>
-                  <option>Intermediate</option>
-                  <option>Expert</option>
-                </select>
-              </label>
-              <label>
-                Reviewed games
-                <select
-                  value={windowSize}
-                  onChange={(event) => {
-                    const windowSize = Number(event.target.value);
-                    setView((old) => ({ ...old, windowSize }));
-                    setAnswer(null);
-                  }}
-                >
-                  {REVIEW_WINDOWS.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+          <div className="coach-learning-filters">
+            <label>
+              Mode
+              <select
+                value={mode}
+                onChange={(event) => switchMode(event.target.value as ReviewMode)}
+              >
+                <option value="practice">Practice</option>
+                <option value="ranked">Ranked</option>
+              </select>
+            </label>
+            <label>
+              Difficulty
+              <select
+                value={actualDifficulty}
+                disabled={mode === "ranked"}
+                onChange={(event) => {
+                  const difficulty = event.target.value;
+                  setView((old) => ({ ...old, difficulty }));
+                  setAnswer(null);
+                }}
+              >
+                <option>Beginner</option>
+                <option>Intermediate</option>
+                <option>Expert</option>
+              </select>
+            </label>
+            <label>
+              Reviewed games
+              <select
+                value={windowSize}
+                onChange={(event) => {
+                  const windowSize = Number(event.target.value);
+                  setView((old) => ({ ...old, windowSize }));
+                  setAnswer(null);
+                }}
+              >
+                {REVIEW_WINDOWS.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         )}
         {status === "loading" || (status === "ready" && !cohortReady) ? (
           <p role="status">Loading saved reports…</p>
@@ -393,12 +405,13 @@ export function PersonalizedCoaching({
         ) : (
           <>
             <p className="verified-note">
-              {learning.selected.length} of {windowSize} saved reviews · latest 100 for this mode and difficulty
+              {learning.selected.length} of {windowSize} saved reviews · latest 100 for
+              this mode and difficulty
             </p>
             {!learning.selected.length ? (
               <p>
-                No eligible saved reviews for this mode and difficulty yet. Open a completed game
-                and select Save coaching report.
+                No eligible saved reviews for this mode and difficulty yet. Open a
+                completed game and select Save coaching report.
               </p>
             ) : (
               <>
@@ -409,9 +422,16 @@ export function PersonalizedCoaching({
                       {formatLearningPercent(learning.evidence.decisionAccuracy.percent)}
                     </strong>
                     {learning.metrics.accuracy !== null && (
-                      <progress className="coach-learning-metric-bar" aria-label="Proven decision accuracy" max={100} value={learning.metrics.accuracy} />
+                      <progress
+                        className="coach-learning-metric-bar"
+                        aria-label="Proven decision accuracy"
+                        max={100}
+                        value={learning.metrics.accuracy}
+                      />
                     )}
-                    <small>{learning.metrics.good} good · {learning.metrics.mistakes} mistakes</small>
+                    <small>
+                      {learning.metrics.good} good · {learning.metrics.mistakes} mistakes
+                    </small>
                   </div>
                   <div>
                     <span>Average learning score</span>
@@ -421,18 +441,39 @@ export function PersonalizedCoaching({
                         : `${learning.metrics.score}/100`}
                     </strong>
                     {learning.metrics.score !== null && (
-                      <progress className="coach-learning-metric-bar" aria-label="Average learning score" max={100} value={learning.metrics.score} />
+                      <progress
+                        className="coach-learning-metric-bar"
+                        aria-label="Average learning score"
+                        max={100}
+                        value={learning.metrics.score}
+                      />
                     )}
-                    <small>{learning.metrics.graded} graded {learning.metrics.graded === 1 ? "review" : "reviews"}</small>
+                    <small>
+                      {learning.metrics.graded} graded{" "}
+                      {learning.metrics.graded === 1 ? "review" : "reviews"}
+                    </small>
                   </div>
                   <div>
                     <span>Accuracy change</span>
-                    <strong className="coach-learning-change" data-direction={accuracyChange === null ? "unknown" : accuracyChange > 0 ? "up" : accuracyChange < 0 ? "down" : "flat"}>
+                    <strong
+                      className="coach-learning-change"
+                      data-direction={
+                        accuracyChange === null
+                          ? "unknown"
+                          : accuracyChange > 0
+                            ? "up"
+                            : accuracyChange < 0
+                              ? "down"
+                              : "flat"
+                      }
+                    >
                       {formatLearningChange(accuracyChange)}
                     </strong>
-                    <small>{learning.selected.length < 10
-                      ? "Needs at least 10 reviews of this mode and difficulty."
-                      : trendAvailability(trends.comparison)}</small>
+                    <small>
+                      {learning.selected.length < 10
+                        ? "Needs at least 10 reviews of this mode and difficulty."
+                        : trendAvailability(trends.comparison)}
+                    </small>
                   </div>
                 </div>
                 <LearningDashboardMetrics dashboard={dashboard} />
@@ -447,12 +488,21 @@ export function PersonalizedCoaching({
                         ? lead.games >= 2
                           ? "Your current focus"
                           : "Suggested focus (one game)"
-                        : recommendation.kind === "reinforce" ? "Reinforce supported decisions" : "Starter practice focus"}
+                        : recommendation.kind === "reinforce"
+                          ? "Reinforce supported decisions"
+                          : "Starter practice focus"}
                     </p>
                     <h3>{recommendation.title}</h3>
                     <p>{recommendation.goal}</p>
                     <p className="verified-note">{recommendation.reason}</p>
-                    {recommendation.history && <p className="verified-note">Earlier {recommendation.history.older.games} games: {recommendation.history.older.occurrences} verified instances. Recent {recommendation.history.recent.games} games: {recommendation.history.recent.occurrences} verified instances.</p>}
+                    {recommendation.history && (
+                      <p className="verified-note">
+                        Earlier {recommendation.history.older.games} games:{" "}
+                        {recommendation.history.older.occurrences} verified instances.
+                        Recent {recommendation.history.recent.games} games:{" "}
+                        {recommendation.history.recent.occurrences} verified instances.
+                      </p>
+                    )}
                     <p className="verified-note">
                       {lead
                         ? lead.games >= 2
@@ -480,7 +530,8 @@ export function PersonalizedCoaching({
                             "coach-quick-drill",
                           ) as HTMLDetailsElement | null;
                           if (drill) {
-                            const more = drill.closest<HTMLDetailsElement>("#coach-learning-more");
+                            const more =
+                              drill.closest<HTMLDetailsElement>("#coach-learning-more");
                             if (more) more.open = true;
                             drill.open = true;
                             drill
@@ -494,8 +545,14 @@ export function PersonalizedCoaching({
                       </button>
                     </div>
                   </div>
-                  <details className="coach-learning-disclosure coach-learning-more" id="coach-learning-more">
-                    <summary>More learning details <span>Drills, progress &amp; saved reports</span></summary>
+                  <details
+                    className="coach-learning-disclosure coach-learning-more"
+                    id="coach-learning-more"
+                  >
+                    <summary>
+                      More learning details{" "}
+                      <span>Drills, progress &amp; saved reports</span>
+                    </summary>
                     <div className="coach-learning-more-body">
                       <details
                         className="coach-learning-disclosure"
@@ -503,7 +560,10 @@ export function PersonalizedCoaching({
                         open={sections.drill}
                       >
                         <summary>
-                          Quick drill <span>{lead ? "1 question" : "General practice · 1 question"}</span>
+                          Quick drill{" "}
+                          <span>
+                            {lead ? "1 question" : "General practice · 1 question"}
+                          </span>
                         </summary>
                         <div className="coach-learning-detail">
                           <p>{lesson.question}</p>
@@ -540,11 +600,19 @@ export function PersonalizedCoaching({
                         </summary>
                         <div className="coach-learning-detail">
                           <ol className="coach-training-steps">
-                            <li>Play {recommendation.objective.practiceGames} {actualDifficulty} {mode === "ranked" ? "Ranked" : "Practice"} games.</li>
                             <li>
-                              {recommendation.objective.habit}
+                              Play {recommendation.objective.practiceGames}{" "}
+                              {actualDifficulty}{" "}
+                              {mode === "ranked" ? "Ranked" : "Practice"} games.
                             </li>
-                            <li>Save those reviews. {lead ? "Aim for zero verified instances of this mistake; " : "Then "}compare assessed and uncertain decisions.</li>
+                            <li>{recommendation.objective.habit}</li>
+                            <li>
+                              Save those reviews.{" "}
+                              {lead
+                                ? "Aim for zero verified instances of this mistake; "
+                                : "Then "}
+                              compare assessed and uncertain decisions.
+                            </li>
                           </ol>
                           {mode === "ranked" && (
                             <p className="verified-note">
@@ -563,20 +631,28 @@ export function PersonalizedCoaching({
                         <p>
                           {learning.metrics.good} proven good moves ·{" "}
                           {learning.metrics.mistakes} proven mistakes ·{" "}
-                          {learning.metrics.uncertain} uncertain moves (excluded from accuracy).
+                          {learning.metrics.uncertain} uncertain moves (excluded from
+                          accuracy).
                         </p>
                         <p>
                           Practice evidence is player-recorded; Ranked recordings are
                           server-verified. Accuracy change compares equal halves of the
-                          available window, with at least five assessed games and 20 assessed decisions per half.{" "}
-                          {learning.metrics.graded} games have a learning score.
+                          available window, with at least five assessed games and 20
+                          assessed decisions per half. {learning.metrics.graded} games
+                          have a learning score.
                         </p>
                       </details>
-                      <details className="coach-learning-disclosure" open={sections.patterns}>
+                      <details
+                        className="coach-learning-disclosure"
+                        open={sections.patterns}
+                      >
                         <summary>
                           Mistake patterns{" "}
                           <span>
-                            {learning.patterns.filter((pattern) => pattern.games > 0).length}{" "}
+                            {
+                              learning.patterns.filter((pattern) => pattern.games > 0)
+                                .length
+                            }{" "}
                             found
                           </span>
                         </summary>
@@ -592,7 +668,8 @@ export function PersonalizedCoaching({
                                       <p>
                                         {pattern.occurrences}{" "}
                                         {pattern.occurrences === 1 ? "move" : "moves"} in{" "}
-                                        {pattern.games} {pattern.games === 1 ? "game" : "games"}
+                                        {pattern.games}{" "}
+                                        {pattern.games === 1 ? "game" : "games"}
                                         {pattern.games < 2 ? " · not yet recurring" : ""}
                                       </p>
                                     </div>
@@ -616,8 +693,9 @@ export function PersonalizedCoaching({
                             </ul>
                           ) : (
                             <p>
-                              No proven mistakes in these reviews. Uncertain decisions are not
-                              assumed safe, and zero mistakes does not establish mastery.
+                              No proven mistakes in these reviews. Uncertain decisions are
+                              not assumed safe, and zero mistakes does not establish
+                              mastery.
                             </p>
                           )}
                         </div>
@@ -633,75 +711,86 @@ export function PersonalizedCoaching({
                           {learning.selected.map((saved) => {
                             const item = safeSavedReviewPresentation(saved);
                             return (
-                            <li key={item.gameRef}>
-                              <div className="coach-saved-report-header">
-                                <strong>
-                                  {item.difficulty} ·{" "}
-                                  {item.outcome === "win" ? "Victory" : "Loss"}
-                                </strong>
-                                <span>
-                                  {new Date(item.completedAt).toLocaleDateString()}
-                                </span>
-                                <span className="coach-learning-report-grade" data-grade={item.review.score.grade ?? "none"}>
-                                  <strong>{item.review.score.grade ?? "Ungraded"}</strong>
-                                  {item.review.score.score !== null && <small>{item.review.score.score}/100</small>}
-                                </span>
-                              </div>
-                              <p>
-                                {item.review.report.moments[0]?.category ??
-                                  "No proven teaching moment"}
-                              </p>
-                              <div className="coach-saved-report-actions">
-                                <button
-                                  type="button"
-                                  className="coach-btn secondary"
-                                  onClick={() => onReview(item.mode, item.gameRef)}
-                                >
-                                  Open replay
-                                </button>
-                                {item.review.report.moments[0] && (
+                              <li key={item.gameRef}>
+                                <div className="coach-saved-report-header">
+                                  <strong>
+                                    {item.difficulty} ·{" "}
+                                    {item.outcome === "win" ? "Victory" : "Loss"}
+                                  </strong>
+                                  <span>
+                                    {new Date(item.completedAt).toLocaleDateString()}
+                                  </span>
+                                  <span
+                                    className="coach-learning-report-grade"
+                                    data-grade={item.review.score.grade ?? "none"}
+                                  >
+                                    <strong>
+                                      {item.review.score.grade ?? "Ungraded"}
+                                    </strong>
+                                    {item.review.score.score !== null && (
+                                      <small>{item.review.score.score}/100</small>
+                                    )}
+                                  </span>
+                                </div>
+                                <p>
+                                  {item.review.report.moments[0]?.category ??
+                                    "No proven teaching moment"}
+                                </p>
+                                <div className="coach-saved-report-actions">
                                   <button
                                     type="button"
-                                    className="coach-btn coach-history-action"
-                                    onClick={() =>
-                                      onReview(
-                                        item.mode,
-                                        item.gameRef,
-                                        item.review.report.moments[0].moveNumber,
-                                      )
-                                    }
+                                    className="coach-btn secondary"
+                                    onClick={() => onReview(item.mode, item.gameRef)}
                                   >
-                                    Review key move
+                                    Open replay
                                   </button>
-                                )}
-                              </div>
-                              <details
-                                className="coach-learning-findings"
-                                open={sections.findings}
-                              >
-                                <summary>
-                                  Saved findings ({item.review.report.moments.length})
-                                </summary>
-                                <p>{item.review.report.takeaway}</p>
-                                {item.review.report.moments.map((moment) => (
-                                  <div className="coach-saved-finding" key={moment.id}>
-                                    <strong>{moment.category}</strong>
-                                    <p>
-                                      {moment.finding} {moment.evidence}
-                                    </p>
+                                  {item.review.report.moments[0] && (
                                     <button
                                       type="button"
-                                      className="coach-btn secondary"
+                                      className="coach-btn coach-history-action"
                                       onClick={() =>
-                                        onReview(item.mode, item.gameRef, moment.moveNumber)
+                                        onReview(
+                                          item.mode,
+                                          item.gameRef,
+                                          item.review.report.moments[0].moveNumber,
+                                        )
                                       }
                                     >
-                                      Review move
+                                      Review key move
                                     </button>
-                                  </div>
-                                ))}
-                              </details>
-                            </li>
+                                  )}
+                                </div>
+                                <details
+                                  className="coach-learning-findings"
+                                  open={sections.findings}
+                                >
+                                  <summary>
+                                    Saved findings ({item.review.report.moments.length})
+                                  </summary>
+                                  <p>{item.review.report.takeaway}</p>
+                                  {item.review.report.moments.map((moment) => (
+                                    <div className="coach-saved-finding" key={moment.id}>
+                                      <strong>{moment.category}</strong>
+                                      <p>
+                                        {moment.finding} {moment.evidence}
+                                      </p>
+                                      <button
+                                        type="button"
+                                        className="coach-btn secondary"
+                                        onClick={() =>
+                                          onReview(
+                                            item.mode,
+                                            item.gameRef,
+                                            moment.moveNumber,
+                                          )
+                                        }
+                                      >
+                                        Review move
+                                      </button>
+                                    </div>
+                                  ))}
+                                </details>
+                              </li>
                             );
                           })}
                         </ul>

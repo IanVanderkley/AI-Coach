@@ -38,7 +38,11 @@ export function numeralGeometry(numeral: RankNumeral | null) {
 }
 
 /** Display-only model. The supplied rating must come from the verified account or receipt. */
-export function rankEmblemModel(rating: number, showDivision = true, version: RankDisplayVersion = 3) {
+export function rankEmblemModel(
+  rating: number,
+  showDivision = true,
+  version: RankDisplayVersion = 3,
+) {
   const rank = displayRank(rating, version);
   const division = showDivision ? rank.division : null;
   return {

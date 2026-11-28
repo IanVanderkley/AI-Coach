@@ -17,11 +17,7 @@ type PlayerModeCardProps = {
 };
 
 /** Both mode summaries can be collapsed without unmounting or reloading match history. */
-export function PlayerModeCard({
-  mode,
-  stats,
-  scope = "recent",
-}: PlayerModeCardProps) {
+export function PlayerModeCard({ mode, stats, scope = "recent" }: PlayerModeCardProps) {
   const [expanded, setExpanded] = useState(true);
   const ranked = mode === "ranked";
   const verifiedLifetime = ranked && scope === "lifetime";
@@ -74,7 +70,12 @@ export function PlayerModeCard({
           <span>Win rate</span>
           <div className="dashboard-meter-slot">
             {stats?.winRate != null && (
-              <progress className="dashboard-win-meter" max={100} value={stats.winRate} aria-label={`${label} win rate`} />
+              <progress
+                className="dashboard-win-meter"
+                max={100}
+                value={stats.winRate}
+                aria-label={`${label} win rate`}
+              />
             )}
           </div>
         </div>

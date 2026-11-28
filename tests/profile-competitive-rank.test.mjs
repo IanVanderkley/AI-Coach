@@ -55,6 +55,9 @@ test("both profile routes mount a responsive accessible card without changing ac
   assert.match(css, /focus-visible/);
   assert.match(component, /aria-label="Progress toward next competitive division"/);
   assert.doesNotMatch(component, /How Elo works/);
-  assert.match(read("components/ranked/ranked-lobby.tsx"), /href="\/faq#ranked">Ranked rules/);
+  assert.match(
+    read("components/ranked/ranked-lobby.tsx"),
+    /href="\/faq#ranked">Ranked rules/,
+  );
   assert.match(component, /href="\/ranked"/);
 });

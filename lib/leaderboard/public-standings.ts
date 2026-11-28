@@ -3,7 +3,9 @@ export const PUBLIC_LEADERBOARD_ENDPOINT = "/api/leaderboard";
 export const PUBLIC_LEADERBOARD_LIMIT = 50;
 export const PUBLIC_RATING_SYSTEM = "solo-elo-benchmark-v3" as const;
 export const PUBLIC_RATING_SYSTEM_V4 = "solo-tier-rating-v4" as const;
-export type PublicRatingSystem = typeof PUBLIC_RATING_SYSTEM | typeof PUBLIC_RATING_SYSTEM_V4;
+export type PublicRatingSystem =
+  | typeof PUBLIC_RATING_SYSTEM
+  | typeof PUBLIC_RATING_SYSTEM_V4;
 export const PUBLIC_USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 
 export type EloStanding = {
@@ -64,7 +66,11 @@ export function projectPublicStandings(
     if (
       !isRow(value) ||
       !validUsername(value.username) ||
-      !validInt(value.rating, ratingSystem === PUBLIC_RATING_SYSTEM_V4 ? -2147483648 : 100, 10000) ||
+      !validInt(
+        value.rating,
+        ratingSystem === PUBLIC_RATING_SYSTEM_V4 ? -2147483648 : 100,
+        10000,
+      ) ||
       !validInt(value.games, 1, 100000000) ||
       !validInt(value.wins, 0, 100000000) ||
       !validInt(value.losses, 0, 100000000) ||
@@ -124,7 +130,8 @@ export function parsePublicStandings(value: unknown): PublicStandings {
   if (
     !isRow(value) ||
     value.source !== "server-verified" ||
-    (value.ratingSystem !== PUBLIC_RATING_SYSTEM && value.ratingSystem !== PUBLIC_RATING_SYSTEM_V4) ||
+    (value.ratingSystem !== PUBLIC_RATING_SYSTEM &&
+      value.ratingSystem !== PUBLIC_RATING_SYSTEM_V4) ||
     value.board !== "intermediate-16x16-40" ||
     !Array.isArray(value.elo) ||
     !Array.isArray(value.fastest)

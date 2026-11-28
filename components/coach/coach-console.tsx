@@ -94,7 +94,9 @@ export function CoachConsole() {
   const [showDevSamples, setShowDevSamples] = useState(false);
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      setShowDevSamples(new URLSearchParams(window.location.search).get("devSamples") === "1");
+      setShowDevSamples(
+        new URLSearchParams(window.location.search).get("devSamples") === "1",
+      );
     }
   }, []);
   useEffect(() => {
@@ -105,7 +107,9 @@ export function CoachConsole() {
   const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
   const [unavailableGrades, setUnavailableGrades] = useState<Record<string, boolean>>({});
   const [scores, setScores] = useState<Record<string, ReviewScore>>({});
-  const [rankedReviewedGrades, setRankedReviewedGrades] = useState<Record<string, ReviewScore>>({});
+  const [rankedReviewedGrades, setRankedReviewedGrades] = useState<
+    Record<string, ReviewScore>
+  >({});
   const [preferences, setPreferences] = useState<CoachPreferences | null>(null);
   const [status, setStatus] = useState<ProviderStatus | null>(null);
   const [replayFocus, setReplayFocus] = useState<{
@@ -255,7 +259,10 @@ export function CoachConsole() {
         const raw: unknown = await response.json();
         if (token !== request.current) return;
         const prepared = prepareRankedReviewResponse(raw, matchId);
-        setRankedReviewedGrades((previous) => ({ ...previous, [matchId]: prepared.review }));
+        setRankedReviewedGrades((previous) => ({
+          ...previous,
+          [matchId]: prepared.review,
+        }));
         setSelection({ mode: "ranked", id: `ranked-${matchId}`, ...prepared });
         setReplayExpanded(showReplay || readCoachingSections().replay);
         replayScrollRequested.current = showReplay;
@@ -283,7 +290,9 @@ export function CoachConsole() {
     const isCurrent = () => active && historyEpoch.current === historyRevision;
     if (!isCurrent()) return;
     // Account changes refresh history, but must not reopen an old deep link.
-    const params = new URLSearchParams(historyRevision === 0 ? window.location.search : "");
+    const params = new URLSearchParams(
+      historyRevision === 0 ? window.location.search : "",
+    );
     const reviewId = params.get("reviewId");
     const gameId = params.get("gameId");
     if (params.get("source") === "ranked") {
@@ -365,7 +374,11 @@ export function CoachConsole() {
     const {
       data: { subscription },
     } = client.auth.onAuthStateChange((event, session) => {
-      const transition = reviewOwnerTransition(owner.current, event, session?.user.id ?? null);
+      const transition = reviewOwnerTransition(
+        owner.current,
+        event,
+        session?.user.id ?? null,
+      );
       owner.current = transition.owner;
       if (!transition.reset) return;
       // Invalidate promises synchronously before React schedules a new render.
@@ -432,7 +445,15 @@ export function CoachConsole() {
     return () => {
       cancelled = true;
     };
-  }, [gradesReady, autoGrades, reviewing, historyLoading, games, repository, historyRevision]);
+  }, [
+    gradesReady,
+    autoGrades,
+    reviewing,
+    historyLoading,
+    games,
+    repository,
+    historyRevision,
+  ]);
   const selectedReplay = selection?.game ?? null;
   const suggestedLesson = selection
     ? prioritizeMoments(selection.analysis.report, preferences)[0]
@@ -624,7 +645,11 @@ export function CoachConsole() {
             </div>
           </div>
           <div className="coach-ranked-history" key={historyRevision}>
-            <RankedHistory onReviewMatch={openRankedGame} gradeEnabled={gradesReady && autoGrades} manualGrades={rankedReviewedGrades} />
+            <RankedHistory
+              onReviewMatch={openRankedGame}
+              gradeEnabled={gradesReady && autoGrades}
+              manualGrades={rankedReviewedGrades}
+            />
           </div>
           {showDevSamples && (
             <details className="coach-demo-tests" open={sections.samples}>
@@ -643,7 +668,8 @@ export function CoachConsole() {
                     else setError("No classic recording is available.");
                   }}
                 >
-                  <History size={15} aria-hidden="true" /> Run classic report (experimental)
+                  <History size={15} aria-hidden="true" /> Run classic report
+                  (experimental)
                 </button>
                 {SAMPLES.map(({ key, label, session }) => (
                   <button
@@ -796,8 +822,8 @@ export function CoachConsole() {
               <div className="coach-conversation-card" hidden={reviewTab !== "coach"}>
                 <h2>Ask your coach</h2>
                 <p className="verified-note">
-                  Ask about this completed game or explore a verified move.
-                  Answers use board logic; external AI chat is not enabled.
+                  Ask about this completed game or explore a verified move. Answers use
+                  board logic; external AI chat is not enabled.
                 </p>
                 <ReviewConversation
                   game={selectedReplay}

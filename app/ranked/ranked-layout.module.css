@@ -99,7 +99,9 @@
   border-radius: 9px;
   padding: 13px;
   min-width: 0;
-  box-shadow: inset 0 1px 0 #ffffff09, 0 3px 10px #0002;
+  box-shadow:
+    inset 0 1px 0 #ffffff09,
+    0 3px 10px #0002;
 }
 .stats svg {
   color: #ef9ca6;
@@ -427,7 +429,9 @@
 .gameplayPage .stats > div {
   background: linear-gradient(150deg, #292729, #202020 70%);
   border-color: #433c40;
-  box-shadow: inset 0 1px 0 #ffffff09, 0 2px 7px #0003;
+  box-shadow:
+    inset 0 1px 0 #ffffff09,
+    0 2px 7px #0003;
 }
 .gameplayPage .stats dt {
   color: #bcb5b8;
@@ -482,7 +486,9 @@
 .lobbySetup :global(.ranked-ladder-card) :global(.ranked-ladder-status) {
   color: #b7afb2;
 }
-.lobbySetup :global(.ranked-ladder-card.ranked-ladder-available) :global(.ranked-ladder-status) {
+.lobbySetup
+  :global(.ranked-ladder-card.ranked-ladder-available)
+  :global(.ranked-ladder-status) {
   color: #f5b7be;
 }
 .lobbySetup :global(.ranked-ladders-heading) > span {
@@ -501,8 +507,12 @@
   border-color: #d85a65;
   border-radius: 13px;
   background-color: var(--button-primary-bg, #b62634);
-  background-image: linear-gradient(135deg, #ffffff12, transparent 60%), repeating-linear-gradient(135deg, transparent 0 15px, #ffffff04 15px 16px);
-  box-shadow: inset 0 1px 0 #ffffff22, 0 5px 16px #0003;
+  background-image:
+    linear-gradient(135deg, #ffffff12, transparent 60%),
+    repeating-linear-gradient(135deg, transparent 0 15px, #ffffff04 15px 16px);
+  box-shadow:
+    inset 0 1px 0 #ffffff22,
+    0 5px 16px #0003;
 }
 .lobbyActions .playButton > svg {
   flex-shrink: 0;
@@ -511,9 +521,15 @@
   background-color: var(--button-primary-hover, #c42b39);
 }
 @media (max-width: 760px) {
-  .lobbySetup { grid-template-columns: minmax(0, 1fr); }
-  .lobbyActions .playButton { min-height: 72px; }
+  .lobbySetup {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lobbyActions .playButton {
+    min-height: 72px;
+  }
 }
 @media (max-width: 410px) {
-  .lobbySetup :global(.ranked-ladder-grid) { grid-template-columns: 1fr; }
+  .lobbySetup :global(.ranked-ladder-grid) {
+    grid-template-columns: 1fr;
+  }
 }

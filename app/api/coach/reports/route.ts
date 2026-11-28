@@ -54,7 +54,8 @@ export async function GET(request: Request) {
     if (limited) return limited;
     const params = new URL(request.url).searchParams;
     const cohort = params.has("difficulty") ? parseLearningCohort(params) : null;
-    if (params.has("difficulty") && !cohort) return fail("Invalid learning selection.", 400);
+    if (params.has("difficulty") && !cohort)
+      return fail("Invalid learning selection.", 400);
     if (params.size > 0 && !cohort) {
       if (
         params.size !== 2 ||
@@ -162,7 +163,10 @@ export async function POST(request: Request) {
       completedAt = result.completedAt;
       practiceGameId = result.gameId;
     }
-    const review = { ...buildSavedReview(analysis), skillEvidence: collectSkillEvidence(analysis) };
+    const review = {
+      ...buildSavedReview(analysis),
+      skillEvidence: collectSkillEvidence(analysis),
+    };
     const recordingHash = createHash("sha256")
       .update(JSON.stringify(analysis.game))
       .digest("hex");

@@ -68,18 +68,18 @@ export function MatchXpBar({
   return (
     <section className="match-xp-compact" aria-label="Level progress after Practice game">
       {state.kind === "loading" && <p role="status">Loading account level…</p>}
-      {state.kind === "guest" && (
-        <p role="status">Sign in to track XP.</p>
-      )}
-      {state.kind === "error" && (
-        <p role="status">Account XP unavailable.</p>
-      )}
+      {state.kind === "guest" && <p role="status">Sign in to track XP.</p>}
+      {state.kind === "error" && <p role="status">Account XP unavailable.</p>}
       {state.kind === "ready" && (
         <>
           <div className="match-xp-compact-heading">
             <strong>Level {state.progress.level.toLocaleString()}</strong>
             {receipt && (
-              <strong className="practice-xp-earned" data-earned={receipt.amount > 0} role="status">
+              <strong
+                className="practice-xp-earned"
+                data-earned={receipt.amount > 0}
+                role="status"
+              >
                 +{receipt.amount.toLocaleString()} XP
               </strong>
             )}
@@ -104,7 +104,9 @@ export function MatchXpBar({
         </>
       )}
       {state.kind === "ready" && !receipt && (
-        <p className="match-xp-compact-disclaimer" role="status">No saved Practice XP receipt for this game.</p>
+        <p className="match-xp-compact-disclaimer" role="status">
+          No saved Practice XP receipt for this game.
+        </p>
       )}
       {/* Confirmed zero-XP receipts already display their amount above. */}
     </section>

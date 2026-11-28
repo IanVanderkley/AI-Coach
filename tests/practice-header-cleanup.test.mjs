@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-const read = p => readFileSync(p, "utf8");
+const read = (p) => readFileSync(p, "utf8");
 test("Practice header removes redundant visual copy but retains the difficulty group name", () => {
   const page = read("app/page.tsx");
   assert.doesNotMatch(page, /Learn how to really play|className="session-info"/);
@@ -16,5 +16,8 @@ test("Practice header removes redundant visual copy but retains the difficulty g
 });
 test("desktop mode controls align after removing the visible legend", () => {
   const css = read("styles/game-station-polish.css");
-  assert.match(css, /Batch 27C\.1[\s\S]*?@media \(min-width: 1051px\)[\s\S]*?\.practice-page \.practice-setup-row\s*\{\s*align-items: center;/);
+  assert.match(
+    css,
+    /Batch 27C\.1[\s\S]*?@media \(min-width: 1051px\)[\s\S]*?\.practice-page \.practice-setup-row\s*\{\s*align-items: center;/,
+  );
 });

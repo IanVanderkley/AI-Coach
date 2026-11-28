@@ -20,9 +20,10 @@ export function RankEmblem({
   showDivision = true,
   decorative = false,
 }: RankEmblemProps) {
-  const emblem = policyVersion === 4
-    ? rankEmblemModel(rating, showDivision, 4)
-    : rankEmblemModel(rating, showDivision);
+  const emblem =
+    policyVersion === 4
+      ? rankEmblemModel(rating, showDivision, 4)
+      : rankEmblemModel(rating, showDivision);
   return (
     <svg
       className={className}

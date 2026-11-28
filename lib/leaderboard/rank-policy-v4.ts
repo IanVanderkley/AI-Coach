@@ -34,7 +34,8 @@ function assertRating(rating: number): void {
 /** Negative ratings are Copper V with zero displayed progress and real Elo debt. */
 export function competitiveRankV4(rating: number) {
   assertRating(rating);
-  const tier = [...RANK_TIERS_V4].reverse().find((t) => rating >= t.min) ?? RANK_TIERS_V4[0];
+  const tier =
+    [...RANK_TIERS_V4].reverse().find((t) => rating >= t.min) ?? RANK_TIERS_V4[0];
   const index = Math.max(0, Math.floor((rating - tier.min) / 100));
   const division = tier.divisions === 0 ? null : NUMERALS[tier.divisions - 1 - index];
   const floor = tier.divisions === 0 ? tier.min : tier.min + index * 100;

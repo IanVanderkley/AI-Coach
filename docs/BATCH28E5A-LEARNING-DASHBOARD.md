@@ -9,6 +9,7 @@ Integrate validated saved-review analytics, historical comparison and determinis
 - Manual acceptance: sign in, save some reviews, return to history, change mode/difficulty/window, verify accuracy and coverage, expand trends and compare table values, test recommended lesson/replay and drill, check no-data behavior, narrow viewport and keyboard, sign out. Never treat unavailable data as poor performance. Full repository tests and typecheck required.
 
 ### Compatibility follow-up
+
 The existing accuracy meter retains its original binding and null guard. The dashboard view model supplies the precise validated accuracy instead of the legacy rounded value; no missing value is converted to zero. Existing regression tests remain unchanged.
 
 The visible accuracy-change hint explicitly distinguishes fewer than ten comparable reviews from additional trend-engine requirements. At ten reviews or more, the engine remains authoritative for the message and the accuracy change.

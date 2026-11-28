@@ -6,10 +6,17 @@ import type { ReviewMode, SavedReview } from "./personalized-review.ts";
 
 /** All views use the same validated saved-review cohort. Older snapshots lack
  * optional action-specific evidence and contribute only to overall analytics. */
-export function buildLearningDashboard(reports: readonly SavedReview[], mode: ReviewMode, difficulty: string, windowSize: number) {
+export function buildLearningDashboard(
+  reports: readonly SavedReview[],
+  mode: ReviewMode,
+  difficulty: string,
+  windowSize: number,
+) {
   const learning = analyzeLearningReviews(reports, mode, difficulty, windowSize);
   const trends = buildLearningTrends(learning.selected, mode, difficulty, windowSize);
-  const skillReviews = reports.filter(saved => saved && typeof saved === "object").map(saved => ({ saved, evidence: saved.review?.skillEvidence }));
+  const skillReviews = reports
+    .filter((saved) => saved && typeof saved === "object")
+    .map((saved) => ({ saved, evidence: saved.review?.skillEvidence }));
   const skillSummary = summarizeSkillEvidence(skillReviews, mode, difficulty, windowSize);
   const recommendation = recommendLearning(skillReviews, mode, difficulty, windowSize);
   // Keep the original meter contract, but use the validated, unrounded rate.
@@ -17,7 +24,10 @@ export function buildLearningDashboard(reports: readonly SavedReview[], mode: Re
   return {
     learning: {
       ...learning,
-      metrics: { ...learning.metrics, accuracy: learning.evidence.decisionAccuracy.percent },
+      metrics: {
+        ...learning.metrics,
+        accuracy: learning.evidence.decisionAccuracy.percent,
+      },
     },
     trends,
     recommendation,
@@ -33,11 +43,17 @@ export function formatLearningChange(value: number | null): string {
   const rounded = Number(value.toFixed(1));
   return `${rounded > 0 ? "+" : ""}${rounded} pp`;
 }
-export function trendAvailability(comparison: LearningDashboard["trends"]["comparison"]): string {
+export function trendAvailability(
+  comparison: LearningDashboard["trends"]["comparison"],
+): string {
   switch (comparison.reason) {
-    case "too-few-games": return "Needs at least 10 comparable saved reviews.";
-    case "overlapping-timestamps": return "These review periods overlap in time.";
-    case "too-few-assessed-decisions": return "Each period needs five assessed games and at least 20 assessed decisions.";
-    default: return "Recent vs. earlier reviews; observed performance, not a mastery rating.";
+    case "too-few-games":
+      return "Needs at least 10 comparable saved reviews.";
+    case "overlapping-timestamps":
+      return "These review periods overlap in time.";
+    case "too-few-assessed-decisions":
+      return "Each period needs five assessed games and at least 20 assessed decisions.";
+    default:
+      return "Recent vs. earlier reviews; observed performance, not a mastery rating.";
   }
 }

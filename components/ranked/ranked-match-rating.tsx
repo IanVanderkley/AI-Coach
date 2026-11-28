@@ -94,10 +94,15 @@ export function RankedMatchRating({
               tone="reward"
               title="Verified final 50/50"
               description="Half victory Elo, rounded up."
-              metric={{ value: formatRatingDelta(value.ratingDelta, value.policyVersion), label: "Elo awarded" }}
-              detail={value.ratingAfter === 10000
-                ? "Awards cannot raise rating above 10,000 Elo. This match still counts as a defeat."
-                : "This match still counts as a defeat."}
+              metric={{
+                value: formatRatingDelta(value.ratingDelta, value.policyVersion),
+                label: "Elo awarded",
+              }}
+              detail={
+                value.ratingAfter === 10000
+                  ? "Awards cannot raise rating above 10,000 Elo. This match still counts as a defeat."
+                  : "This match still counts as a defeat."
+              }
             />
           )}
           {model.demotionProtected && (
@@ -105,7 +110,10 @@ export function RankedMatchRating({
               tone="protection"
               title="Demotion prevented"
               description="Another ordinary loss at this floor will demote you."
-              metric={{ value: value.ratingAfter.toLocaleString(), label: `${model.after.label} floor` }}
+              metric={{
+                value: value.ratingAfter.toLocaleString(),
+                label: `${model.after.label} floor`,
+              }}
             />
           )}
           <div className="ranked-rating-transition" data-transition={model.transition}>
@@ -120,7 +128,12 @@ export function RankedMatchRating({
               {model.transition !== "unchanged" && (
                 <>
                   <div className="ranked-rating-rank">
-                    <RankEmblem rating={value.ratingBefore} size={112} decorative policyVersion={value.policyVersion === 4 ? 4 : 3} />
+                    <RankEmblem
+                      rating={value.ratingBefore}
+                      size={112}
+                      decorative
+                      policyVersion={value.policyVersion === 4 ? 4 : 3}
+                    />
                     <span style={{ color: model.before.color }}>
                       {model.before.label}
                     </span>
@@ -131,7 +144,12 @@ export function RankedMatchRating({
                 </>
               )}
               <div className="ranked-rating-rank ranked-rating-current">
-                <RankEmblem rating={value.ratingAfter} size={144} decorative policyVersion={value.policyVersion === 4 ? 4 : 3} />
+                <RankEmblem
+                  rating={value.ratingAfter}
+                  size={144}
+                  decorative
+                  policyVersion={value.policyVersion === 4 ? 4 : 3}
+                />
                 <strong style={{ color: model.after.color }}>{model.after.label}</strong>
               </div>
             </div>
@@ -171,7 +189,10 @@ export function RankedMatchRating({
           Couldn’t verify this match’s rating change. No points have been assumed.
         </p>
       )}
-      <div className="ranked-rating-footer" hidden={state.kind === "ready" || state.kind === "loading"}>
+      <div
+        className="ranked-rating-footer"
+        hidden={state.kind === "ready" || state.kind === "loading"}
+      >
         {(state.kind === "missing" || state.kind === "unavailable") && (
           <button type="button" onClick={() => setRevision((n) => n + 1)}>
             <RefreshCw size={13} aria-hidden="true" /> Retry

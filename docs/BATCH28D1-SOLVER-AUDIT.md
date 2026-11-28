@@ -11,11 +11,11 @@ Run `node --test tests/batch28d-solver-audit.test.mjs` on the project's Node ver
 ## Baseline findings (isolated run on supplied source)
 
 | Dimensions | Unique evidence snapshots | Layout/snapshot pairs | Sound square claims checked | Missed forced squares | Snapshots with misses |
-|---|---:|---:|---:|---:|---:|
-| 2×2 | 47 | 80 | 60 | 0 | 0 |
-| 2×3 | 415 | 728 | 1050 | 0 | 0 |
-| 3×3 | 10999 | 19682 | 47363 | 292 | 148 |
-| Total | 11461 | 20490 | 48473 | 292 | 148 |
+| ---------- | ------------------------: | --------------------: | --------------------------: | --------------------: | --------------------: |
+| 2×2        |                        47 |                    80 |                          60 |                     0 |                     0 |
+| 2×3        |                       415 |                   728 |                        1050 |                     0 |                     0 |
+| 3×3        |                     10999 |                 19682 |                       47363 |                   292 |                   148 |
+| Total      |                     11461 |                 20490 |                       48473 |                   292 |                   148 |
 
 Zero false safe/mine claims in this finite corpus. Missed deductions are diagnostic, not test failures: soundness is mandatory but completeness is not yet required. Counts can improve as the solver evolves. This is not a proof of correctness on arbitrary boards. No probabilities are inferred. The isolated fixture uses the supplied solver, square-analysis and visual-deduction source; a fail-fast replay-hash stub is present because these tests never replay a game or compute a hash. The complete repo must be tested locally.
 

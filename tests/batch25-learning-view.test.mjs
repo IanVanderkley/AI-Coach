@@ -55,7 +55,10 @@ test("saved status is exact, owner scoped and versioned; unsave deletes reports 
   const route = readFileSync("app/api/coach/reports/route.ts", "utf8");
   const statusStart = route.indexOf("if (params.size > 0 && !cohort)");
   const statusEnd = route.indexOf("const reports:", statusStart);
-  assert.ok(statusStart >= 0 && statusEnd > statusStart, "Saved-status branch must exist");
+  assert.ok(
+    statusStart >= 0 && statusEnd > statusStart,
+    "Saved-status branch must exist",
+  );
   const status = route.slice(statusStart, statusEnd);
   assert.match(status, /params\.size !== 2/);
   assert.match(status, /parseReviewSave\(/);

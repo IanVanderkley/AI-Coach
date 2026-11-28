@@ -18,7 +18,10 @@ test("collapsing Practice hides the list without unmounting or hiding Ranked his
   assert.match(ui.slice(body, rows), /hidden=\{!practiceExpanded\}/);
   assert.match(ui.slice(body, ranked), /<\/div>\s*<\/div>\s*<div\s*$/);
   assert.doesNotMatch(ui, /practiceExpanded\s*&&\s*\(/);
-  assert.match(ui.slice(ranked), /<RankedHistory onReviewMatch=\{openRankedGame\} gradeEnabled=\{gradesReady && autoGrades\} manualGrades=\{rankedReviewedGrades\} \/>/);
+  assert.match(
+    ui.slice(ranked),
+    /<RankedHistory\s+onReviewMatch=\{openRankedGame\}\s+gradeEnabled=\{gradesReady && autoGrades\}\s+manualGrades=\{rankedReviewedGrades\}\s*\/>/,
+  );
 });
 test("Practice review links and automatic grading still use the same recordings", () => {
   assert.match(ui, /onClick=\{\(\) => void openGame\(game\.id\)\}/);

@@ -22,10 +22,17 @@ import type { PracticeAnalysis } from "@/lib/coach/practice-analysis";
 import { explainMove, timelineMove, cellLabel } from "@/lib/coach/teaching-review";
 import { TeachingProof } from "@/components/coach/teaching-proof";
 import { AdvancedSquarePanel } from "@/components/coach/advanced-square-panel";
-import { analyzeAdvancedSnapshot, type AdvancedSnapshot } from "@/lib/coach/advanced-square-analysis";
+import {
+  analyzeAdvancedSnapshot,
+  type AdvancedSnapshot,
+} from "@/lib/coach/advanced-square-analysis";
 import { SquareAnalysisPanel } from "@/components/coach/square-analysis-panel";
 import { explainSquare, prepareSquareAnalysis } from "@/lib/coach/square-analysis";
-import { describeReplayRows, nearbyReplayClues, replayKeyboardIndex } from "@/lib/coach/replay-accessibility";
+import {
+  describeReplayRows,
+  nearbyReplayClues,
+  replayKeyboardIndex,
+} from "@/lib/coach/replay-accessibility";
 import { useReplayTooltips } from "@/lib/settings/replay-tooltips";
 import { useReplayView, type ReplayView } from "@/lib/settings/replay-view";
 import type { PracticeSession } from "@/lib/practice/history";
@@ -78,7 +85,8 @@ function BoardView({
   const sources = new Set(clues);
   const taught = new Set(targets);
   const nearby = useMemo(
-    () => new Set(showNearbyClues ? nearbyReplayClues(cells, columns, inspectedIndex) : []),
+    () =>
+      new Set(showNearbyClues ? nearbyReplayClues(cells, columns, inspectedIndex) : []),
     [cells, columns, inspectedIndex, showNearbyClues],
   );
   const boardStyle: CSSProperties = {
@@ -158,12 +166,19 @@ function BoardView({
                   data-replay-index={index}
                   onClick={() => onInspect(index)}
                   onKeyDown={(event) => {
-                    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-                    const next = replayKeyboardIndex(index, columns, cells.length, event.key);
+                    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)
+                      return;
+                    const next = replayKeyboardIndex(
+                      index,
+                      columns,
+                      cells.length,
+                      event.key,
+                    );
                     if (next === null) return;
                     event.preventDefault();
                     onInspect(next);
-                    event.currentTarget.closest(".verified-board")
+                    event.currentTarget
+                      .closest(".verified-board")
                       ?.querySelector<HTMLButtonElement>(`[data-replay-index="${next}"]`)
                       ?.focus();
                   }}
@@ -179,8 +194,12 @@ function BoardView({
                           : proof === "proven mine"
                             ? "!"
                             : ""}
-                  {nearby.has(index) && <span aria-hidden="true" className="verified-nearby-marker" />}
-                  {inspected && <span aria-hidden="true" className="verified-inspection-marker" />}
+                  {nearby.has(index) && (
+                    <span aria-hidden="true" className="verified-nearby-marker" />
+                  )}
+                  {inspected && (
+                    <span aria-hidden="true" className="verified-inspection-marker" />
+                  )}
                 </button>
               </BoardCell>
             );
@@ -258,13 +277,21 @@ export function VerifiedReplayPanel({
   );
   const last = Math.max(0, frames.length - 1);
   const [cursor, setCursor] = useState<number | null>(null);
-  const [inspection, setInspection] = useState<{ game: PracticeSession; index: number } | null>(null);
+  const [inspection, setInspection] = useState<{
+    game: PracticeSession;
+    index: number;
+  } | null>(null);
   const { view: preferredView } = useReplayView();
   const [viewOverride, setBoardMode] = useState<ReplayView | null>(null);
   const boardMode = viewOverride ?? preferredView;
   const [showProofs, setShowProofs] = useState(true);
   const [playing, setPlaying] = useState(false);
-  const [advanced, setAdvanced] = useState<{ game: PracticeSession; board: readonly VisibleCell[]; mineCount: number; result: AdvancedSnapshot } | null>(null);
+  const [advanced, setAdvanced] = useState<{
+    game: PracticeSession;
+    board: readonly VisibleCell[];
+    mineCount: number;
+    result: AdvancedSnapshot;
+  } | null>(null);
   const { enabled: tooltips } = useReplayTooltips();
   const position = Math.max(0, Math.min(last, cursor ?? important[0]?.index ?? 0));
   const selectedIndex = timelineMove(position, last);
@@ -313,9 +340,15 @@ export function VerifiedReplayPanel({
     [current, selectedIndex, game.rows, game.columns, game.mineCount],
   );
   const squareContext = useMemo(
-    () => current && showProofs
-      ? prepareSquareAnalysis(selectedIndex === 0 ? current.after : current.before, game.rows, game.columns, game.mineCount)
-      : null,
+    () =>
+      current && showProofs
+        ? prepareSquareAnalysis(
+            selectedIndex === 0 ? current.after : current.before,
+            game.rows,
+            game.columns,
+            game.mineCount,
+          )
+        : null,
     [current, selectedIndex, showProofs, game.rows, game.columns, game.mineCount],
   );
   const detail = preferences?.explanationDetail ?? "standard";
@@ -334,16 +367,35 @@ export function VerifiedReplayPanel({
     );
   const opening = selectedIndex === 0;
   const chosen = current.move.row * game.columns + current.move.col;
-  const inspected = inspection?.game === game && inspection.index >= 0 && inspection.index < current.after.length
-    ? inspection.index
-    : chosen;
+  const inspected =
+    inspection?.game === game &&
+    inspection.index >= 0 &&
+    inspection.index < current.after.length
+      ? inspection.index
+      : chosen;
   const squareAnalysis = squareContext ? explainSquare(squareContext, inspected) : null;
   const advancedBoard = opening ? current.after : current.before;
-  const advancedResult = advanced && advanced.game === game && advanced.board === advancedBoard && advanced.mineCount === game.mineCount ? advanced.result : null;
+  const advancedResult =
+    advanced &&
+    advanced.game === game &&
+    advanced.board === advancedBoard &&
+    advanced.mineCount === game.mineCount
+      ? advanced.result
+      : null;
   function runAdvanced() {
     if (!showProofs || squareAnalysis?.classification !== "unresolved") return;
     setPlaying(false);
-    setAdvanced({ game, board: advancedBoard, mineCount: game.mineCount, result: analyzeAdvancedSnapshot(game.rows, game.columns, game.mineCount, advancedBoard) });
+    setAdvanced({
+      game,
+      board: advancedBoard,
+      mineCount: game.mineCount,
+      result: analyzeAdvancedSnapshot(
+        game.rows,
+        game.columns,
+        game.mineCount,
+        advancedBoard,
+      ),
+    });
   }
   const boardCellCount = current.after.length;
   function inspectSquare(index: number) {
@@ -544,7 +596,10 @@ export function VerifiedReplayPanel({
           Show deductions
         </label>
       </div>
-      <div className="verified-decision coach-replay-decision-banner" data-decision={decision}>
+      <div
+        className="verified-decision coach-replay-decision-banner"
+        data-decision={decision}
+      >
         <strong>
           {opening
             ? "Move 0 · Opening reveal"
@@ -569,10 +624,21 @@ export function VerifiedReplayPanel({
         <div className="coach-review-board-pane">
           <div className="verified-inspection-toolbar">
             <div>
-              <strong aria-live="polite">Inspecting {cellLabel(inspected, game.columns)}</strong>
-              <p>Choose any square or use the arrow keys. Nearby clues are context, not proof.</p>
+              <strong aria-live="polite">
+                Inspecting {cellLabel(inspected, game.columns)}
+              </strong>
+              <p>
+                Choose any square or use the arrow keys. Nearby clues are context, not
+                proof.
+              </p>
             </div>
-            <button type="button" onClick={() => { setPlaying(false); setInspection(null); }}>
+            <button
+              type="button"
+              onClick={() => {
+                setPlaying(false);
+                setInspection(null);
+              }}
+            >
               Return to recorded move
             </button>
           </div>
@@ -615,14 +681,30 @@ export function VerifiedReplayPanel({
             )}
           </div>
           <ul className="verified-legend coach-replay-legend" aria-label="Board symbols">
-            <li><span data-symbol="safe">✓</span> Proven safe</li>
-            <li><span data-symbol="mine">!</span> Proven mine</li>
-            <li><span data-symbol="flag">⚑</span> Player flag</li>
-            <li><span data-symbol="clue">2</span> Supporting clue</li>
-            <li><span data-symbol="suggested"> </span> Suggested reveal</li>
-            <li><span data-symbol="chosen"> </span> Recorded move</li>
-            <li><span data-symbol="inspected"> </span> Inspected square</li>
-            <li><span data-symbol="nearby"> </span> Nearby clue (context)</li>
+            <li>
+              <span data-symbol="safe">✓</span> Proven safe
+            </li>
+            <li>
+              <span data-symbol="mine">!</span> Proven mine
+            </li>
+            <li>
+              <span data-symbol="flag">⚑</span> Player flag
+            </li>
+            <li>
+              <span data-symbol="clue">2</span> Supporting clue
+            </li>
+            <li>
+              <span data-symbol="suggested"> </span> Suggested reveal
+            </li>
+            <li>
+              <span data-symbol="chosen"> </span> Recorded move
+            </li>
+            <li>
+              <span data-symbol="inspected"> </span> Inspected square
+            </li>
+            <li>
+              <span data-symbol="nearby"> </span> Nearby clue (context)
+            </li>
           </ul>
         </div>
         <div className="coach-review-insight-pane">
@@ -637,10 +719,23 @@ export function VerifiedReplayPanel({
             />
           )}
           {showProofs && squareAnalysis?.classification === "unresolved" && (
-            <AdvancedSquarePanel key={`advanced-${current.actionNumber}-${inspected}`} snapshot={advancedResult} index={inspected} columns={game.columns} onAnalyze={runAdvanced} technical={proofOptions.technical} />
+            <AdvancedSquarePanel
+              key={`advanced-${current.actionNumber}-${inspected}`}
+              snapshot={advancedResult}
+              index={inspected}
+              columns={game.columns}
+              onAnalyze={runAdvanced}
+              technical={proofOptions.technical}
+            />
           )}
-          {!showProofs && <p className="coach-square-analysis-disabled">Turn on Show deductions to inspect the logic for this square.</p>}
-          {!opening && <h4 className="coach-recorded-lesson-heading">Recorded move lesson</h4>}
+          {!showProofs && (
+            <p className="coach-square-analysis-disabled">
+              Turn on Show deductions to inspect the logic for this square.
+            </p>
+          )}
+          {!opening && (
+            <h4 className="coach-recorded-lesson-heading">Recorded move lesson</h4>
+          )}
           {showProofs && mode !== "after" && recommendation !== null && (
             <p className="verified-note">
               Recommended safe reveal: {cellLabel(recommendation, game.columns)}. The

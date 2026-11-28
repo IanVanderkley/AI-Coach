@@ -1,8 +1,9 @@
+import { RANK_POLICY, calculateRankPolicyV3 } from "./rank-policy.ts";
 import {
-  RANK_POLICY,
-  calculateRankPolicyV3,
-} from "./rank-policy.ts";
-import { displayRank, rankDefinitionsForPolicy, type RankDisplayVersion } from "./rank-display.ts";
+  displayRank,
+  rankDefinitionsForPolicy,
+  type RankDisplayVersion,
+} from "./rank-display.ts";
 import { calculateRankPolicyV4, RANK_POLICY_V4 } from "./rank-policy-v4.ts";
 
 export type RankedLobbyRating = {
@@ -53,7 +54,11 @@ export function parseRankedLobbyRating(value: unknown): RankedLobbyRating {
     row.highestRating < row.rating
   )
     throw new TypeError("Invalid Ranked lobby response.");
-  return { rating: row.rating, highestRating: row.highestRating, policyVersion: row.policyVersion };
+  return {
+    rating: row.rating,
+    highestRating: row.highestRating,
+    policyVersion: row.policyVersion,
+  };
 }
 
 /** Position is interpolated between the equally spaced rank markers, not the raw Elo range. */

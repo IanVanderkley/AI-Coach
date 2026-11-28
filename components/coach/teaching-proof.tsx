@@ -176,33 +176,36 @@ export function TeachingProof({
               </h5>
               <div className="coach-proof-split">
                 <div className="coach-proof-visual">
-              <ProofBoard visual={visual} explanation={explanation} />
-              <div className="coach-proof-key">
-                <span>Blue number = clue</span>
-                {visual.groups.length > 1 && <span>Blue ? = shared squares</span>}
-                <span>✓ = safe</span>
-                <span>M = proven mine</span>
-              </div>
+                  <ProofBoard visual={visual} explanation={explanation} />
+                  <div className="coach-proof-key">
+                    <span>Blue number = clue</span>
+                    {visual.groups.length > 1 && <span>Blue ? = shared squares</span>}
+                    <span>✓ = safe</span>
+                    <span>M = proven mine</span>
+                  </div>
                 </div>
                 <div className="coach-proof-copy">
-              <p>{lesson.introduction}</p>
-              {visual.groups.length > 1 && (
-                <div className="coach-proof-equations">
-                  {visual.groups.map((group, j) => (
-                    <p key={j}>
-                      <strong>{j === 0 ? "A" : "B"}:</strong>{" "}
-                      {describeGroup(group, j === 0 ? "A" : "B")}
-                    </p>
-                  ))}
-                </div>
-              )}
-              <p>{lesson.reasoning}</p>
-              <p className="coach-proof-conclusion" data-safe={visual.mineCount === 0}>
-                <strong>{lesson.conclusion}</strong>
-              </p>
-              <p className="coach-proof-habit">
-                <strong>Remember:</strong> {lesson.habit}
-              </p>
+                  <p>{lesson.introduction}</p>
+                  {visual.groups.length > 1 && (
+                    <div className="coach-proof-equations">
+                      {visual.groups.map((group, j) => (
+                        <p key={j}>
+                          <strong>{j === 0 ? "A" : "B"}:</strong>{" "}
+                          {describeGroup(group, j === 0 ? "A" : "B")}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  <p>{lesson.reasoning}</p>
+                  <p
+                    className="coach-proof-conclusion"
+                    data-safe={visual.mineCount === 0}
+                  >
+                    <strong>{lesson.conclusion}</strong>
+                  </p>
+                  <p className="coach-proof-habit">
+                    <strong>Remember:</strong> {lesson.habit}
+                  </p>
                 </div>
               </div>
               <details className="coach-proof-technical" open={technical}>

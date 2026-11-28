@@ -45,7 +45,10 @@ test("a crossing loss lands at zero progress then the next loss demotes", () => 
   for (let floor = 100; floor <= 3300; floor += 100) {
     const current = competitiveRankV4(floor + 1);
     assert.deepEqual(loss(floor + 1), {
-      rating: floor, delta: -1, nominalDelta: -current.loss, demotionProtected: true,
+      rating: floor,
+      delta: -1,
+      nominalDelta: -current.loss,
+      demotionProtected: true,
     });
     assert.equal(loss(floor).rating, floor - current.loss);
     assert.equal(loss(floor).demotionProtected, false);
@@ -68,7 +71,16 @@ test("winning restores protection once above a floor; no hidden protection state
 });
 
 test("nominal reward schedule uses the starting tier, including multi-division wins", () => {
-  const expected = [[160, 10], [140, 10], [120, 10], [110, 12], [100, 15], [85, 18], [70, 22], [50, 25]];
+  const expected = [
+    [160, 10],
+    [140, 10],
+    [120, 10],
+    [110, 12],
+    [100, 15],
+    [85, 18],
+    [70, 22],
+    [50, 25],
+  ];
   for (let i = 0; i < RANK_TIERS_V4.length; i++) {
     const tier = RANK_TIERS_V4[i];
     const rating = tier.min + 50;

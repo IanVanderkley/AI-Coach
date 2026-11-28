@@ -70,7 +70,7 @@ test("owner receipt route and result UI retain security and no lobby controls in
   assert.match(route, /\.eq\("user_id", user.id\)/);
   assert.match(route, /policyVersion: data.policy_version/);
   assert.match(route, /private, no-store/);
-  assert.match(ui, /RankEmblem rating=\{value.ratingAfter\}/);
+  assert.match(ui, /RankEmblem\s+rating=\{value\.ratingAfter\}/);
   assert.match(ui, /value.outcome === expectedOutcome/);
   assert.match(page, /showLobby && <RankedLobby \/>/);
   assert.match(css, /prefers-reduced-motion: reduce/);

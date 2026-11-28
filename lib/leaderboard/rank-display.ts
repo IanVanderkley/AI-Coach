@@ -7,7 +7,9 @@ export type RankDisplayVersion = 3 | 4;
 export function rankDefinitionsForPolicy(version: RankDisplayVersion) {
   if (version === 3) return RANK_DEFINITIONS;
   return RANK_TIERS_V4.map((tier, index) => ({
-    name: tier.name, min: tier.min, divisions: tier.divisions,
+    name: tier.name,
+    min: tier.min,
+    divisions: tier.divisions,
     color: RANK_DEFINITIONS[index].color,
   }));
 }

@@ -35,7 +35,9 @@ export async function GET(request: Request) {
     const admin = createAdminClient();
     const { data, error } = await admin
       .from("ranked_elo_events")
-      .select("outcome,rating_before,rating_delta,rating_after,policy_version,final_guess_compensated")
+      .select(
+        "outcome,rating_before,rating_delta,rating_after,policy_version,final_guess_compensated",
+      )
       .eq("match_id", matchIds[0])
       .eq("user_id", user.id)
       .maybeSingle();
@@ -46,7 +48,8 @@ export async function GET(request: Request) {
         { status: 404, headers },
       );
 
-    if (typeof data.final_guess_compensated !== "boolean") throw new Error("Invalid receipt marker");
+    if (typeof data.final_guess_compensated !== "boolean")
+      throw new Error("Invalid receipt marker");
     const receipt = parseRankedMatchRating({
       ...(data.final_guess_compensated ? { finalGuessCompensated: true } : {}),
       outcome: data.outcome,

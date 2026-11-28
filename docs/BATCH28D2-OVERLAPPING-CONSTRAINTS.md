@@ -11,11 +11,11 @@ The new `overlap` certificate preserves actual clue groups, prior deductions, sh
 ## Isolated results
 
 | Board | Snapshots | Previous misses | Advanced misses | Sound advanced claims |
-|---|---:|---:|---:|---:|
-| 2×2 | 47 | 0 | 0 | 60 |
-| 2×3 | 415 | 0 | 0 | 1,050 |
-| 3×3 | 10,999 | 292 | 108 | 47,547 |
-| Total | 11,461 | 292 | 108 | 48,657 |
+| ----- | --------: | --------------: | --------------: | --------------------: |
+| 2×2   |        47 |               0 |               0 |                    60 |
+| 2×3   |       415 |               0 |               0 |                 1,050 |
+| 3×3   |    10,999 |             292 |             108 |                47,547 |
+| Total |    11,461 |             292 |             108 |                48,657 |
 
 184 additional forced-square claims across 84 snapshots; zero incorrect claims in this corpus. Every traced step was checked against all assignments to its input groups; prerequisite order, group provenance, flags and traced/plain agreement were also checked. The two-sided 1-2-1 example now finds both safe squares in opt-in mode. These are synthetic small-board snapshots, not all real games. No completeness or probability guarantee follows from this finite audit.
 

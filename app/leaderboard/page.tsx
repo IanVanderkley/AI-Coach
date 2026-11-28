@@ -31,8 +31,8 @@ export default function LeaderboardPage() {
         </div>
         <VerifiedLeaderboard />
         <p className="leaderboard-bottom-link">
-          <strong>Leaderboard visibility.</strong>{" "}
-          Ranked players appear publicly by default. Anonymous mode hides your name and results.{" "}
+          <strong>Leaderboard visibility.</strong> Ranked players appear publicly by
+          default. Anonymous mode hides your name and results.{" "}
           <Link href="/settings">Manage visibility</Link>
         </p>
       </main>

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-const read = p => readFileSync(p,"utf8");
+const read = (p) => readFileSync(p, "utf8");
 const board = read("components/leaderboard/verified-leaderboard.tsx");
 const css = read("styles/leaderboard-podium.css");
 test("podium uses only the first three existing ordered public results from either tab", () => {
