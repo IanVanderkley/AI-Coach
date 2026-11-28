@@ -773,7 +773,7 @@ export function CoachConsole() {
               <div className="coach-conversation-card" hidden={reviewTab !== "coach"}>
                 <h2>Ask your coach</h2>
                 <p className="verified-note">
-                  Ask for an explanation of a verified move in this completed game.
+                  Ask about this completed game or explore a verified move.
                   Answers use board logic; external AI chat is not enabled.
                 </p>
                 <ReviewConversation

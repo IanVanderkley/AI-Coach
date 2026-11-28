@@ -8,6 +8,7 @@ import type { EvidenceReport, ReportMoment } from "./evidence-report.ts";
 export type QuestionIntent = "why" | "evidence" | "next";
 export type FollowUpAnswer = {
   momentId: string;
+  scope?: "game";
   moveNumber: number;
   intent: QuestionIntent;
   question: string;
@@ -25,6 +26,62 @@ export const SUGGESTED_QUESTIONS = [
 ] as const;
 
 const SIMPLE_QUESTION = "Explain this move in simple terms.";
+
+export const GAME_FOLLOW_UP_ID = "whole-game";
+export const GAME_FOLLOW_UP_QUESTIONS = [
+  "How did I do in this game?",
+  "What was my biggest area to improve?",
+  "What did I do well?",
+  "What should I practice next?",
+] as const;
+
+/** Context is explicit: a suggestion belongs to the answer it follows. */
+export function contextualFollowUpQuestions(answer: FollowUpAnswer): readonly string[] {
+  const choices = answer.scope === "game" ? GAME_FOLLOW_UP_QUESTIONS : [
+    "What did the visible board prove?",
+    "What should I try next time?",
+    SIMPLE_QUESTION,
+  ];
+  return choices.filter(q => q.toLowerCase() !== answer.question.trim().toLowerCase());
+}
+
+/** Whole-game answers are limited to the post-opening report, including ungraded actions. */
+export function answerGameFollowUp(report: EvidenceReport, question: string): FollowUpResult {
+  const text = question.trim();
+  if (text.length < 5 || text.length > 240) return { supported: false, message: "Enter a question between 5 and 240 characters." };
+  const normalized = text.toLowerCase().replace(/[?.!]+$/, "").trim();
+  const is = (...phrases: string[]) => phrases.some(phrase => normalized === phrase.toLowerCase().replace(/[?.!]+$/, ""));
+  const mistakes = report.moments.filter(m => m.kind === "mistake").sort((a,b) => b.occurrences - a.occurrences || a.moveNumber - b.moveNumber);
+  const good = report.moments.filter(m => m.kind === "good").sort((a,b) => b.occurrences - a.occurrences || a.moveNumber - b.moveNumber);
+  const summary = `After the opening, ${report.provenGood} actions were proven good, ${report.verifiedMistakes} were verified mistakes, and ${report.uncertainActions} had insufficient evidence for a definite judgment.`;
+  const limit = "These findings cover this completed game under the review's rules. An uncertain action is not automatically a mistake or an unavoidable guess.";
+  let title: string, paragraphs: string[], focus: ReportMoment | undefined, intent: QuestionIntent = "why";
+  if (is(GAME_FOLLOW_UP_QUESTIONS[0], "summarize my game", "how did i play", "give me a game summary")) {
+    title = "Your game in review";
+    paragraphs = [summary, limit];
+    focus = mistakes[0] ?? good[0];
+    if (focus) paragraphs.push(`One useful example is move ${focus.moveNumber}: ${focus.category.toLowerCase()}.`);
+  } else if (is(GAME_FOLLOW_UP_QUESTIONS[1], GAME_FOLLOW_UP_QUESTIONS[3], "what should i improve", "what should i practice")) {
+    title = "Your next practice focus";
+    intent = "next";
+    focus = mistakes[0];
+    paragraphs = [summary];
+    if (focus) paragraphs.push(`Among the reported mistake categories, ${focus.category.toLowerCase()} occurred ${focus.occurrences} time${focus.occurrences === 1 ? "" : "s"}. Review move ${focus.moveNumber} for an example.`, focus.nextTime);
+    else paragraphs.push("There is no reported verified mistake to prioritize. Review the available clues and practice finding proven-safe squares before guessing.");
+    paragraphs.push(limit);
+  } else if (is(GAME_FOLLOW_UP_QUESTIONS[2], "what were my strengths", "what did i get right")) {
+    title = "What you did well";
+    focus = good[0];
+    paragraphs = [summary];
+    if (focus) paragraphs.push(`A verified example is move ${focus.moveNumber}: ${focus.finding}`, focus.evidence);
+    else paragraphs.push("There is no representative proven-good moment in this report. That does not establish poor overall skill.");
+    paragraphs.push(limit);
+  } else {
+    return { supported: false, message: "Choose a whole-game question about the summary, strengths or practice focus. To ask about a specific move, select it first. For square analysis, open the replay." };
+  }
+  return { supported: true, answer: { scope: "game", momentId: GAME_FOLLOW_UP_ID, moveNumber: focus?.moveNumber ?? -1, intent, question: text, title, paragraphs: paragraphs.map(plainFollowUpCoordinates) } };
+}
+
 
 /** Suggestions describe the selected reported move, never an unseen board. */
 export function guidedFollowUpQuestions(moment?: ReportMoment): readonly string[] {

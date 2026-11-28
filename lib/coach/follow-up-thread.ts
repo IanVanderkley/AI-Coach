@@ -1,6 +1,8 @@
 import type { EvidenceReport } from "./evidence-report.ts";
 import {
   answerVerifiedFollowUp,
+  answerGameFollowUp,
+  GAME_FOLLOW_UP_ID,
   type FollowUpAnswer,
   type FollowUpResult,
 } from "./verified-follow-up.ts";
@@ -22,6 +24,7 @@ export function resolveThreadQuestion(
   momentId: string,
   question: string,
 ): FollowUpResult {
+  if (momentId === GAME_FOLLOW_UP_ID) return answerGameFollowUp(report, question);
   const selected = report.moments.find((moment) => moment.id === momentId);
   const references = [...question.matchAll(/\bmove\s*#?\s*(\d+)\b/gi)];
   if (selected && references.some((match) => Number(match[1]) !== selected.moveNumber)) {
