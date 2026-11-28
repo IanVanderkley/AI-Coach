@@ -59,6 +59,8 @@ function TrainingBoardWorkspace({ catalog, progress, onAttempt, onReset }: { cat
   const sessionRef = useRef(session);
   const [hintLevel, setHintLevel] = useState(0);
   const hintRef = useRef(0);
+  const seenHints = useRef(new Map<number, number>());
+  const exposedAnswers = useRef(new Set<number>());
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
   const recommendation = progress ? recommendTraining(catalog, progress.history) : null;
@@ -79,10 +81,20 @@ function TrainingBoardWorkspace({ catalog, progress, onAttempt, onReset }: { cat
     if (next === current) return;
     sessionRef.current = next;
     setSession(next);
-    if (next.position !== current.position) { hintRef.current = 0; setHintLevel(0); touchCell.current = null; }
+    if (next.position !== current.position) {
+      seenHints.current.set(current.position, hintRef.current);
+      hintRef.current = seenHints.current.get(next.position) ?? 0;
+      if (hintRef.current === 0) setHintLevel(0); else setHintLevel(hintRef.current);
+      touchCell.current = null;
+    }
     if (action.kind === "retry" && current.attempt?.status === "correct") { hintRef.current = 3; setHintLevel(3); }
     if (action.kind === "answer" && next.attempt) {
-      onAttempt?.({ id: catalog[current.position].exercise.id, correct: next.attempt.status === "correct", hints: hintRef.current });
+      onAttempt?.({ id: catalog[current.position].exercise.id, correct: next.attempt.status === "correct", hints: exposedAnswers.current.has(current.position) ? 3 : hintRef.current });
+      // Correct feedback and classification feedback reveal the actual answer.
+      // Subsequent attempts in this workspace are assisted, even after navigation.
+      if (next.attempt.status === "correct" || catalog[current.position].exercise.objective.kind === "classify-square") {
+        exposedAnswers.current.add(current.position);
+      }
     }
   };
   const guidance = trainingGuidance(prepared, attempt?.status === "correct" ? attempt.answer : undefined);
@@ -101,16 +113,16 @@ function TrainingBoardWorkspace({ catalog, progress, onAttempt, onReset }: { cat
           <div><span>Recent attempts</span><strong>{stats.attempts}</strong></div>
           <div><span>Correct answers</span><strong>{stats.correct}</strong></div>
           <div><span>Different puzzles solved</span><strong>{stats.solved}/{catalog.length}</strong></div>
-          <div><span>Attempts with hints shown</span><strong>{stats.assisted}</strong></div>
+          <div><span>Assisted attempts</span><strong>{stats.assisted}</strong></div>
         </div>
-        <p className="verified-note">Last {TRAINING_HISTORY_LIMIT} answers to general exercises, including retries. Hints count explanations shown during this visit to a puzzle. Shared by anyone using this browser. Not a skill rating.</p>
+        <p className="verified-note">Last {TRAINING_HISTORY_LIMIT} answers to general exercises, including retries. Assistance includes hints or an answer already shown during this training session. Shared by anyone using this browser. Not a skill rating.</p>
         <div className="coach-training-recommendation">
           <div><strong>Recommended: {recommendation.difficulty}</strong><p>{recommendation.reason}</p></div>
           <button className="coach-btn secondary" type="button" disabled={recommendation.position === session.position && !attempt} onClick={() => dispatch(recommendation.position === session.position ? {kind:"retry"} : {kind:"jump",position:recommendation.position})}>Practice recommended exercise</button>
         </div>
         <label className="coach-training-level">Choose difficulty <select value={exercise.difficulty} onChange={event => { const position = catalog.findIndex(p => p.exercise.difficulty === event.target.value); if (position >= 0) dispatch({kind:"jump",position}); }}>{TRAINING_LEVELS.map(level => <option key={level} value={level}>{level[0].toUpperCase() + level.slice(1)}</option>)}</select></label>
         <details className="coach-training-history"><summary>Recent training history</summary>
-          {progress.history.length ? <ul>{progress.history.slice(-10).reverse().map((entry,i) => <li key={i}><span>{catalog.find(p => p.exercise.id === entry.id)?.exercise.title}</span><strong>{entry.correct ? "Correct" : "Incorrect"}</strong><small>{entry.hints === 0 ? "No hint displayed" : `Hint level ${entry.hints}`}</small></li>)}</ul> : <p>No training answers yet.</p>}
+          {progress.history.length ? <ul>{progress.history.slice(-10).reverse().map((entry,i) => <li key={i}><span>{catalog.find(p => p.exercise.id === entry.id)?.exercise.title}</span><strong>{entry.correct ? "Correct" : "Incorrect"}</strong><small>{entry.hints === 0 ? "No assistance recorded" : entry.hints === 3 ? "Answer or full explanation shown" : `Hint level ${entry.hints}`}</small></li>)}</ul> : <p>No training answers yet.</p>}
           {confirmReset ? <div className="coach-training-actions"><span>Clear the training history saved in this browser?</span><button type="button" className="coach-btn secondary" onClick={() => setConfirmReset(false)}>Cancel</button><button type="button" className="coach-btn" onClick={() => { const cleared = onReset?.(); setConfirmReset(false); setResetMessage(cleared ? "Training history cleared." : "Could not clear saved history. Check browser storage settings."); }}>Clear history</button></div> : <button type="button" className="coach-btn secondary" disabled={!progress.history.length} onClick={() => {setConfirmReset(true);setResetMessage("");}}>Reset training history</button>}
           {resetMessage && <p role="status">{resetMessage}</p>}
         </details>
@@ -207,6 +219,6 @@ export function ReviewTrainingPanel({ analysis }: { analysis: CompletedGameAnaly
   return <section className="coach-training-panel coach-review-training" aria-label="Train from your mistakes">
     <h2>Train from your mistakes</h2>
     <p className="verified-note">Try a verified puzzle using the complete visible board before a mistake in this review. Up to three exercises are available.</p>
-    {catalog === null ? <button type="button" className="coach-btn secondary" onClick={() => setCatalog(prepareReviewTraining({ rows: analysis.game.rows, columns: analysis.game.columns, mineCount: analysis.game.mineCount }, analysis.reviewed))}>Practice my mistakes</button> : catalog.length ? <TrainingBoardWorkspace catalog={catalog} /> : <p role="status">No supported exercise could be fully verified from the first few mistakes. Try the starter exercises in Coaching instead.</p>}
+    {catalog === null ? <button type="button" className="coach-btn secondary" onClick={() => setCatalog(prepareReviewTraining({ rows: analysis.game.rows, columns: analysis.game.columns, mineCount: analysis.game.mineCount, opening: analysis.opening }, analysis.reviewed))}>Practice my mistakes</button> : catalog.length ? <TrainingBoardWorkspace catalog={catalog} /> : <p role="status">No supported exercise could be fully verified from the first few mistakes. Try the starter exercises in Coaching instead.</p>}
   </section>;
 }

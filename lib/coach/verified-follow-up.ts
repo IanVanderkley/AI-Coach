@@ -24,6 +24,21 @@ export const SUGGESTED_QUESTIONS = [
   "What should I try next time?",
 ] as const;
 
+const SIMPLE_QUESTION = "Explain this move in simple terms.";
+
+/** Suggestions describe the selected reported move, never an unseen board. */
+export function guidedFollowUpQuestions(moment?: ReportMoment): readonly string[] {
+  if (!moment) return SUGGESTED_QUESTIONS;
+  const why = moment.kind === "mistake" ? "Why was this a mistake?" : "Why was this a good move?";
+  const evidence = moment.action === "flag" ? "What did the visible clues prove about this flag?" : "What did the visible clues prove about this move?";
+  return [why, evidence, SUGGESTED_QUESTIONS[2], SIMPLE_QUESTION];
+}
+
+/** Translate solver coordinates in responses without altering evidence IDs. */
+export function plainFollowUpCoordinates(text: string): string {
+  return text.replace(/\bR(\d+)C(\d+)\b/gi, (_match, row: string, column: string) => `row ${row}, column ${column}`);
+}
+
 /** The text is only used to recognize one of three safe, rule-backed intents. */
 export function classifyVerifiedQuestion(question: string): QuestionIntent | null {
   const text = question.trim().toLowerCase();
@@ -125,6 +140,15 @@ export function answerVerifiedFollowUp(
       message: "That move isn't one of the verified coaching moments in this report.",
     };
   }
+  if (question.trim().length < 5 || question.trim().length > 240) return { supported: false, message: "Enter a question between 5 and 240 characters about this move." };
+  // The report contains one teaching moment, not a general square-inspection
+  // context. Do not answer a coordinate question with an unrelated proof.
+  if (/\b(?:r\s*\d+\s*c\s*\d+|row\s*#?\s*\d+|col(?:umn)?\s*#?\s*\d+)\b/i.test(question)) {
+    return { supported: false, message: "To ask about a particular square, open this move in replay and select the square on the board. Here you can ask about the selected teaching moment." };
+  }
+  if ([...question.matchAll(/\bmove\s*#?\s*(\d+)\b/gi)].some(match => Number(match[1]) !== moment.moveNumber)) {
+    return { supported: false, message: "Select the move you want to ask about. Questions comparing multiple moves are not supported yet." };
+  }
   const intent = classifyVerifiedQuestion(question);
   if (!intent) {
     return {
@@ -133,5 +157,10 @@ export function answerVerifiedFollowUp(
         "I can't verify an answer to that question from the recorded move. Try asking why the move was classified this way, what the visible board proved, or what to try next time. Unsupported questions do not use your one follow-up.",
     };
   }
-  return { supported: true, answer: answerForMoment(moment, intent, question.trim()) };
+  const answer = answerForMoment(moment, intent, question.trim());
+  if (question.trim().toLowerCase() === SIMPLE_QUESTION.toLowerCase()) {
+    answer.title = "The short explanation";
+    answer.paragraphs = [moment.finding, `Next time: ${moment.nextTime}`];
+  }
+  return { supported: true, answer: { ...answer, paragraphs: answer.paragraphs.map(plainFollowUpCoordinates) } };
 }
