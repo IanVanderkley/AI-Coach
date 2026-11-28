@@ -26,12 +26,23 @@ export type ProofVisual = {
   result: number[];
   mineCount: number;
 };
+/** Experimental certificate for partial overlaps; not a subset diagram. */
+export type OverlapProof = {
+  groups: TeachingGroup[];
+  region: "shared" | "only-a" | "only-b";
+  sharedMin: number;
+  sharedMax: number;
+  result: number[];
+  mineCount: number;
+};
+
 export type ProofDerivation = {
   title: string;
   text: string;
   dependencies: number[];
   clues: number[];
   visual?: ProofVisual;
+  overlap?: OverlapProof;
 };
 
 export type Proof = {
@@ -128,6 +139,7 @@ export function deduceVisibleBoard(
   mineCount: number,
   cells: readonly VisibleCell[],
   explain = false,
+  advancedOverlap = false,
 ): Deductions {
   const total = rows * columns;
   if (
@@ -143,6 +155,11 @@ export function deduceVisibleBoard(
     throw new Error("Invalid visible board dimensions or mine count.");
   }
 
+  // Advanced inspection is experimental, not enabled by existing replay callers.
+  if (advancedOverlap && cells.some(cell => cell.exploded || (cell.revealed && cell.adjacentMines === null))) {
+    return { safe: [], mines: [] };
+  }
+  let overlapBudget = 100_000;
   const safe = new Map<number, Proof>();
   const mines = new Map<number, Proof>();
 
@@ -333,6 +350,76 @@ export function deduceVisibleBoard(
           : undefined;
         for (const index of difference) {
           changed = add(target, index, reason, evidence, derivation) || changed;
+        }
+      }
+    }
+
+    // Only attempt the experimental rule once the existing rules are exhausted.
+    // All constraints refer to the same pass's unresolved cells. No flags or
+    // hidden mine locations are used. An exhausted budget proves nothing new.
+    if (!changed && advancedOverlap && overlapBudget > 0) {
+      const key = (indices: readonly number[]) => [...indices].sort((a, b) => a - b).join(",");
+      const byCells = new Map<string, Constraint>();
+      for (const constraint of constraints) {
+        const k = key(constraint.cells);
+        const previous = byCells.get(k);
+        if (previous && previous.count !== constraint.count) return { safe: [], mines: [] };
+        if (!previous) byCells.set(k, constraint);
+      }
+      const unique = [...byCells.values()];
+      pairs: for (let i = 0; i < unique.length; i++) {
+        const a = unique[i];
+        const setA = new Set(a.cells);
+        for (let j = i + 1; j < unique.length; j++) {
+          if (overlapBudget-- <= 0) break pairs;
+          const b = unique[j];
+          const setB = new Set(b.cells);
+          const shared = b.cells.filter(n => setA.has(n));
+          const onlyA = a.cells.filter(n => !setB.has(n));
+          const onlyB = b.cells.filter(n => !setA.has(n));
+          if (!shared.length || !onlyA.length || !onlyB.length) continue;
+          let lo = Math.max(0, a.count - onlyA.length, b.count - onlyB.length);
+          let hi = Math.min(shared.length, a.count, b.count);
+          // If a third visible constraint covers exactly the union, inclusion-
+          // exclusion determines the shared mine count (e.g. two-sided 1-2-1).
+          const union = byCells.get(key([...a.cells, ...onlyB]));
+          if (union) {
+            const exact = a.count + b.count - union.count;
+            lo = Math.max(lo, exact);
+            hi = Math.min(hi, exact);
+          }
+          if (lo > hi) return { safe: [], mines: [] };
+          const inputs = union ? [a, b, union] : [a, b];
+          const evidence = [...new Set(inputs.flatMap(c => c.source))];
+          const regions = [
+            { region: "shared" as const, cells: shared, min: lo, max: hi },
+            { region: "only-a" as const, cells: onlyA, min: a.count - hi, max: a.count - lo },
+            { region: "only-b" as const, cells: onlyB, min: b.count - hi, max: b.count - lo },
+          ];
+          for (const region of regions) {
+            const count = region.min === region.max ? region.min : -1;
+            if (count !== 0 && count !== region.cells.length) continue;
+            const target = count === 0 ? safe : mines;
+            const reason = `Partial overlap of visible constraints proves this cell is ${count === 0 ? "safe" : "a mine"}.`;
+            const derivation: ProofDerivation | undefined = explain ? {
+              title: "Overlapping clues — shared mine bounds",
+              text: `${inputs.map((c, k) => `Group ${"ABC"[k]}: ${constraintText(c)}`).join(" ")} The two groups share ${shared.length} squares (${coordinates(shared)}). Their shared mine count is between ${lo} and ${hi}.${union ? ` The union contains ${union.count} mines, so ${a.count} + ${b.count} - ${union.count} gives the shared mine count.` : ""} The ${region.region} region has between ${region.min} and ${region.max} mines. ${conclusion(count, region.cells)}`,
+              dependencies: [...new Set(inputs.flatMap(c => c.teaching?.dependencies ?? []))],
+              clues: evidence,
+              overlap: {
+                groups: inputs.map(c => c.teaching!.group),
+                region: region.region,
+                sharedMin: lo,
+                sharedMax: hi,
+                result: region.cells,
+                mineCount: count,
+              },
+            } : undefined;
+            for (const index of region.cells) {
+              if ((count === 0 ? mines : safe).has(index)) return { safe: [], mines: [] };
+              changed = add(target, index, reason, evidence, derivation) || changed;
+            }
+          }
         }
       }
     }
