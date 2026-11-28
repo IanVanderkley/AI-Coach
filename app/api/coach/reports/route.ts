@@ -18,6 +18,7 @@ import { readPracticeReview } from "@/lib/coach/practice-review-store";
 import { buildSavedReview, type SavedReview } from "@/lib/coach/personalized-review";
 import { collectSkillEvidence } from "@/lib/coach/skill-evidence";
 import { parseReviewSave } from "@/lib/coach/review-request";
+import { parseLearningCohort } from "@/lib/coach/saved-review-safety";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,7 +53,9 @@ export async function GET(request: Request) {
     const limited = await guardRankedRateLimit(admin, userId, "read");
     if (limited) return limited;
     const params = new URL(request.url).searchParams;
-    if (params.size > 0) {
+    const cohort = params.has("difficulty") ? parseLearningCohort(params) : null;
+    if (params.has("difficulty") && !cohort) return fail("Invalid learning selection.", 400);
+    if (params.size > 0 && !cohort) {
       if (
         params.size !== 2 ||
         params.getAll("mode").length !== 1 ||
@@ -76,13 +79,18 @@ export async function GET(request: Request) {
       return Response.json({ saved: data !== null }, { headers });
     }
     const reports: SavedReview[] = [];
-    for (const mode of ["practice", "ranked"] as const) {
-      const { data, error } = await admin
+    // Scope before limiting: active players retain a full window for each difficulty.
+    // Preserve the bounded no-query response for existing callers.
+    const modes = cohort ? [cohort.mode] : (["practice", "ranked"] as const);
+    for (const mode of modes) {
+      let history = admin
         .from("coaching_reviews")
         .select("game_ref,difficulty,outcome,completed_at,analysis_version,review")
         .eq("user_id", userId)
         .eq("mode", mode)
-        .eq("analysis_version", PRACTICE_ANALYSIS_VERSION)
+        .eq("analysis_version", PRACTICE_ANALYSIS_VERSION);
+      if (cohort) history = history.eq("difficulty", cohort.difficulty);
+      const { data, error } = await history
         .order("completed_at", { ascending: false })
         .order("id", { ascending: false })
         .limit(100);

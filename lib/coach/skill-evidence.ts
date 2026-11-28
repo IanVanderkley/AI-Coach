@@ -76,6 +76,8 @@ export function summarizeSkillEvidence(reviews: readonly SkillReview[], mode: Re
     // Reject evidence attached to an invalid or contradictory summary, even if its
     // counters happen to match the selected valid review.
     const accepted = matching.filter(row => {
+      // The selected object has already passed the exact same validation.
+      if (row.saved === saved) return true;
       const candidate = analyzeLearningReviews([row.saved], mode, difficulty, windowSize).selected[0];
       if (!candidate || candidate.outcome !== saved.outcome) return false;
       const a = candidate.review.score, b = saved.review.score;

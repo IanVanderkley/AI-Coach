@@ -19,6 +19,7 @@ import {
 
 import { buildLearningDashboard, formatLearningPercent, formatLearningChange, trendAvailability } from "@/lib/coach/learning-dashboard";
 import { LearningDashboardDetail, LearningDashboardMetrics } from "./learning-dashboard-detail";
+import { safeSavedReviewPresentation } from "@/lib/coach/saved-review-safety";
 
 import {
   DEFAULT_LEARNING_VIEW,
@@ -205,6 +206,10 @@ export function PersonalizedCoaching({
   const [view, setView] = useState(DEFAULT_LEARNING_VIEW);
   const [viewReady, setViewReady] = useState(false);
   const { mode, difficulty, windowSize, expanded } = view;
+  const actualDifficulty = mode === "ranked" ? "Intermediate" : difficulty;
+  const cohortKey = `${mode}:${actualDifficulty}`;
+  const [loadedCohort, setLoadedCohort] = useState<string | null>(null);
+  const cohortReady = status === "ready" && loadedCohort === cohortKey;
   useEffect(() => {
     try {
       setView(readLearningView(window.localStorage));
@@ -225,12 +230,15 @@ export function PersonalizedCoaching({
   const [answer, setAnswer] = useState<number | null>(null);
   const owner = useRef<string | null>(null);
   useEffect(() => {
+    if (!viewReady) return;
     const controller = new AbortController();
     setReports([]);
+    setLoadedCohort(null);
     setStatus("loading");
+    const query = new URLSearchParams({ mode, difficulty: actualDifficulty });
     async function load() {
       try {
-        const response = await fetch("/api/coach/reports", {
+        const response = await fetch(`/api/coach/reports?${query}`, {
           cache: "no-store",
           signal: controller.signal,
         });
@@ -244,6 +252,7 @@ export function PersonalizedCoaching({
         if (controller.signal.aborted) return;
         if (!Array.isArray(result.reports)) throw new Error("Invalid reports");
         setReports(result.reports);
+        setLoadedCohort(cohortKey);
         setStatus("ready");
       } catch {
         if (!controller.signal.aborted) setStatus("error");
@@ -275,8 +284,7 @@ export function PersonalizedCoaching({
       controller.abort();
       subscription?.unsubscribe();
     };
-  }, [revision]);
-  const actualDifficulty = mode === "ranked" ? "Intermediate" : difficulty;
+  }, [revision, viewReady, mode, actualDifficulty, cohortKey]);
   const dashboard = useMemo(() => buildLearningDashboard(reports, mode, actualDifficulty, windowSize), [reports, mode, actualDifficulty, windowSize]);
   const { learning, trends, recommendation } = dashboard;
   const lead = recommendation.focus;
@@ -310,9 +318,9 @@ export function PersonalizedCoaching({
             />
           </button>
         </h2>
-        {status === "ready" && (
+        {cohortReady && (
           <span className="coach-card-count">
-            {reports.length} saved {reports.length === 1 ? "review" : "reviews"}
+            {reports.length} recent {reports.length === 1 ? "review" : "reviews"} in this selection
           </span>
         )}
       </div>
@@ -320,23 +328,7 @@ export function PersonalizedCoaching({
         Learn from your saved reviews.
       </p>
       <div id="personalized-coaching-body" hidden={!expanded}>
-        {status === "loading" ? (
-          <p role="status">Loading saved reports…</p>
-        ) : status === "guest" ? (
-          <p>Sign in to track progress across devices.</p>
-        ) : status === "error" ? (
-          <div>
-            <p role="alert">Saved reports could not be loaded.</p>
-            <button
-              type="button"
-              className="coach-btn secondary"
-              onClick={() => setRevision((value) => value + 1)}
-            >
-              Retry
-            </button>
-          </div>
-        ) : (
-          <>
+        {status !== "guest" && (
             <div className="coach-learning-filters">
               <label>
                 Mode
@@ -382,8 +374,26 @@ export function PersonalizedCoaching({
                 </select>
               </label>
             </div>
+        )}
+        {status === "loading" || (status === "ready" && !cohortReady) ? (
+          <p role="status">Loading saved reports…</p>
+        ) : status === "guest" ? (
+          <p>Sign in to track progress across devices.</p>
+        ) : status === "error" ? (
+          <div>
+            <p role="alert">Saved reports could not be loaded.</p>
+            <button
+              type="button"
+              className="coach-btn secondary"
+              onClick={() => setRevision((value) => value + 1)}
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <>
             <p className="verified-note">
-              {learning.selected.length} of {windowSize} saved reviews
+              {learning.selected.length} of {windowSize} saved reviews · latest 100 for this mode and difficulty
             </p>
             {!learning.selected.length ? (
               <p>
@@ -620,7 +630,9 @@ export function PersonalizedCoaching({
                           Saved reports <span>{learning.selected.length} reviews</span>
                         </summary>
                         <ul className="coach-learning-patterns coach-saved-report-list">
-                          {learning.selected.map((item) => (
+                          {learning.selected.map((saved) => {
+                            const item = safeSavedReviewPresentation(saved);
+                            return (
                             <li key={item.gameRef}>
                               <div className="coach-saved-report-header">
                                 <strong>
@@ -690,7 +702,8 @@ export function PersonalizedCoaching({
                                 ))}
                               </details>
                             </li>
-                          ))}
+                            );
+                          })}
                         </ul>
                       </details>
                     </div>

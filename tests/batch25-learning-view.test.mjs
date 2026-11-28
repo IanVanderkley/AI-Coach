@@ -53,10 +53,14 @@ test("invalid or blocked preferences fail safely", () => {
 });
 test("saved status is exact, owner scoped and versioned; unsave deletes reports only", () => {
   const route = readFileSync("app/api/coach/reports/route.ts", "utf8");
-  const status = route.slice(
-    route.indexOf("if (params.size > 0)"),
-    route.indexOf("const reports:"),
-  );
+  const statusStart = route.indexOf("if (params.size > 0 && !cohort)");
+  const statusEnd = route.indexOf("const reports:", statusStart);
+  assert.ok(statusStart >= 0 && statusEnd > statusStart, "Saved-status branch must exist");
+  const status = route.slice(statusStart, statusEnd);
+  assert.match(status, /params\.size !== 2/);
+  assert.match(status, /parseReviewSave\(/);
+  assert.match(status, /getAll\("mode"\)\.length !== 1/);
+  assert.match(status, /getAll\("gameRef"\)\.length !== 1/);
   assert.match(status, /getAll\("mode"\)/);
   assert.match(status, /getAll\("gameRef"\)/);
   assert.match(
