@@ -1,25 +1,68 @@
 "use client";
 
-import { Fragment, useId, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { ChevronDown, GraduationCap } from "lucide-react";
-import { newTrainingSession, prepareStarterTraining, trainingCellAnswer, updateTrainingSession, type TrainingAction, type TrainingCellInput } from "@/lib/coach/training-catalog";
+import { newTrainingSession, prepareAdaptiveTraining, trainingCellAnswer, updateTrainingSession, type TrainingAction, type TrainingCellInput } from "@/lib/coach/training-catalog";
 import { explainTrainingAnswer, trainingGuidance, trainingPositionLabel } from "@/lib/coach/training-guidance";
 import { prepareReviewTraining } from "@/lib/coach/training-from-review";
 import type { CompletedGameAnalysis } from "@/lib/coach/practice-analysis";
 import type { PreparedTrainingExercise, TrainingClassification } from "@/lib/coach/training-exercise";
 
+import { appendTrainingAttempt, readTrainingHistory, writeTrainingHistory, recommendTraining, trainingProgress, TRAINING_HISTORY_LIMIT, TRAINING_LEVELS, type TrainingHistoryEntry } from "@/lib/coach/training-progress";
+
 const choices: TrainingClassification[] = ["safe", "mine", "uncertain"];
 
 
-function TrainingWorkspace() {
-  const [catalog] = useState(prepareStarterTraining);
-  if (!catalog?.length) return <p role="alert">Training exercises are temporarily unavailable.</p>;
-  return <TrainingBoardWorkspace catalog={catalog} />;
+function browserStorage(): Storage | null {
+  try { return window.localStorage; } catch { return null; }
 }
 
-function TrainingBoardWorkspace({ catalog }: { catalog: readonly PreparedTrainingExercise[] }) {
+function TrainingWorkspace() {
+  const [catalog] = useState(prepareAdaptiveTraining);
+  const [progress, setProgress] = useState<{ history: TrainingHistoryEntry[]; available: boolean } | null>(null);
+  const latest = useRef<typeof progress>(null);
+  useEffect(() => {
+    if (!catalog) return;
+    const state = readTrainingHistory(browserStorage(), catalog.map(p => p.exercise.id));
+    latest.current = state;
+    setProgress(state);
+  }, [catalog]);
+  if (!catalog?.length) return <p role="alert">Training exercises are temporarily unavailable.</p>;
+  if (!progress) return <p role="status">Loading training progress…</p>;
+  const ids = catalog.map(p => p.exercise.id);
+  function recordAttempt(entry: TrainingHistoryEntry) {
+    const current = latest.current;
+    if (!current) return;
+    const storage = current.available ? browserStorage() : null;
+    const stored = storage ? readTrainingHistory(storage, ids) : null;
+    const history = appendTrainingAttempt(stored?.available ? stored.history : current.history, entry, ids);
+    const state = { history, available: writeTrainingHistory(storage, history, ids) };
+    latest.current = state;
+    setProgress(state);
+  }
+  function resetProgress(): boolean {
+    const current = latest.current;
+    if (!current) return false;
+    // If storage was unavailable, don't pretend the prior saved copy was cleared.
+    const available = writeTrainingHistory(browserStorage(), [], ids);
+    if (!available) return false;
+    const state = { history: [], available };
+    latest.current = state;
+    setProgress(state);
+    return true;
+  }
+  return <TrainingBoardWorkspace catalog={catalog} progress={progress} onAttempt={recordAttempt} onReset={resetProgress} />;
+}
+
+function TrainingBoardWorkspace({ catalog, progress, onAttempt, onReset }: { catalog: readonly PreparedTrainingExercise[]; progress?: { history: TrainingHistoryEntry[]; available: boolean }; onAttempt?: (entry: TrainingHistoryEntry) => void; onReset?: () => boolean }) {
   const [session, setSession] = useState(newTrainingSession);
+  const sessionRef = useRef(session);
   const [hintLevel, setHintLevel] = useState(0);
+  const hintRef = useRef(0);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
+  const recommendation = progress ? recommendTraining(catalog, progress.history) : null;
+  const stats = progress ? trainingProgress(progress.history) : null;
   const touchCell = useRef<number | null>(null);
   const prepared = catalog[session.position];
   const { exercise } = prepared;
@@ -31,8 +74,16 @@ function TrainingBoardWorkspace({ catalog }: { catalog: readonly PreparedTrainin
   const selectedIndex = attempt && "index" in attempt.answer ? attempt.answer.index : null;
   const selectedClass = attempt && "classification" in attempt.answer ? attempt.answer.classification : null;
   const dispatch = (action: TrainingAction) => {
-    if (action.kind === "next" || action.kind === "previous") setHintLevel(0);
-    setSession(current => updateTrainingSession(current, catalog, action));
+    const current = sessionRef.current;
+    const next = updateTrainingSession(current, catalog, action);
+    if (next === current) return;
+    sessionRef.current = next;
+    setSession(next);
+    if (next.position !== current.position) { hintRef.current = 0; setHintLevel(0); touchCell.current = null; }
+    if (action.kind === "retry" && current.attempt?.status === "correct") { hintRef.current = 3; setHintLevel(3); }
+    if (action.kind === "answer" && next.attempt) {
+      onAttempt?.({ id: catalog[current.position].exercise.id, correct: next.attempt.status === "correct", hints: hintRef.current });
+    }
   };
   const guidance = trainingGuidance(prepared, attempt?.status === "correct" ? attempt.answer : undefined);
   const visibleHint = attempt?.status === "correct" ? 3 : hintLevel;
@@ -44,6 +95,26 @@ function TrainingBoardWorkspace({ catalog }: { catalog: readonly PreparedTrainin
   const prompt = objective.kind === "reveal-safe" ? "Left-click a covered square that is guaranteed safe to reveal." : objective.kind === "flag-mine" ? "Right-click an unflagged covered square that must contain a mine." : `Classify the highlighted square (${trainingPositionLabel(objective.index, columns)}).`;
   return (
     <div className="coach-training-workspace">
+      {progress && stats && recommendation && <div className="coach-training-progress">
+        <div className="coach-training-progress-heading"><h3>Training progress</h3><span className="verified-note">{progress.available ? "Saved on this browser" : "Browser storage unavailable — progress is temporary"}</span></div>
+        <div className="coach-training-progress-grid">
+          <div><span>Recent attempts</span><strong>{stats.attempts}</strong></div>
+          <div><span>Correct answers</span><strong>{stats.correct}</strong></div>
+          <div><span>Different puzzles solved</span><strong>{stats.solved}/{catalog.length}</strong></div>
+          <div><span>Attempts with hints shown</span><strong>{stats.assisted}</strong></div>
+        </div>
+        <p className="verified-note">Last {TRAINING_HISTORY_LIMIT} answers to general exercises, including retries. Hints count explanations shown during this visit to a puzzle. Shared by anyone using this browser. Not a skill rating.</p>
+        <div className="coach-training-recommendation">
+          <div><strong>Recommended: {recommendation.difficulty}</strong><p>{recommendation.reason}</p></div>
+          <button className="coach-btn secondary" type="button" disabled={recommendation.position === session.position && !attempt} onClick={() => dispatch(recommendation.position === session.position ? {kind:"retry"} : {kind:"jump",position:recommendation.position})}>Practice recommended exercise</button>
+        </div>
+        <label className="coach-training-level">Choose difficulty <select value={exercise.difficulty} onChange={event => { const position = catalog.findIndex(p => p.exercise.difficulty === event.target.value); if (position >= 0) dispatch({kind:"jump",position}); }}>{TRAINING_LEVELS.map(level => <option key={level} value={level}>{level[0].toUpperCase() + level.slice(1)}</option>)}</select></label>
+        <details className="coach-training-history"><summary>Recent training history</summary>
+          {progress.history.length ? <ul>{progress.history.slice(-10).reverse().map((entry,i) => <li key={i}><span>{catalog.find(p => p.exercise.id === entry.id)?.exercise.title}</span><strong>{entry.correct ? "Correct" : "Incorrect"}</strong><small>{entry.hints === 0 ? "No hint displayed" : `Hint level ${entry.hints}`}</small></li>)}</ul> : <p>No training answers yet.</p>}
+          {confirmReset ? <div className="coach-training-actions"><span>Clear the training history saved in this browser?</span><button type="button" className="coach-btn secondary" onClick={() => setConfirmReset(false)}>Cancel</button><button type="button" className="coach-btn" onClick={() => { const cleared = onReset?.(); setConfirmReset(false); setResetMessage(cleared ? "Training history cleared." : "Could not clear saved history. Check browser storage settings."); }}>Clear history</button></div> : <button type="button" className="coach-btn secondary" disabled={!progress.history.length} onClick={() => {setConfirmReset(true);setResetMessage("");}}>Reset training history</button>}
+          {resetMessage && <p role="status">{resetMessage}</p>}
+        </details>
+      </div>}
       <div className="coach-training-heading">
         <div>
           <p className="coach-training-kicker">Exercise {session.position + 1} of {catalog.length} · {exercise.difficulty}</p>
@@ -97,7 +168,7 @@ function TrainingBoardWorkspace({ catalog }: { catalog: readonly PreparedTrainin
         {attempt ? <><strong>{attempt.status === "correct" ? "Correct!" : "Not quite."}</strong>{" "}{attempt.status === "correct" ? feedback : `${feedback ?? "That answer is not supported by the visible board."} Retry to make another choice or use a hint.`}</> : "Choose an answer to check your deduction."}
       </div>
       <div className="coach-training-guidance">
-        <button type="button" className="coach-btn secondary" disabled={visibleHint >= 3} onClick={() => setHintLevel(level => Math.min(3, level + 1))}>{visibleHint === 0 ? "Get a hint" : visibleHint === 1 ? "Next hint" : visibleHint === 2 ? "Show full explanation" : "Explanation shown"}</button>
+        <button type="button" className="coach-btn secondary" disabled={visibleHint >= 3} onClick={() => { hintRef.current = Math.min(3, hintRef.current + 1); setHintLevel(hintRef.current); }}>{visibleHint === 0 ? "Get a hint" : visibleHint === 1 ? "Next hint" : visibleHint === 2 ? "Show full explanation" : "Explanation shown"}</button>
         <div aria-live="polite">
           {visibleHint >= 1 && <p><strong>Hint 1 — Where to look:</strong> {guidance.hint1}</p>}
           {visibleHint >= 2 && <p><strong>Hint 2 — Reason it through:</strong> {guidance.hint2}</p>}
@@ -109,7 +180,7 @@ function TrainingBoardWorkspace({ catalog }: { catalog: readonly PreparedTrainin
         <button type="button" className="coach-btn secondary" disabled={!attempt} onClick={() => dispatch({ kind: "retry" })}>Retry</button>
         <button type="button" className="coach-btn" disabled={session.position === catalog.length - 1} onClick={() => dispatch({ kind: "next" })}>{attempt?.status === "correct" ? "Next exercise" : "Skip exercise"}</button>
       </div>
-      <p className="verified-note">Training is separate from Practice and Ranked. Attempts are not saved yet.</p>
+      <p className="verified-note">Training is separate from Practice and Ranked. {progress ? "General exercise history stays on this browser, not your account." : "Personalized review attempts are temporary and are not saved."}</p>
     </div>
   );
 }

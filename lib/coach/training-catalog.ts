@@ -15,9 +15,22 @@ const starterExercises = [
 /** Prepare once when a training session opens. Reject the catalog as a unit if
  * any definition fails; never silently substitute an authored answer. */
 export function prepareStarterTraining(): PreparedTrainingExercise[] | null {
+  return prepareCatalog(starterExercises);
+}
+
+// Multi-clue chains verified against the complete visible board.
+const advancedExercises = [
+  make("advanced-chain-1", "Connect the visible clues", "advanced", 4, 4, 4, [C,2,2,C,C,C,3,C,1,C,C,C,0,1,1,1], {kind:"classify-square",index:4}),
+  make("advanced-chain-2", "Compare overlapping clues", "advanced", 4, 4, 4, [C,C,C,2,0,1,C,C,1,C,3,C,C,C,C,1], {kind:"classify-square",index:7}),
+  make("advanced-chain-3", "Reason about multiple layouts", "advanced", 4, 4, 4, [2,C,1,C,C,C,C,0,C,2,C,1,1,C,C,C], {kind:"classify-square",index:8}),
+];
+export function prepareAdaptiveTraining(): PreparedTrainingExercise[] | null {
+  return prepareCatalog([...starterExercises, ...advancedExercises]);
+}
+function prepareCatalog(exercises: readonly TrainingExercise[]): PreparedTrainingExercise[] | null {
   const prepared: PreparedTrainingExercise[] = [];
   const ids = new Set<string>();
-  for (const exercise of starterExercises) {
+  for (const exercise of exercises) {
     const result = prepareTrainingExercise(exercise);
     if (!result.ok || ids.has(exercise.id)) return null;
     ids.add(exercise.id);
@@ -38,7 +51,7 @@ export function trainingCellAnswer(objective: TrainingObjective, index: number, 
 export type TrainingAttempt = { answer: TrainingAnswer; status: Exclude<TrainingAssessment["status"], "invalid"> };
 export type TrainingSession = { position: number; attempt: TrainingAttempt | null };
 export const newTrainingSession = (): TrainingSession => ({ position: 0, attempt: null });
-export type TrainingAction = { kind: "answer"; answer: TrainingAnswer } | { kind: "retry" | "previous" | "next" };
+export type TrainingAction = { kind: "answer"; answer: TrainingAnswer } | { kind: "retry" | "previous" | "next" } | { kind: "jump"; position: number };
 
 /** Transient exercise state only. No gameplay input, account writes or rewards. */
 export function updateTrainingSession(session: TrainingSession, catalog: readonly PreparedTrainingExercise[], action: TrainingAction): TrainingSession {
@@ -51,6 +64,6 @@ export function updateTrainingSession(session: TrainingSession, catalog: readonl
     return { ...session, attempt: { answer: { ...action.answer }, status: result.status } };
   }
   if (action.kind === "retry") return session.attempt ? { ...session, attempt: null } : session;
-  const position = session.position + (action.kind === "next" ? 1 : -1);
-  return position >= 0 && position < catalog.length ? { position, attempt: null } : session;
+  const position = action.kind === "jump" ? action.position : session.position + (action.kind === "next" ? 1 : -1);
+  return Number.isSafeInteger(position) && position >= 0 && position < catalog.length && position !== session.position ? { position, attempt: null } : session;
 }

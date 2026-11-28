@@ -68,3 +68,25 @@
 .coaching-page .coach-training-axis-guide { margin: 0; text-align: center; }
 .coaching-page .coach-training-axis { display: grid; place-items: center; min-width: 0; color: var(--text-secondary, #ccc); font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.25; }
 .coaching-page .coach-training-column-number { min-height: 24px; }
+
+/* Batch 28F.5–7: device-local practice progress and difficulty guidance. */
+.coaching-page .coach-training-progress { display: grid; gap: 12px; border: 1px solid var(--line, #444); border-radius: 12px; padding: clamp(12px, 2vw, 20px); background: var(--surface); min-width: 0; }
+.coaching-page .coach-training-progress-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.coaching-page .coach-training-progress-heading h3 { margin: 0; font-size: 1.15rem; }
+.coaching-page .coach-training-progress-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr)); gap: 10px; }
+.coaching-page .coach-training-progress-grid > div { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--line, #444); border-radius: 8px; background: #141414; }
+.coaching-page .coach-training-progress-grid span { color: var(--text-secondary); font-size: 13px; }
+.coaching-page .coach-training-progress-grid strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.coaching-page .coach-training-recommendation { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; border-left: 3px solid var(--red, #ae2434); padding: 12px; background: #1d1d1d; border-radius: 8px; }
+.coaching-page .coach-training-recommendation strong { text-transform: capitalize; }
+.coaching-page .coach-training-recommendation p { margin: 4px 0 0; }
+.coaching-page .coach-training-level { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.coaching-page .coach-training-level select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line, #444); border-radius: 8px; background: #242424; color: var(--text, white); font: inherit; }
+.coaching-page .coach-training-history { border-top: 1px solid var(--line, #444); padding-top: 10px; }
+.coaching-page .coach-training-history summary { cursor: pointer; padding: 8px 0; }
+.coaching-page .coach-training-history ul { display: grid; gap: 8px; list-style: none; padding: 0; margin: 12px 0; }
+.coaching-page .coach-training-history li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line, #444); padding: 8px 0; }
+.coaching-page .coach-training-history li span { flex: 1 1 160px; }
+.coaching-page .coach-training-history li small { color: var(--text-secondary); }
+.coaching-page .coach-training-progress :focus-visible { outline: 2px solid #ff909e; outline-offset: 3px; }
+@media (max-width: 600px) { .coaching-page .coach-training-recommendation > button { width: 100%; } }
