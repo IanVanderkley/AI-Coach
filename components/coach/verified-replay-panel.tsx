@@ -21,6 +21,8 @@ import { reviewProofOptions } from "@/lib/coach/review-presentation";
 import type { PracticeAnalysis } from "@/lib/coach/practice-analysis";
 import { explainMove, timelineMove, cellLabel } from "@/lib/coach/teaching-review";
 import { TeachingProof } from "@/components/coach/teaching-proof";
+import { AdvancedSquarePanel } from "@/components/coach/advanced-square-panel";
+import { analyzeAdvancedSnapshot, type AdvancedSnapshot } from "@/lib/coach/advanced-square-analysis";
 import { SquareAnalysisPanel } from "@/components/coach/square-analysis-panel";
 import { explainSquare, prepareSquareAnalysis } from "@/lib/coach/square-analysis";
 import { describeReplayRows, nearbyReplayClues, replayKeyboardIndex } from "@/lib/coach/replay-accessibility";
@@ -262,6 +264,7 @@ export function VerifiedReplayPanel({
   const boardMode = viewOverride ?? preferredView;
   const [showProofs, setShowProofs] = useState(true);
   const [playing, setPlaying] = useState(false);
+  const [advanced, setAdvanced] = useState<{ game: PracticeSession; board: readonly VisibleCell[]; mineCount: number; result: AdvancedSnapshot } | null>(null);
   const { enabled: tooltips } = useReplayTooltips();
   const position = Math.max(0, Math.min(last, cursor ?? important[0]?.index ?? 0));
   const selectedIndex = timelineMove(position, last);
@@ -269,6 +272,7 @@ export function VerifiedReplayPanel({
   useEffect(() => {
     setCursor(null);
     setInspection(null);
+    setAdvanced(null);
     setPlaying(false);
     setBoardMode(null);
     setShowProofs(true);
@@ -334,6 +338,13 @@ export function VerifiedReplayPanel({
     ? inspection.index
     : chosen;
   const squareAnalysis = squareContext ? explainSquare(squareContext, inspected) : null;
+  const advancedBoard = opening ? current.after : current.before;
+  const advancedResult = advanced && advanced.game === game && advanced.board === advancedBoard && advanced.mineCount === game.mineCount ? advanced.result : null;
+  function runAdvanced() {
+    if (!showProofs || squareAnalysis?.classification !== "unresolved") return;
+    setPlaying(false);
+    setAdvanced({ game, board: advancedBoard, mineCount: game.mineCount, result: analyzeAdvancedSnapshot(game.rows, game.columns, game.mineCount, advancedBoard) });
+  }
   const boardCellCount = current.after.length;
   function inspectSquare(index: number) {
     if (!Number.isInteger(index) || index < 0 || index >= boardCellCount) return;
@@ -624,6 +635,9 @@ export function VerifiedReplayPanel({
               opening={opening}
               technical={proofOptions.technical}
             />
+          )}
+          {showProofs && squareAnalysis?.classification === "unresolved" && (
+            <AdvancedSquarePanel key={`advanced-${current.actionNumber}-${inspected}`} snapshot={advancedResult} index={inspected} columns={game.columns} onAnalyze={runAdvanced} technical={proofOptions.technical} />
           )}
           {!showProofs && <p className="coach-square-analysis-disabled">Turn on Show deductions to inspect the logic for this square.</p>}
           {!opening && <h4 className="coach-recorded-lesson-heading">Recorded move lesson</h4>}
