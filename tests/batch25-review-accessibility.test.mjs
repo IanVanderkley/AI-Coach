@@ -46,7 +46,7 @@ test("read-only text disclosure is wired to the same board and overlay inputs", 
   assert.match(source, /className="coach-board-text"/);
   assert.match(
     source,
-    /describeReplayRows\(\s*cells,\s*columns,\s*selectedIndex,\s*safe,\s*mines,\s*sources,\s*recommendation,?\s*\)/,
+    /describeReplayRows\(\s*cells,\s*columns,\s*selectedIndex,\s*safe,\s*mines,\s*sources,\s*recommendation,\s*inspectedIndex,\s*nearby,?\s*\)/,
   );
   assert.match(source, /textOpen &&/);
   assert.match(source, /tabIndex=\{0\}/);

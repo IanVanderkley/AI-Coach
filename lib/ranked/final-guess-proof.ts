@@ -51,8 +51,12 @@ export function proveFinalFiftyFifty(
   }
   const candidates: number[] = [];
   for (const candidate of covered) {
-    if (constraints.every(({ covered: near, count, clue }) =>
-      clue === count - (near.has(candidate) ? 1 : 0))) {
+    if (
+      constraints.every(
+        ({ covered: near, count, clue }) =>
+          clue === count - (near.has(candidate) ? 1 : 0),
+      )
+    ) {
       candidates.push(candidate);
       if (candidates.length > 2) return null;
     }

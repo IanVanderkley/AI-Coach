@@ -52,7 +52,12 @@ export function ReviewOverview({
         <div>
           <dt>Board cleared</dt>
           <dd>{review.progress}%</dd>
-          <progress className="coach-review-board-progress" aria-label="Board cleared" max={100} value={review.progress} />
+          <progress
+            className="coach-review-board-progress"
+            aria-label="Board cleared"
+            max={100}
+            value={review.progress}
+          />
         </div>
         <div>
           <dt>Good decisions</dt>

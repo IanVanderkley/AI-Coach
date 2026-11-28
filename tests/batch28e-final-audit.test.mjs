@@ -1,0 +1,153 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import {
+  parseLearningCohort,
+  safeSavedReviewPresentation,
+} from "../lib/coach/saved-review-safety.ts";
+import { buildLearningDashboard } from "../lib/coach/learning-dashboard.ts";
+const parse = (s) => parseLearningCohort(new URLSearchParams(s));
+const moment = {
+  id: "move-2",
+  moveNumber: 2,
+  kind: "good",
+  occurrences: 1,
+  category: "Supported reveal",
+  action: "reveal",
+  location: "row 1, column 1",
+  finding: "Safe",
+  evidence: "Visible clue",
+  nextTime: "Check clues",
+};
+const saved = (i = 1) => ({
+  mode: "practice",
+  difficulty: "Intermediate",
+  gameRef: `g${i}`,
+  completedAt: new Date(Date.UTC(2026, 0, i)).toISOString(),
+  version: 1,
+  outcome: "win",
+  review: {
+    score: { good: 1, mistakes: 0, uncertain: 0, progress: 100, score: 100, grade: "S" },
+    report: {
+      provenGood: 1,
+      verifiedMistakes: 0,
+      uncertainActions: 0,
+      recordedActions: 1,
+      moments: [moment],
+      takeaway: "Check clues",
+    },
+    mistakeMoves: {
+      "unnecessary-guess": [],
+      "revealed-known-mine": [],
+      "flagged-known-safe": [],
+    },
+  },
+});
+test("history selection allows the four supported cohorts", () => {
+  for (const difficulty of ["Beginner", "Intermediate", "Expert"])
+    assert.deepEqual(parse(`mode=practice&difficulty=${difficulty}`), {
+      mode: "practice",
+      difficulty,
+    });
+  assert.deepEqual(parse("mode=ranked&difficulty=Intermediate"), {
+    mode: "ranked",
+    difficulty: "Intermediate",
+  });
+});
+test("history selection rejects duplicate, extra, missing and unsupported parameters", () => {
+  for (const q of [
+    "",
+    "mode=practice",
+    "difficulty=Beginner",
+    "mode=ranked&difficulty=Expert",
+    "mode=practice&difficulty=Unknown",
+    "mode=other&difficulty=Beginner",
+    "mode=practice&mode=ranked&difficulty=Intermediate",
+    "mode=practice&difficulty=Beginner&userId=x",
+    "mode=practice&difficulty=Beginner&gameRef=x",
+    "mode=practice&difficulty=Beginner&difficulty=Expert",
+  ])
+    assert.equal(parse(q), null, q);
+});
+test("server filters owner, mode, version and difficulty before applying history limit", () => {
+  const s = readFileSync("app/api/coach/reports/route.ts", "utf8");
+  const get = s.slice(
+    s.indexOf("export async function GET"),
+    s.indexOf("export async function POST"),
+  );
+  assert.match(get, /parseLearningCohort\(params\)/);
+  assert.match(get, /params.has\("difficulty"\) && !cohort/);
+  assert.match(get, /if \(params.size > 0 && !cohort\)/);
+  assert.match(get, /const modes = cohort \? \[cohort.mode\]/);
+  assert.match(
+    get,
+    /let history = admin[\s\S]*?\.eq\("user_id", userId\)[\s\S]*?\.eq\("mode", mode\)[\s\S]*?\.eq\("analysis_version", PRACTICE_ANALYSIS_VERSION\);[\s\S]*?history = history.eq\("difficulty", cohort.difficulty\);[\s\S]*?\.limit\(100\)/,
+  );
+  assert.match(get, /parseReviewSave/);
+  assert.doesNotMatch(get, /replayRecordedGame\(|collectSkillEvidence\(/);
+});
+test("client keeps filters usable while loading, aborts stale requests and does not refetch on window changes", () => {
+  const s = readFileSync("components/coach/personalized-coaching.tsx", "utf8");
+  const ui = s.slice(s.indexOf("export function PersonalizedCoaching"));
+  assert.match(ui, /new URLSearchParams\(\{ mode, difficulty: actualDifficulty \}\)/);
+  assert.match(ui, /if \(!viewReady\) return/);
+  assert.match(ui, /loadedCohort === cohortKey/);
+  assert.match(ui, /\[revision, viewReady, mode, actualDifficulty, cohortKey\]/);
+  assert.match(ui, /controller\.abort\(\)/);
+  assert.match(
+    ui,
+    /if \(controller.signal.aborted\) return;\s*if \(!Array.isArray\(result.reports\)\)/,
+  );
+  assert.ok(
+    ui.indexOf('className="coach-learning-filters"') <
+      ui.indexOf('status === "loading" ||'),
+  );
+});
+test("a full selected cohort still supports the 100-review window", () => {
+  const rows = Array.from({ length: 100 }, (_, i) => saved(i + 1));
+  assert.equal(
+    buildLearningDashboard(rows, "practice", "Intermediate", 100).learning.selected
+      .length,
+    100,
+  );
+});
+test("malformed presentation fields do not crash or change valid numerical analytics", () => {
+  const r = saved();
+  r.review.report.moments = null;
+  r.review.report.takeaway = {};
+  r.review.score.grade = {};
+  const d = buildLearningDashboard([r], "practice", "Intermediate", 10);
+  assert.equal(d.learning.metrics.accuracy, 100);
+  const s = safeSavedReviewPresentation(d.learning.selected[0]);
+  assert.deepEqual(s.review.report.moments, []);
+  assert.equal(s.review.score.grade, null);
+  assert.equal(typeof s.review.report.takeaway, "string");
+  assert.equal(r.review.report.moments, null);
+});
+test("malformed and duplicate moments are excluded; valid findings and replay references survive", () => {
+  const r = saved();
+  r.review.report.moments = [
+    null,
+    {},
+    { ...moment, id: "bad", moveNumber: 1 },
+    { ...moment, id: "bad2", category: {} },
+    moment,
+    moment,
+    { ...moment, id: "move-3", moveNumber: 3 },
+  ];
+  const before = structuredClone(r);
+  const s = safeSavedReviewPresentation(r);
+  assert.deepEqual(
+    s.review.report.moments.map((m) => m.moveNumber),
+    [2, 3],
+  );
+  assert.equal(s.review.score.grade, "S");
+  assert.deepEqual(r, before);
+});
+test("presentation fallback is wired into saved report display", () => {
+  const s = readFileSync("components/coach/personalized-coaching.tsx", "utf8");
+  assert.match(
+    s,
+    /learning.selected.map\(\(saved\) => \{\s*const item = safeSavedReviewPresentation\(saved\);/,
+  );
+});

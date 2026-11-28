@@ -1,0 +1,338 @@
+/* Isolated training surface; never changes Practice or Ranked board styles. */
+/* Match the shared Coaching history-card and heading geometry (Batch 25D.8). */
+.coach-full-page .coach-history-screen > .coach-training-panel {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
+  padding: clamp(16px, 2vw, 24px);
+  border: 1px solid var(--line, #444);
+  border-radius: 12px;
+  background: var(--surface);
+  color: inherit;
+}
+.coach-full-page .coach-training-panel > h2 {
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+  line-height: 1.35;
+  margin: 0 0 8px;
+}
+.coach-full-page .coach-training-panel > p {
+  margin: 0;
+  max-width: 76ch;
+  line-height: 1.65;
+}
+.coaching-page .coach-training-panel [hidden] {
+  display: none !important;
+}
+.coaching-page .coach-training-workspace {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+  min-width: 0;
+}
+.coaching-page .coach-training-heading {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.coaching-page .coach-training-heading h3 {
+  margin: 4px 0 8px;
+}
+.coaching-page .coach-training-heading p {
+  margin: 0;
+}
+.coaching-page .coach-training-kicker {
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-transform: capitalize;
+}
+.coaching-page .coach-training-mine-count {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+}
+.coaching-page .coach-training-board-scroll {
+  display: flex;
+  justify-content: safe center;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 8px;
+}
+.coaching-page .coach-training-board {
+  display: grid;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.coaching-page .coach-training-cell {
+  aspect-ratio: 1;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #686868;
+  border-radius: 4px;
+  padding: 0;
+  font-size: clamp(16px, 4vw, 22px);
+  font-weight: 700;
+  color: #f3f3f3;
+  background: #353535;
+}
+.coaching-page button.coach-training-cell {
+  cursor: pointer;
+  box-shadow: inset 0 2px 0 #ffffff22;
+}
+.coaching-page button.coach-training-cell:not([aria-disabled="true"]):hover {
+  background: #505050;
+}
+.coaching-page .coach-training-cell[data-state="revealed"] {
+  background: #202020;
+  border-color: #414141;
+}
+.coaching-page .coach-training-cell[data-state="flagged"] {
+  color: #ff939c;
+}
+.coaching-page .coach-training-cell[data-clue="1"] {
+  color: #85baff;
+}
+.coaching-page .coach-training-cell[data-clue="2"] {
+  color: #9ee5b0;
+}
+.coaching-page .coach-training-cell[data-clue="3"] {
+  color: #ff939c;
+}
+.coaching-page .coach-training-cell[data-clue="4"] {
+  color: #c2a8ff;
+}
+.coaching-page .coach-training-cell[data-target="true"] {
+  outline: 3px solid #f2c75d;
+  outline-offset: -3px;
+}
+.coaching-page .coach-training-classifications,
+.coaching-page .coach-training-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.coaching-page .coach-training-panel [data-result="correct"] {
+  border-color: #9ee5b0;
+  color: #c5f4d0;
+}
+.coaching-page .coach-training-panel [data-result="incorrect"] {
+  border-color: #ff939c;
+  color: #ffd0d4;
+}
+.coaching-page .coach-training-panel button[aria-disabled="true"] {
+  cursor: default;
+}
+.coaching-page .coach-training-panel button:focus-visible {
+  outline: 2px solid var(--red, #e53945);
+  outline-offset: 3px;
+}
+.coaching-page .coach-training-feedback {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 48px;
+  background: #1d1d1d;
+}
+@media (max-width: 600px) {
+  .coaching-page .coach-training-actions > button,
+  .coaching-page .coach-training-classifications > button {
+    flex: 1 1 120px;
+    min-height: 44px;
+  }
+}
+
+.coaching-page .coach-review-training {
+  padding: clamp(16px, 2vw, 24px);
+  border: 1px solid var(--line, #444);
+  border-radius: 12px;
+  background: var(--surface);
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.coaching-page .coach-review-training > h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.coaching-page .coach-review-training > p {
+  margin: 0;
+}
+.coaching-page .coach-review-training > button {
+  justify-self: start;
+}
+.coaching-page .coach-training-guidance {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line, #444);
+  border-radius: 8px;
+}
+.coaching-page .coach-training-guidance > button {
+  justify-self: start;
+  min-height: 44px;
+}
+.coaching-page .coach-training-guidance p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+.coaching-page .coach-training-proof h4 {
+  margin: 12px 0 4px;
+}
+.coaching-page .coach-training-proof ol {
+  padding-inline-start: 22px;
+  list-style: decimal;
+  display: grid;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+.coaching-page .coach-training-cell[data-hint="clue"] {
+  box-shadow: inset 0 0 0 3px #f2c75d;
+}
+.coaching-page .coach-training-cell[data-hint="related"] {
+  box-shadow: inset 0 0 0 2px #85baff;
+}
+.coaching-page .coach-training-cell[data-hint="solution"] {
+  box-shadow: inset 0 0 0 3px #f3f3f3;
+}
+
+.coaching-page .coach-training-cell[data-hint="solution"][data-target="true"] {
+  outline-color: #f3f3f3;
+}
+
+/* One-based axes share the board grid and scroll with their squares. */
+.coaching-page .coach-training-axis-guide {
+  margin: 0;
+  text-align: center;
+}
+.coaching-page .coach-training-axis {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  color: var(--text-secondary, #ccc);
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+}
+.coaching-page .coach-training-column-number {
+  min-height: 24px;
+}
+
+/* Batch 28F.5–7: device-local practice progress and difficulty guidance. */
+.coaching-page .coach-training-progress {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line, #444);
+  border-radius: 12px;
+  padding: clamp(12px, 2vw, 20px);
+  background: var(--surface);
+  min-width: 0;
+}
+.coaching-page .coach-training-progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.coaching-page .coach-training-progress-heading h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.coaching-page .coach-training-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+  gap: 10px;
+}
+.coaching-page .coach-training-progress-grid > div {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line, #444);
+  border-radius: 8px;
+  background: #141414;
+}
+.coaching-page .coach-training-progress-grid span {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.coaching-page .coach-training-progress-grid strong {
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+.coaching-page .coach-training-recommendation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-left: 3px solid var(--red, #ae2434);
+  padding: 12px;
+  background: #1d1d1d;
+  border-radius: 8px;
+}
+.coaching-page .coach-training-recommendation strong {
+  text-transform: capitalize;
+}
+.coaching-page .coach-training-recommendation p {
+  margin: 4px 0 0;
+}
+.coaching-page .coach-training-level {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.coaching-page .coach-training-level select {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line, #444);
+  border-radius: 8px;
+  background: #242424;
+  color: var(--text, white);
+  font: inherit;
+}
+.coaching-page .coach-training-history {
+  border-top: 1px solid var(--line, #444);
+  padding-top: 10px;
+}
+.coaching-page .coach-training-history summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.coaching-page .coach-training-history ul {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+.coaching-page .coach-training-history li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--line, #444);
+  padding: 8px 0;
+}
+.coaching-page .coach-training-history li span {
+  flex: 1 1 160px;
+}
+.coaching-page .coach-training-history li small {
+  color: var(--text-secondary);
+}
+.coaching-page .coach-training-progress :focus-visible {
+  outline: 2px solid #ff909e;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .coaching-page .coach-training-recommendation > button {
+    width: 100%;
+  }
+}

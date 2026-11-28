@@ -55,7 +55,12 @@ export function RankedLobby() {
       {value && model ? (
         <>
           <div className={styles.hero}>
-            <RankEmblem rating={value.rating} size={160} decorative policyVersion={value.policyVersion} />
+            <RankEmblem
+              rating={value.rating}
+              size={160}
+              decorative
+              policyVersion={value.policyVersion}
+            />
             <div className={styles.current}>
               <p className={styles.eyebrow}>CURRENT RANK</p>
               <h3>{model.current.label}</h3>
@@ -83,7 +88,12 @@ export function RankedLobby() {
             </div>
             <div className={styles.peak}>
               <p className={styles.eyebrow}>HIGHEST RECORDED RANK</p>
-              <RankEmblem rating={value.highestRating} size={72} decorative policyVersion={value.policyVersion} />
+              <RankEmblem
+                rating={value.highestRating}
+                size={72}
+                decorative
+                policyVersion={value.policyVersion}
+              />
               <strong>{model.highest.label}</strong>
               <span>{value.highestRating.toLocaleString()} Elo</span>
             </div>

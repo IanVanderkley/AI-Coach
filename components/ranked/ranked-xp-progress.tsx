@@ -93,7 +93,10 @@ export function RankedXpProgress({ matchId }: { matchId: string }) {
             <span style={{ width: `${progress.percent}%` }} />
           </div>
           <div className="ranked-xp-progress-heading">
-            <span>{progress.xpIntoLevel.toLocaleString()} / {progress.xpPerLevel.toLocaleString()} XP</span>
+            <span>
+              {progress.xpIntoLevel.toLocaleString()} /{" "}
+              {progress.xpPerLevel.toLocaleString()} XP
+            </span>
             <span>Level {(progress.level + 1).toLocaleString()}</span>
           </div>
         </>

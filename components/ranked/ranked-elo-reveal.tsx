@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { eloRevealFrame } from "@/lib/leaderboard/elo-reveal";
 
 /** Mount once per verified receipt. Accessible text always describes the final result. */
-export function RankedEloReveal({ before, after, deltaLabel }: {
+export function RankedEloReveal({
+  before,
+  after,
+  deltaLabel,
+}: {
   before: number;
   after: number;
   deltaLabel: string;
@@ -17,7 +21,9 @@ export function RankedEloReveal({ before, after, deltaLabel }: {
       window.cancelAnimationFrame(animation);
       setFrame({ rating: after, done: true });
     };
-    const motionChanged = () => { if (motion.matches) finish(); };
+    const motionChanged = () => {
+      if (motion.matches) finish();
+    };
     motion.addEventListener("change", motionChanged);
     if (motion.matches || before === after) finish();
     else {
@@ -38,9 +44,14 @@ export function RankedEloReveal({ before, after, deltaLabel }: {
   const tone = after > before ? "gain" : after < before ? "loss" : "neutral";
   return (
     <div className="ranked-elo-reveal" data-tone={tone} data-settled={frame.done}>
-      <span className="sr-only" role="status">Rating: {before.toLocaleString()} to {after.toLocaleString()} Elo. Change: {deltaLabel} Elo.</span>
+      <span className="sr-only" role="status">
+        Rating: {before.toLocaleString()} to {after.toLocaleString()} Elo. Change:{" "}
+        {deltaLabel} Elo.
+      </span>
       <div className="ranked-elo-value" aria-hidden="true">
-        <strong>{frame.rating.toLocaleString()} <small>Elo</small></strong>
+        <strong>
+          {frame.rating.toLocaleString()} <small>Elo</small>
+        </strong>
         <span className="ranked-elo-delta">{deltaLabel} Elo</span>
       </div>
     </div>

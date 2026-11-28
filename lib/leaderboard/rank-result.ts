@@ -17,9 +17,13 @@ export function rankResultModel(receipt: RankedMatchRating) {
     before,
     after,
     transition,
-    demotionProtected: receipt.policyVersion === 4 && !receipt.finalGuessCompensated &&
+    demotionProtected:
+      receipt.policyVersion === 4 &&
+      !receipt.finalGuessCompensated &&
       calculateRankPolicyV4(receipt.ratingBefore, receipt.outcome).demotionProtected,
     nextRank:
-      after.nextThreshold === null ? null : displayRank(after.nextThreshold, version).label,
+      after.nextThreshold === null
+        ? null
+        : displayRank(after.nextThreshold, version).label,
   };
 }

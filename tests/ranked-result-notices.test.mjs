@@ -7,11 +7,22 @@ const page = read("app/ranked/page.tsx");
 const css = read("components/ui/feedback-notice.module.css");
 const shared = read("components/ui/feedback-notice.tsx");
 test("special rating notices reuse shared feedback and remain driven by the verified receipt", () => {
-  assert.match(ui, /\{value\.finalGuessCompensated && \(\s*<FeedbackNotice\s+tone="reward"/);
-  assert.match(ui, /\{model\.demotionProtected && \(\s*<FeedbackNotice\s+tone="protection"/);
-  assert.ok(ui.indexOf('tone="reward"') > ui.indexOf('ranked-rating-summary'));
-  assert.ok(ui.indexOf('tone="protection"') < ui.indexOf('className="ranked-rating-transition"'));
-  assert.match(ui, /formatRatingDelta\(value.ratingDelta, value.policyVersion\), label: "Elo awarded"/);
+  assert.match(
+    ui,
+    /\{value\.finalGuessCompensated && \(\s*<FeedbackNotice\s+tone="reward"/,
+  );
+  assert.match(
+    ui,
+    /\{model\.demotionProtected && \(\s*<FeedbackNotice\s+tone="protection"/,
+  );
+  assert.ok(ui.indexOf('tone="reward"') > ui.indexOf("ranked-rating-summary"));
+  assert.ok(
+    ui.indexOf('tone="protection"') < ui.indexOf('className="ranked-rating-transition"'),
+  );
+  assert.match(
+    ui,
+    /formatRatingDelta\(\s*value\.ratingDelta,\s*value\.policyVersion,?\s*\),\s*label: "Elo awarded"/,
+  );
   assert.match(ui, /value.ratingAfter === 10000/);
   assert.match(ui, /still counts as a defeat/);
   assert.match(ui, /rounded up/);
@@ -30,8 +41,14 @@ test("all feedback tones use one charcoal background and nested actions share th
 });
 test("completed match notice prioritizes opening the saved result without changing callbacks", () => {
   const panel = page.slice(page.indexOf("{/* Display results after a win or loss. */}"));
-  assert.match(panel, /title=\{board.status === "won" \? "Ranked victory" : "Game over"\}/);
-  assert.match(panel, /data-primary="true"\s+onClick=\{\(\) => setDismissedResultMatchId\(null\)\}/);
+  assert.match(
+    panel,
+    /title=\{board.status === "won" \? "Ranked victory" : "Game over"\}/,
+  );
+  assert.match(
+    panel,
+    /data-primary="true"\s+onClick=\{\(\) => setDismissedResultMatchId\(null\)\}/,
+  );
   assert.match(panel, /onClick=\{returnToLobby\}/);
   assert.match(panel, /View results/);
   assert.doesNotMatch(panel, /data-primary="true"\s+onClick=\{returnToLobby\}/);

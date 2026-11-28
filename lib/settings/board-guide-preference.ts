@@ -9,7 +9,10 @@ export function readBoardGuide(storage: Pick<Storage, "getItem"> | undefined): b
   }
 }
 
-export function writeBoardGuide(storage: Pick<Storage, "setItem"> | undefined, enabled: boolean): boolean {
+export function writeBoardGuide(
+  storage: Pick<Storage, "setItem"> | undefined,
+  enabled: boolean,
+): boolean {
   if (!storage) return false;
   try {
     storage.setItem(BOARD_GUIDE_KEY, enabled ? "on" : "off");

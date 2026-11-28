@@ -7,7 +7,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { formatRankedDuration } from "@/lib/ranked/result-summary";
 import { competitiveRank } from "@/lib/leaderboard/rank-policy";
 import { displayRank, type RankDisplayVersion } from "@/lib/leaderboard/rank-display";
-import { PUBLIC_RATING_SYSTEM_V4, PUBLIC_USERNAME_PATTERN } from "@/lib/leaderboard/public-standings";
+import {
+  PUBLIC_RATING_SYSTEM_V4,
+  PUBLIC_USERNAME_PATTERN,
+} from "@/lib/leaderboard/public-standings";
 import { RankEmblem } from "@/components/ranked/rank-emblem";
 import {
   PUBLIC_LEADERBOARD_ENDPOINT,
@@ -28,7 +31,13 @@ function formatDate(value: string) {
   });
 }
 
-function CompetitiveRankCell({ rating, policyVersion }: { rating: number; policyVersion: RankDisplayVersion }) {
+function CompetitiveRankCell({
+  rating,
+  policyVersion,
+}: {
+  rating: number;
+  policyVersion: RankDisplayVersion;
+}) {
   const rank = policyVersion === 4 ? displayRank(rating, 4) : competitiveRank(rating);
   return (
     <span className="leaderboard-competitive-rank">
@@ -38,30 +47,59 @@ function CompetitiveRankCell({ rating, policyVersion }: { rating: number; policy
   );
 }
 
-function LeaderboardPodium({ standings, tab, ownName }: {
+function LeaderboardPodium({
+  standings,
+  tab,
+  ownName,
+}: {
   standings: PublicStandings;
   tab: "elo" | "fastest";
   ownName: string | null;
 }) {
-  const version: RankDisplayVersion = standings.ratingSystem === PUBLIC_RATING_SYSTEM_V4 ? 4 : 3;
+  const version: RankDisplayVersion =
+    standings.ratingSystem === PUBLIC_RATING_SYSTEM_V4 ? 4 : 3;
   const leaders = standings[tab].slice(0, 3);
   return (
-    <section className="leaderboard-podium" aria-label={tab === "elo" ? "Top Elo players" : "Fastest victories"}>
+    <section
+      className="leaderboard-podium"
+      aria-label={tab === "elo" ? "Top Elo players" : "Fastest victories"}
+    >
       {leaders.map((entry) => (
-        <article key={entry.rank} className="leaderboard-podium-place" data-place={entry.rank} data-own={entry.username === ownName}>
-          <span className="leaderboard-podium-position"><Medal size={17} aria-hidden="true" /> #{entry.rank}</span>
+        <article
+          key={entry.rank}
+          className="leaderboard-podium-place"
+          data-place={entry.rank}
+          data-own={entry.username === ownName}
+        >
+          <span className="leaderboard-podium-position">
+            <Medal size={17} aria-hidden="true" /> #{entry.rank}
+          </span>
           {"rating" in entry ? (
             <>
-              <RankEmblem rating={entry.rating} size={112} decorative policyVersion={version} />
+              <RankEmblem
+                rating={entry.rating}
+                size={112}
+                decorative
+                policyVersion={version}
+              />
               <strong className="leaderboard-podium-name">{entry.username}</strong>
-              <span className="leaderboard-podium-rank" style={{ color: displayRank(entry.rating, version).color }}>{displayRank(entry.rating, version).label}</span>
-              <strong className="leaderboard-podium-score">{entry.rating.toLocaleString()} <small>Elo</small></strong>
+              <span
+                className="leaderboard-podium-rank"
+                style={{ color: displayRank(entry.rating, version).color }}
+              >
+                {displayRank(entry.rating, version).label}
+              </span>
+              <strong className="leaderboard-podium-score">
+                {entry.rating.toLocaleString()} <small>Elo</small>
+              </strong>
             </>
           ) : (
             <>
               <Clock3 className="leaderboard-podium-clock" size={56} aria-hidden="true" />
               <strong className="leaderboard-podium-name">{entry.username}</strong>
-              <strong className="leaderboard-podium-score">{formatRankedDuration(entry.durationMs)}</strong>
+              <strong className="leaderboard-podium-score">
+                {formatRankedDuration(entry.durationMs)}
+              </strong>
             </>
           )}
           {entry.username === ownName && <span className="leaderboard-you">You</span>}
@@ -88,15 +126,23 @@ export function VerifiedLeaderboard() {
     void (async () => {
       try {
         const response = await fetch("/api/leaderboard/preferences", {
-          cache: "no-store", credentials: "same-origin", signal: controller.signal,
+          cache: "no-store",
+          credentials: "same-origin",
+          signal: controller.signal,
         });
         if (!response.ok) return;
         const data = await response.json();
-        if (!controller.signal.aborted && data?.isAnonymous === false &&
-            typeof data.username === "string" && PUBLIC_USERNAME_PATTERN.test(data.username)) {
+        if (
+          !controller.signal.aborted &&
+          data?.isAnonymous === false &&
+          typeof data.username === "string" &&
+          PUBLIC_USERNAME_PATTERN.test(data.username)
+        ) {
           setOwnName(data.username);
         }
-      } catch { /* Public standings are still usable. */ }
+      } catch {
+        /* Public standings are still usable. */
+      }
     })();
     try {
       const response = await fetch(PUBLIC_LEADERBOARD_ENDPOINT, {
@@ -234,7 +280,10 @@ export function VerifiedLeaderboard() {
               <tbody>
                 {tab === "elo"
                   ? standings.elo.map((entry) => (
-                      <tr key={`rating-${entry.rank}-${entry.username}`} data-own={entry.username === ownName}>
+                      <tr
+                        key={`rating-${entry.rank}-${entry.username}`}
+                        data-own={entry.username === ownName}
+                      >
                         <td>
                           <span
                             className={`verified-board-rank${entry.rank <= 3 ? ` verified-board-rank-top-${entry.rank}` : ""}`}
@@ -245,19 +294,32 @@ export function VerifiedLeaderboard() {
                             )}
                           </span>
                         </td>
-                        <td className="leaderboard-username">{entry.username}{entry.username === ownName && <span className="leaderboard-you">You</span>}</td>
+                        <td className="leaderboard-username">
+                          {entry.username}
+                          {entry.username === ownName && (
+                            <span className="leaderboard-you">You</span>
+                          )}
+                        </td>
                         <td className="leaderboard-rating">
                           {entry.rating.toLocaleString()}
                         </td>
                         <td>
-                          <CompetitiveRankCell rating={entry.rating} policyVersion={standings.ratingSystem === PUBLIC_RATING_SYSTEM_V4 ? 4 : 3} />
+                          <CompetitiveRankCell
+                            rating={entry.rating}
+                            policyVersion={
+                              standings.ratingSystem === PUBLIC_RATING_SYSTEM_V4 ? 4 : 3
+                            }
+                          />
                         </td>
                         <td>{entry.wins}</td>
                         <td>{entry.losses}</td>
                       </tr>
                     ))
                   : standings.fastest.map((entry) => (
-                      <tr key={`speed-${entry.rank}-${entry.username}`} data-own={entry.username === ownName}>
+                      <tr
+                        key={`speed-${entry.rank}-${entry.username}`}
+                        data-own={entry.username === ownName}
+                      >
                         <td>
                           <span
                             className={`verified-board-rank${entry.rank <= 3 ? ` verified-board-rank-top-${entry.rank}` : ""}`}
@@ -268,7 +330,12 @@ export function VerifiedLeaderboard() {
                             )}
                           </span>
                         </td>
-                        <td className="leaderboard-username">{entry.username}{entry.username === ownName && <span className="leaderboard-you">You</span>}</td>
+                        <td className="leaderboard-username">
+                          {entry.username}
+                          {entry.username === ownName && (
+                            <span className="leaderboard-you">You</span>
+                          )}
+                        </td>
                         <td>
                           <span className="verified-board-time">
                             <Clock3 size={15} aria-hidden="true" />

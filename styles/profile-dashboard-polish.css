@@ -8,8 +8,12 @@
   gap: 18px;
   margin-bottom: 16px;
 }
-.player-dashboard-page .profile-heading h1 { font-size: clamp(32px, 4vw, 46px); }
-.player-dashboard-page .profile-heading-side { width: min(100%, 400px); }
+.player-dashboard-page .profile-heading h1 {
+  font-size: clamp(32px, 4vw, 46px);
+}
+.player-dashboard-page .profile-heading-side {
+  width: min(100%, 400px);
+}
 .player-dashboard-page .profile-level-compact {
   width: 100%;
   padding: 13px 16px;
@@ -17,10 +21,21 @@
   border-color: #3d3538;
   box-shadow: inset 0 2px 0 #b62634;
 }
-.player-dashboard-page .profile-level-compact-label strong { font-family: var(--heading-font); font-size: 21px; }
-.player-dashboard-page .profile-level-compact .profile-level-progress-track { height: 8px; background: #383438; }
-.player-dashboard-page .profile-level-compact-values { font-size: 11px; }
-.player-dashboard-page .preview-badge { padding: 0; border: 0; }
+.player-dashboard-page .profile-level-compact-label strong {
+  font-family: var(--heading-font);
+  font-size: 21px;
+}
+.player-dashboard-page .profile-level-compact .profile-level-progress-track {
+  height: 8px;
+  background: #383438;
+}
+.player-dashboard-page .profile-level-compact-values {
+  font-size: 11px;
+}
+.player-dashboard-page .preview-badge {
+  padding: 0;
+  border: 0;
+}
 .player-dashboard-page .player-dashboard-overview,
 .player-dashboard-page .player-mode-card,
 .player-dashboard-page .practice-difficulty-panel {
@@ -30,60 +45,184 @@
   padding: clamp(14px, 2vw, 20px);
   margin-bottom: 14px;
 }
-.player-dashboard-page .player-dashboard-heading h2 { margin: 0; }
-.player-dashboard-page .player-dashboard-status { color: var(--text-secondary); }
-.player-dashboard-page .player-dashboard-metrics { gap: 0; margin-top: 14px; }
-.player-dashboard-page .player-dashboard-metric {
-  border: 0; border-radius: 0; background: transparent; padding: 8px 12px;
-  text-align: center; gap: 4px;
+.player-dashboard-page .player-dashboard-heading h2 {
+  margin: 0;
 }
-.player-dashboard-page .player-dashboard-metric + .player-dashboard-metric { border-inline-start: 1px solid #393639; }
-.player-dashboard-page .player-dashboard-metric strong { font-family: var(--heading-font); font-size: clamp(24px, 3vw, 34px); }
-.player-dashboard-page .player-dashboard-metric .metric-accent { color: #f3b4bc; }
-.player-dashboard-page .player-dashboard-mode-grid { gap: 14px; margin-bottom: 0; }
-.player-dashboard-page .player-mode-icon { background: #302226; color: #ef9ca6; border: 1px solid #624049; flex-shrink: 0; }
-.player-dashboard-page .player-mode-eyebrow { color: #bdb7ba; letter-spacing: .07em; }
-.player-dashboard-page .player-mode-toggle { background: #262626; border-color: #424242; }
-.player-dashboard-page .player-mode-toggle:hover { background: #343434; }
-.player-dashboard-page .player-mode-main-stat { margin: 15px 0 12px; }
-.player-dashboard-page .player-mode-main-stat strong { font-family: var(--heading-font); }
-.player-dashboard-page .player-mode-secondary > div { background: #222; border: 1px solid #363636; padding: 9px 11px; }
-.player-dashboard-page .player-mode-fastest { margin: 10px 0 0; }
-.player-dashboard-page .player-mode-body { min-width: 0; }
-.player-dashboard-page .player-mode-actions { margin-top: 12px; }
-.player-dashboard-page .player-mode-full-link { background: var(--button-primary-bg, #b62634); color: #fff; border-color: #b62634; }
-.player-dashboard-page .player-mode-full-link:hover { background: var(--button-primary-hover, #c42b39); }
-.player-dashboard-page .practice-difficulty-panel { margin-top: 0; }
-.player-dashboard-page .practice-difficulty-header h2 { margin: 0; font-family: var(--heading-font); }
-.player-dashboard-page .practice-difficulty-card { background: #222; border-color: #3a383a; padding: 14px; gap: 5px; }
-.player-dashboard-page .practice-difficulty-rate { margin-top: 5px; }
-.player-dashboard-page .practice-difficulty-rate strong { font-family: var(--heading-font); color: #f5f5f5; }
-.player-dashboard-page .practice-difficulty-details { margin-top: 8px; padding-top: 9px; border-color: #3e3b3d; }
+.player-dashboard-page .player-dashboard-status {
+  color: var(--text-secondary);
+}
+.player-dashboard-page .player-dashboard-metrics {
+  gap: 0;
+  margin-top: 14px;
+}
+.player-dashboard-page .player-dashboard-metric {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 8px 12px;
+  text-align: center;
+  gap: 4px;
+}
+.player-dashboard-page .player-dashboard-metric + .player-dashboard-metric {
+  border-inline-start: 1px solid #393639;
+}
+.player-dashboard-page .player-dashboard-metric strong {
+  font-family: var(--heading-font);
+  font-size: clamp(24px, 3vw, 34px);
+}
+.player-dashboard-page .player-dashboard-metric .metric-accent {
+  color: #f3b4bc;
+}
+.player-dashboard-page .player-dashboard-mode-grid {
+  gap: 14px;
+  margin-bottom: 0;
+}
+.player-dashboard-page .player-mode-icon {
+  background: #302226;
+  color: #ef9ca6;
+  border: 1px solid #624049;
+  flex-shrink: 0;
+}
+.player-dashboard-page .player-mode-eyebrow {
+  color: #bdb7ba;
+  letter-spacing: 0.07em;
+}
+.player-dashboard-page .player-mode-toggle {
+  background: #262626;
+  border-color: #424242;
+}
+.player-dashboard-page .player-mode-toggle:hover {
+  background: #343434;
+}
+.player-dashboard-page .player-mode-main-stat {
+  margin: 15px 0 12px;
+}
+.player-dashboard-page .player-mode-main-stat strong {
+  font-family: var(--heading-font);
+}
+.player-dashboard-page .player-mode-secondary > div {
+  background: #222;
+  border: 1px solid #363636;
+  padding: 9px 11px;
+}
+.player-dashboard-page .player-mode-fastest {
+  margin: 10px 0 0;
+}
+.player-dashboard-page .player-mode-body {
+  min-width: 0;
+}
+.player-dashboard-page .player-mode-actions {
+  margin-top: 12px;
+}
+.player-dashboard-page .player-mode-full-link {
+  background: var(--button-primary-bg, #b62634);
+  color: #fff;
+  border-color: #b62634;
+}
+.player-dashboard-page .player-mode-full-link:hover {
+  background: var(--button-primary-hover, #c42b39);
+}
+.player-dashboard-page .practice-difficulty-panel {
+  margin-top: 0;
+}
+.player-dashboard-page .practice-difficulty-header h2 {
+  margin: 0;
+  font-family: var(--heading-font);
+}
+.player-dashboard-page .practice-difficulty-card {
+  background: #222;
+  border-color: #3a383a;
+  padding: 14px;
+  gap: 5px;
+}
+.player-dashboard-page .practice-difficulty-rate {
+  margin-top: 5px;
+}
+.player-dashboard-page .practice-difficulty-rate strong {
+  font-family: var(--heading-font);
+  color: #f5f5f5;
+}
+.player-dashboard-page .practice-difficulty-details {
+  margin-top: 8px;
+  padding-top: 9px;
+  border-color: #3e3b3d;
+}
 /* A real zero rate shows an empty meter; missing/empty data has no meter. */
 :is(.player-dashboard-page, .profile-detail-page) .dashboard-win-meter {
-  display: block; appearance: none; -webkit-appearance: none;
-  width: 100%; height: 6px; border: 0; border-radius: 999px;
-  overflow: hidden; background: #373737; color: #d64b58; accent-color: #d64b58;
+  display: block;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #373737;
+  color: #d64b58;
+  accent-color: #d64b58;
   margin: 4px 0 2px;
 }
-:is(.player-dashboard-page, .profile-detail-page) .dashboard-win-meter::-webkit-progress-bar { background: #373737; }
-:is(.player-dashboard-page, .profile-detail-page) .dashboard-win-meter::-webkit-progress-value { background: #d64b58; border-radius: 999px; }
-:is(.player-dashboard-page, .profile-detail-page) .dashboard-win-meter::-moz-progress-bar { background: #d64b58; border-radius: 999px; }
-:is(.player-dashboard-page, .profile-detail-page) .dashboard-data-details { margin-top: 10px; font-size: 12px; color: var(--text-secondary); }
-:is(.player-dashboard-page, .profile-detail-page) .dashboard-data-details summary { cursor: pointer; width: fit-content; }
-:is(.player-dashboard-page, .profile-detail-page) .dashboard-data-details summary:focus-visible { outline: 2px solid #ff9aa5; outline-offset: 3px; border-radius: 3px; }
-:is(.player-dashboard-page, .profile-detail-page) .dashboard-data-details :is(.player-dashboard-honesty, .player-mode-context, .profile-disclaimer) { margin: 7px 0 0; min-height: 0; }
+:is(.player-dashboard-page, .profile-detail-page)
+  .dashboard-win-meter::-webkit-progress-bar {
+  background: #373737;
+}
+:is(.player-dashboard-page, .profile-detail-page)
+  .dashboard-win-meter::-webkit-progress-value {
+  background: #d64b58;
+  border-radius: 999px;
+}
+:is(.player-dashboard-page, .profile-detail-page)
+  .dashboard-win-meter::-moz-progress-bar {
+  background: #d64b58;
+  border-radius: 999px;
+}
+:is(.player-dashboard-page, .profile-detail-page) .dashboard-data-details {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+:is(.player-dashboard-page, .profile-detail-page) .dashboard-data-details summary {
+  cursor: pointer;
+  width: fit-content;
+}
+:is(.player-dashboard-page, .profile-detail-page)
+  .dashboard-data-details
+  summary:focus-visible {
+  outline: 2px solid #ff9aa5;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+:is(.player-dashboard-page, .profile-detail-page)
+  .dashboard-data-details
+  :is(.player-dashboard-honesty, .player-mode-context, .profile-disclaimer) {
+  margin: 7px 0 0;
+  min-height: 0;
+}
 @media (max-width: 890px) {
-  .player-dashboard-page .player-dashboard-metric:nth-child(3) { border-inline-start: 0; }
-  .player-dashboard-page .player-dashboard-metric:nth-child(n+3) { border-top: 1px solid #393639; }
+  .player-dashboard-page .player-dashboard-metric:nth-child(3) {
+    border-inline-start: 0;
+  }
+  .player-dashboard-page .player-dashboard-metric:nth-child(n + 3) {
+    border-top: 1px solid #393639;
+  }
 }
 @media (max-width: 800px) {
-  .player-dashboard-page .profile-heading { align-items: stretch; flex-direction: column; gap: 12px; }
-  .player-dashboard-page .profile-heading-side { width: 100%; }
+  .player-dashboard-page .profile-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .player-dashboard-page .profile-heading-side {
+    width: 100%;
+  }
 }
 @media (max-width: 510px) {
-  .player-dashboard-page .player-dashboard-metric { padding: 9px 6px; }
-  .player-dashboard-page .player-mode-secondary > div { padding: 8px; }
+  .player-dashboard-page .player-dashboard-metric {
+    padding: 9px 6px;
+  }
+  .player-dashboard-page .player-mode-secondary > div {
+    padding: 8px;
+  }
 }
 
 /* Batch 27F.3 — aligned profile summaries; missing rates remain unknown. */
@@ -139,8 +278,12 @@
   background: #202020;
   border-color: #383838;
 }
-.profile-detail-page .profile-detail-best > svg { color: #ef9ca6; }
-.profile-detail-page .profile-detail-best span { color: #bdbdbd; }
+.profile-detail-page .profile-detail-best > svg {
+  color: #ef9ca6;
+}
+.profile-detail-page .profile-detail-best span {
+  color: #bdbdbd;
+}
 .profile-detail-page .profile-detail-best a {
   background: var(--button-primary-bg, #b62634);
   border-color: #b62634;
@@ -149,5 +292,7 @@
   background: var(--button-primary-hover, #c42b39);
 }
 @media (max-width: 480px) {
-  .player-dashboard-page .player-mode-actions { grid-template-columns: minmax(0, 1fr); }
+  .player-dashboard-page .player-mode-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

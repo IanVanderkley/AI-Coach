@@ -1,0 +1,10 @@
+# Batch 28E.6 — Final audit follow-up
+
+Baseline: `ce3f7b8` (1,167 reported passing tests and 16 accepted browser checks).
+
+- Account identity, active session, read/save rate limits, strict identifier-only save/delete, owned completed replay readers and private/no-store responses reviewed at the baseline. No competitive writes in this endpoint.
+- Staging catalog checks: RLS enabled; anon/authenticated have no direct review-table CRUD or TRUNCATE privileges; service role has CRUD, not TRUNCATE; session/quota RPCs execute only for service role among those roles. Existing composite recent index covers owner/mode/version/time; difficulty is an additional filter. Staging had no saved review rows, so no representative database latency or payload benchmark is claimed.
+- Fix: dashboard requests the selected mode/difficulty, with a maximum of 100 rows per request. The filter is applied before the limit. Window changes remain local. Legacy no-query and single-game status requests retain their prior behavior. The dashboard count describes the selected recent cohort, not all account history. Abort pending requests on selection change, retain filters while loading, and prevent old cohort responses from rendering as current. No new database migration.
+- Fix: optional saved-report presentation fields are sanitized on display, after numerical validation. Invalid teaching moments are omitted, not invented; legitimate counters remain useful. This does not authenticate client-provided Practice recordings.
+- Minor optimization: avoid redundant singleton validation of the already selected object in skill aggregation; still validate duplicate candidates.
+- Remaining local checks: full tests/TypeScript/build; exercise rapid filter switching, reload, save/unsave, account switch/sign-out and guest status. Validate actual local API ownership and malformed query response. No production changes or deployment. Existing JSONB size limit is 64 KiB per report; realistic payload/latency benchmarks remain a separate concern if history grows. No new provider calls or solver work on history reads.

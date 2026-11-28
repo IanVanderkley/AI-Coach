@@ -21,7 +21,10 @@ import {
   takeRankedIntent,
   type RankedMoveIntent,
 } from "@/lib/ranked/input-queue";
-import { isRankedFlagLimitReached, blocksRankedFlagPlacement } from "@/lib/ranked/flag-limit";
+import {
+  isRankedFlagLimitReached,
+  blocksRankedFlagPlacement,
+} from "@/lib/ranked/flag-limit";
 
 import { Navbar } from "@/components/play/navbar";
 import { BoardControlsGuide } from "@/components/play/board-controls-guide";
@@ -723,7 +726,9 @@ export default function RankedPage() {
             <h1>
               Ranked<span className="title-period">.</span>
             </h1>
-            {!showLobby && <p className="page-subtitle">Intermediate · 16 × 16 · 40 mines</p>}
+            {!showLobby && (
+              <p className="page-subtitle">Intermediate · 16 × 16 · 40 mines</p>
+            )}
           </div>
         </div>
 
@@ -879,7 +884,8 @@ export default function RankedPage() {
               <span role="status" aria-live="polite">
                 {isRankedFlagLimitReached(board) && (
                   <span className={styles.flagLimitNotice}>
-                    <Flag size={14} aria-hidden="true" /> Flag limit reached. Remove a flag to place another.
+                    <Flag size={14} aria-hidden="true" /> Flag limit reached. Remove a
+                    flag to place another.
                   </span>
                 )}
                 {submittingMove && (
@@ -1021,7 +1027,12 @@ export default function RankedPage() {
                 </p>
               )
             ) : (
-              <BoardControlsGuide mode="ranked" rows={board.rows} columns={board.columns} mines={board.mineCount} />
+              <BoardControlsGuide
+                mode="ranked"
+                rows={board.rows}
+                columns={board.columns}
+                mines={board.mineCount}
+              />
             )}
 
             {/* Display results after a win or loss. */}
@@ -1045,11 +1056,7 @@ export default function RankedPage() {
                     >
                       View results
                     </button>
-                    <button
-                      type="button"
-                      onClick={returnToLobby}
-                      disabled={starting}
-                    >
+                    <button type="button" onClick={returnToLobby} disabled={starting}>
                       Return to Ranked lobby
                     </button>
                   </div>

@@ -4,7 +4,10 @@ import Link from "next/link";
 import { readCoachingSections } from "@/lib/settings/coaching-sections";
 import { ChevronDown, Clock3, History, Play, RefreshCw, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { parseRankedHistoryGrade, type RankedHistoryGrade } from "@/lib/ranked/history-grade";
+import {
+  parseRankedHistoryGrade,
+  type RankedHistoryGrade,
+} from "@/lib/ranked/history-grade";
 import type { ReviewScore } from "@/lib/coach/review-score";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -16,22 +19,39 @@ import { formatRankedDuration } from "@/lib/ranked/result-summary";
 type HistoryItem = RankedHistoryEntry | RankedCoachingHistoryEntry;
 type GradeResult = Pick<ReviewScore, "grade" | "score"> | "unavailable";
 
-function RankedGradeBadge({ value, enabled, available }: {
-  value?: GradeResult; enabled: boolean; available: boolean;
+function RankedGradeBadge({
+  value,
+  enabled,
+  available,
+}: {
+  value?: GradeResult;
+  enabled: boolean;
+  available: boolean;
 }) {
-  return <span className="coach-history-score">
-    {value && value !== "unavailable" && value.grade ? (
-      <span className="grade-badge" data-grade={value.grade}
-        aria-label={`Coaching grade ${value.grade}, ${value.score} out of 100`}>
-        <span className="grade-letter">{value.grade}</span>
-        <span className="grade-score">{value.score}/100</span>
-      </span>
-    ) : (
-      <span className="coach-history-ungraded">
-        {value === "unavailable" || !available ? "Unavailable" : value ? "Not graded" : enabled ? "Grading…" : "Not reviewed"}
-      </span>
-    )}
-  </span>;
+  return (
+    <span className="coach-history-score">
+      {value && value !== "unavailable" && value.grade ? (
+        <span
+          className="grade-badge"
+          data-grade={value.grade}
+          aria-label={`Coaching grade ${value.grade}, ${value.score} out of 100`}
+        >
+          <span className="grade-letter">{value.grade}</span>
+          <span className="grade-score">{value.score}/100</span>
+        </span>
+      ) : (
+        <span className="coach-history-ungraded">
+          {value === "unavailable" || !available
+            ? "Unavailable"
+            : value
+              ? "Not graded"
+              : enabled
+                ? "Grading…"
+                : "Not reviewed"}
+        </span>
+      )}
+    </span>
+  );
 }
 
 type HistoryState =
@@ -56,7 +76,9 @@ export function RankedHistory({
 }) {
   const [state, setState] = useState<HistoryState>({ kind: "loading" });
   const [revision, setRevision] = useState(0);
-  const [grades, setGrades] = useState<Record<string, RankedHistoryGrade | "unavailable">>({});
+  const [grades, setGrades] = useState<
+    Record<string, RankedHistoryGrade | "unavailable">
+  >({});
   const gradesRef = useRef(grades);
   // AI_COACH_COLLAPSIBLE_HISTORY_V1
   const [rankedExpanded, setRankedExpanded] = useState(true);
@@ -119,7 +141,14 @@ export function RankedHistory({
   // Keep metadata fast; grade only visible owner-authorized rows, one request at a time.
   // Cache hits are compact reads; neither this worker nor the endpoint uses paid AI.
   useEffect(() => {
-    if (!gradeEnabled || !rankedExpanded || summaryOnly || !onReviewMatch || state.kind !== "ready") return;
+    if (
+      !gradeEnabled ||
+      !rankedExpanded ||
+      summaryOnly ||
+      !onReviewMatch ||
+      state.kind !== "ready"
+    )
+      return;
     const controller = new AbortController();
     let cancelled = false;
     async function populateRankedGrades() {
@@ -128,17 +157,31 @@ export function RankedHistory({
       let count = 0;
       for (const item of state.matches) {
         if (cancelled || count++ >= 10) break;
-        if (!("matchId" in item) || !item.reviewAvailable || !isRankedRecordingId(item.matchId) ||
-          manualGrades?.[item.matchId] || gradesRef.current[item.matchId]) continue;
+        if (
+          !("matchId" in item) ||
+          !item.reviewAvailable ||
+          !isRankedRecordingId(item.matchId) ||
+          manualGrades?.[item.matchId] ||
+          gradesRef.current[item.matchId]
+        )
+          continue;
         let value: RankedHistoryGrade | "unavailable" = "unavailable";
         if (!limited) {
           try {
-            const response = await fetch(`/api/ranked/coaching/grade?matchId=${encodeURIComponent(item.matchId)}`, {
-              cache: "no-store", credentials: "same-origin", signal: controller.signal,
-            });
+            const response = await fetch(
+              `/api/ranked/coaching/grade?matchId=${encodeURIComponent(item.matchId)}`,
+              {
+                cache: "no-store",
+                credentials: "same-origin",
+                signal: controller.signal,
+              },
+            );
             if (response.status === 429 || response.status === 401) limited = true;
-            if (response.ok) value = parseRankedHistoryGrade(await response.json(), item.matchId);
-          } catch { /* A failed grade never breaks the metadata list. */ }
+            if (response.ok)
+              value = parseRankedHistoryGrade(await response.json(), item.matchId);
+          } catch {
+            /* A failed grade never breaks the metadata list. */
+          }
         }
         if (cancelled) return;
         gradesRef.current = { ...gradesRef.current, [item.matchId]: value };
@@ -146,7 +189,10 @@ export function RankedHistory({
       }
     }
     void populateRankedGrades();
-    return () => { cancelled = true; controller.abort(); };
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [gradeEnabled, rankedExpanded, summaryOnly, onReviewMatch, state, manualGrades]);
 
   // Updating dashboard stats never fetches or changes match data.
@@ -166,7 +212,13 @@ export function RankedHistory({
 
   return (
     <section className="ranked-history-card" aria-labelledby="ranked-history-title">
-      <div className={onReviewMatch ? "ranked-history-heading coach-history-heading" : "ranked-history-heading"}>
+      <div
+        className={
+          onReviewMatch
+            ? "ranked-history-heading coach-history-heading"
+            : "ranked-history-heading"
+        }
+      >
         <div>
           <span className="ranked-history-eyebrow">RANKED ACTIVITY</span>
           <h2 id="ranked-history-title">
@@ -206,7 +258,9 @@ export function RankedHistory({
         </div>
         <div className="ranked-history-header-actions">
           {onReviewMatch && state.kind === "ready" && (
-            <span className="coach-card-count">{matches.length} {matches.length === 1 ? "match" : "matches"}</span>
+            <span className="coach-card-count">
+              {matches.length} {matches.length === 1 ? "match" : "matches"}
+            </span>
           )}
           {!onReviewMatch && (
             <button
@@ -241,23 +295,25 @@ export function RankedHistory({
         )}
         {state.kind === "ready" && (
           <>
-            {!onReviewMatch && <div
-              className="ranked-history-summary"
-              aria-label="Recent Ranked match summary"
-            >
-              <div>
-                <span>Recent matches</span>
-                <strong>{matches.length}</strong>
+            {!onReviewMatch && (
+              <div
+                className="ranked-history-summary"
+                aria-label="Recent Ranked match summary"
+              >
+                <div>
+                  <span>Recent matches</span>
+                  <strong>{matches.length}</strong>
+                </div>
+                <div>
+                  <span>Wins</span>
+                  <strong>{wins}</strong>
+                </div>
+                <div>
+                  <span>Losses</span>
+                  <strong>{losses}</strong>
+                </div>
               </div>
-              <div>
-                <span>Wins</span>
-                <strong>{wins}</strong>
-              </div>
-              <div>
-                <span>Losses</span>
-                <strong>{losses}</strong>
-              </div>
-            </div>}
+            )}
             {matches.length === 0 ? (
               <p>
                 No completed server-recorded Ranked matches to show yet.{" "}
@@ -267,26 +323,52 @@ export function RankedHistory({
               <ul className="coach-history-list" aria-label="Select a Ranked game">
                 {matches.map((game) => {
                   if (!("matchId" in game)) return null;
-                  const seconds = game.durationMs === null ? null : Math.floor(game.durationMs / 1000);
-                  const displayTime = seconds === null ? "—" : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+                  const seconds =
+                    game.durationMs === null ? null : Math.floor(game.durationMs / 1000);
+                  const displayTime =
+                    seconds === null
+                      ? "—"
+                      : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
                   const won = game.outcome === "won";
                   return (
                     <li className="coach-history-row" key={game.matchId}>
-                      <span className={`result-dot ${won ? "win" : "loss"}`} aria-hidden="true" />
+                      <span
+                        className={`result-dot ${won ? "win" : "loss"}`}
+                        aria-hidden="true"
+                      />
                       <div className="coach-history-result">
                         <strong>{won ? "Win" : "Loss"} · Intermediate</strong>
-                        <span>{game.rows} × {game.columns} · {new Date(game.finishedAt).toLocaleString()}</span>
+                        <span>
+                          {game.rows} × {game.columns} ·{" "}
+                          {new Date(game.finishedAt).toLocaleString()}
+                        </span>
                       </div>
-                      <span className="coach-history-detail" title={formatRankedDuration(game.durationMs)}>
+                      <span
+                        className="coach-history-detail"
+                        title={formatRankedDuration(game.durationMs)}
+                      >
                         <Clock3 size={14} aria-hidden="true" /> {displayTime}
                       </span>
-                      <span className="coach-history-detail">{game.moveCount} actions</span>
-                      <RankedGradeBadge value={manualGrades?.[game.matchId] ?? (gradeEnabled ? grades[game.matchId] : undefined)}
-                        enabled={gradeEnabled} available={game.reviewAvailable} />
-                      <button type="button" className="practice-review-link coach-history-action"
-                        disabled={!game.reviewAvailable || !isRankedRecordingId(game.matchId)}
+                      <span className="coach-history-detail">
+                        {game.moveCount} actions
+                      </span>
+                      <RankedGradeBadge
+                        value={
+                          manualGrades?.[game.matchId] ??
+                          (gradeEnabled ? grades[game.matchId] : undefined)
+                        }
+                        enabled={gradeEnabled}
+                        available={game.reviewAvailable}
+                      />
+                      <button
+                        type="button"
+                        className="practice-review-link coach-history-action"
+                        disabled={
+                          !game.reviewAvailable || !isRankedRecordingId(game.matchId)
+                        }
                         aria-label={`Review Intermediate ${won ? "win" : "loss"} from ${new Date(game.finishedAt).toLocaleString()}`}
-                        onClick={() => onReviewMatch(game.matchId)}>
+                        onClick={() => onReviewMatch(game.matchId)}
+                      >
                         <Play size={14} aria-hidden="true" /> Review game
                       </button>
                     </li>
@@ -335,7 +417,8 @@ export function RankedHistory({
             {!onReviewMatch && (
               <p className="ranked-history-footnote">
                 Only your latest ten completed Intermediate matches are considered. These
-                counts are not lifetime stats or RP. XP appears only when a matching database receipt exists.
+                counts are not lifetime stats or RP. XP appears only when a matching
+                database receipt exists.
               </p>
             )}
           </>

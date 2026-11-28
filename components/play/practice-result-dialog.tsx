@@ -260,7 +260,11 @@ export function PracticeResultDialog({
           </div>
 
           <div className="practice-result-bottom">
-            <button type="button" title="Share result" onClick={() => void shareSummary()}>
+            <button
+              type="button"
+              title="Share result"
+              onClick={() => void shareSummary()}
+            >
               {shareState === "shared" || shareState === "copied" ? (
                 <Check size={15} aria-hidden="true" />
               ) : (
@@ -296,7 +300,10 @@ export function PracticeResultDialog({
           )}
           <details className="practice-result-note practice-result-about">
             <summary>About this result</summary>
-            <p>Practice times are saved on this browser, not independently verified world records.</p>
+            <p>
+              Practice times are saved on this browser, not independently verified world
+              records.
+            </p>
           </details>
         </div>
       ) : null}

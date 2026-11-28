@@ -8,6 +8,8 @@ import "@/styles/coaching-overview-polish.css";
 import "@/styles/coaching-learning-polish.css";
 
 import "@/styles/coaching-replay-polish.css";
+import "@/styles/batch28e-learning-dashboard.css";
+import "@/styles/batch28f-training.css";
 
 export const metadata = {
   title: "AI-Coach | Coaching",
@@ -27,7 +29,9 @@ export default function CoachingPage() {
 
       <main className="page-shell coaching-page" id="main-content">
         <div className="page-heading coaching-page-heading">
-          <h1>Coaching<span className="title-period">.</span></h1>
+          <h1>
+            Coaching<span className="title-period">.</span>
+          </h1>
         </div>
 
         <CoachConsole />

@@ -11,7 +11,9 @@ test("resume button replaces the redundant saved-match copy", () => {
   assert.match(page, /onClick=\{startMatch\}/);
 });
 test("lobby action fills its grid row and mobile layout remains responsive", () => {
-  const css = read("app/ranked/ranked-layout.module.css").split("/* Batch 27D: competitive lobby surfaces */")[1];
+  const css = read("app/ranked/ranked-layout.module.css").split(
+    "/* Batch 27D: competitive lobby surfaces */",
+  )[1];
   assert.match(css, /\.lobbyActions\s*\{[^}]*align-content:\s*stretch/);
   assert.match(css, /\.lobbyActions \.launch\s*\{[^}]*grid-template-rows:\s*1fr/);
   assert.match(css, /\.lobbyActions \.playButton\s*\{[^}]*height:\s*100%/);
@@ -22,7 +24,9 @@ test("rank artwork, server model and milestone geometry remain intact", () => {
   assert.match(component, /rankedLobbyModel\(value\)/);
   assert.match(component, /RANK_DEFINITIONS\.map/);
   assert.match(component, /href="\/faq#ranked"/);
-  const css = read("components/ranked/ranked-lobby.module.css").split("/* Batch 27D: rank presentation */")[1];
+  const css = read("components/ranked/ranked-lobby.module.css").split(
+    "/* Batch 27D: rank presentation */",
+  )[1];
   assert.match(css, /var\(--rank-accent\)/);
   assert.doesNotMatch(css, /\.track\s*\{|\.milestones li > svg\s*\{/);
 });

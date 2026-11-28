@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Award, Check, Clipboard, RotateCcw, Share2, Trophy, UserRound, X } from "lucide-react";
+import {
+  Award,
+  Check,
+  Clipboard,
+  RotateCcw,
+  Share2,
+  Trophy,
+  UserRound,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
@@ -193,7 +202,12 @@ export function RankedResultDialog({
               <Award size={17} aria-hidden="true" /> Analyze Game
             </Link>
             <div className="ranked-result-navigation">
-              <button type="button" className="ranked-result-primary" onClick={onReturnLobby} disabled={busy}>
+              <button
+                type="button"
+                className="ranked-result-primary"
+                onClick={onReturnLobby}
+                disabled={busy}
+              >
                 Return to lobby
               </button>
               <button type="button" className="ranked-result-primary" onClick={onDismiss}>
@@ -202,25 +216,48 @@ export function RankedResultDialog({
             </div>
           </div>
           <div className="ranked-result-utilities">
-            <Link className="ranked-result-profile-icon" href="/profile" aria-label="View profile" title="View profile">
+            <Link
+              className="ranked-result-profile-icon"
+              href="/profile"
+              aria-label="View profile"
+              title="View profile"
+            >
               <UserRound size={18} aria-hidden="true" />
             </Link>
             <div className="ranked-result-sharing" aria-label="Share Ranked match result">
-              <button type="button" aria-label="Share result" title="Share result" onClick={() => void shareResult()}>
+              <button
+                type="button"
+                aria-label="Share result"
+                title="Share result"
+                onClick={() => void shareResult()}
+              >
                 {shareState === "shared" || shareState === "copied" ? (
                   <Check size={16} aria-hidden="true" />
                 ) : (
                   <Share2 size={16} aria-hidden="true" />
                 )}
-                <span className="sr-only" role="status">{shareState === "shared" ? "Shared!" : shareState === "copied" ? "Copied to share" : ""}</span>
+                <span className="sr-only" role="status">
+                  {shareState === "shared"
+                    ? "Shared!"
+                    : shareState === "copied"
+                      ? "Copied to share"
+                      : ""}
+                </span>
               </button>
-              <button type="button" aria-label="Copy result" title="Copy result" onClick={() => void copyResult()}>
+              <button
+                type="button"
+                aria-label="Copy result"
+                title="Copy result"
+                onClick={() => void copyResult()}
+              >
                 {copyState === "copied" ? (
                   <Check size={16} aria-hidden="true" />
                 ) : (
                   <Clipboard size={16} aria-hidden="true" />
                 )}
-                <span className="sr-only" role="status">{copyState === "copied" ? "Copied!" : ""}</span>
+                <span className="sr-only" role="status">
+                  {copyState === "copied" ? "Copied!" : ""}
+                </span>
               </button>
             </div>
             {(copyState === "unavailable" || shareState === "unavailable") && (

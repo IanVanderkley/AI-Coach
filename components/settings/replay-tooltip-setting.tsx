@@ -67,19 +67,21 @@ export function ReplayTooltipSetting() {
           Choose which sections start expanded. Saved in this browser; you can still open
           or close each card during a review.
         </p>
-        {(Object.keys(COACHING_SECTION_LABELS) as CoachingSection[]).filter((key) => key !== "samples" && key !== "accuracy" && key !== "score").map((key) => (
-          <label className="coach-tooltip-option" key={key}>
-            <input
-              type="checkbox"
-              checked={defaults.sections[key]}
-              disabled={!defaults.ready}
-              onChange={(event) => defaults.update(key, event.target.checked)}
-            />
-            <span>
-              <strong>{COACHING_SECTION_LABELS[key]}</strong>
-            </span>
-          </label>
-        ))}
+        {(Object.keys(COACHING_SECTION_LABELS) as CoachingSection[])
+          .filter((key) => key !== "samples" && key !== "accuracy" && key !== "score")
+          .map((key) => (
+            <label className="coach-tooltip-option" key={key}>
+              <input
+                type="checkbox"
+                checked={defaults.sections[key]}
+                disabled={!defaults.ready}
+                onChange={(event) => defaults.update(key, event.target.checked)}
+              />
+              <span>
+                <strong>{COACHING_SECTION_LABELS[key]}</strong>
+              </span>
+            </label>
+          ))}
         {defaults.error && <p role="alert">{defaults.error}</p>}
       </div>
     </section>

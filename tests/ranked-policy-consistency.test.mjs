@@ -54,10 +54,7 @@ test("profile and settings use Elo terminology without changing privacy or XP", 
     read("components/profile/competitive-rank-card.tsx"),
     /parseRankedLobbyRating/,
   );
-  assert.match(
-    read("components/profile/profile-level-card.tsx"),
-    /loadPlayerLevel/,
-  );
+  assert.match(read("components/profile/profile-level-card.tsx"), /loadPlayerLevel/);
   assert.doesNotMatch(
     read("components/profile/player-mode-card.tsx"),
     /Competitive RP|Ranked RP/,

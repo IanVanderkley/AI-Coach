@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-const read = p => readFileSync(p, "utf8");
+const read = (p) => readFileSync(p, "utf8");
 test("profile dashboard polish retains verified totals and scope information", () => {
   const page = read("components/profile/practice-profile.tsx");
   assert.match(page, /trackedOverallStats \?\? overallStats/);
@@ -9,7 +9,10 @@ test("profile dashboard polish retains verified totals and scope information", (
   assert.doesNotMatch(page, /<details className="dashboard-data-details">/);
   assert.match(page, /Lifetime recorded results/);
   assert.match(page, /Recent records only/);
-  assert.doesNotMatch(page, /Your account progression, results and mode performance in one place/);
+  assert.doesNotMatch(
+    page,
+    /Your account progression, results and mode performance in one place/,
+  );
 });
 test("win-rate meters use available values only and retain accessible scope and history links", () => {
   const modes = read("components/profile/player-mode-card.tsx");

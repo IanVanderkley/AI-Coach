@@ -10,7 +10,13 @@ export function isRankedFlagLimitReached(board: FlagBudget): boolean {
   return board.status === "active" && board.flagCount >= board.mineCount;
 }
 
-export function blocksRankedFlagPlacement(board: FlagBudget, row: number, column: number): boolean {
-  return isRankedFlagLimitReached(board) &&
-    !board.flaggedCells.some((cell) => cell.row === row && cell.column === column);
+export function blocksRankedFlagPlacement(
+  board: FlagBudget,
+  row: number,
+  column: number,
+): boolean {
+  return (
+    isRankedFlagLimitReached(board) &&
+    !board.flaggedCells.some((cell) => cell.row === row && cell.column === column)
+  );
 }

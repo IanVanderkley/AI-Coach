@@ -161,22 +161,14 @@ test("dashboard preserves recent overall scope but uses Ranked lifetime in mode 
     /formatRankedDuration\(stats\.fastestWinMs\)/,
     "display fastest official win on the full Ranked statistics page",
   );
-  contains(
-    profile,
-    /Recent records only/,
-    "overall snapshot not mislabeled",
-  );
+  contains(profile, /Recent records only/, "overall snapshot not mislabeled");
 });
 
 test("difficulty cards show every board size without claiming cloud lifetime or RP", () => {
   contains(difficulty, /"9 × 9 · 10 mines"/, "Beginner board supported");
   contains(difficulty, /"16 × 16 · 40 mines"/, "Intermediate board supported");
   contains(difficulty, /"16 × 30 · 99 mines"/, "Expert board supported");
-  contains(
-    difficulty,
-    /scope === "recent"/,
-    "Practice limitations explained",
-  );
+  contains(difficulty, /scope === "recent"/, "Practice limitations explained");
   contains(globalStyles, /profile-difficulty-stats\.css/, "new styles loaded");
   contains(style, /@media \(max-width: 850px\)/, "mobile layout present");
 });

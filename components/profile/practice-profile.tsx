@@ -189,11 +189,7 @@ export function PracticeProfile() {
         className="player-dashboard-mode-grid"
         aria-label="Recent results by game mode"
       >
-        <PlayerModeCard
-          mode="ranked"
-          stats={rankedLifetime}
-          scope="lifetime"
-        />
+        <PlayerModeCard mode="ranked" stats={rankedLifetime} scope="lifetime" />
         <PlayerModeCard
           mode="practice"
           stats={accountPracticeTracking?.overall ?? practiceStats}
@@ -207,7 +203,6 @@ export function PracticeProfile() {
       />
 
       <RankedHistory onRecentMatches={setRankedMatches} summaryOnly />
-
     </main>
   );
 }

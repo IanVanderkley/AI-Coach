@@ -49,7 +49,12 @@ export function PracticeDifficultyStats({
                 <span>Win rate</span>
                 <div className="dashboard-meter-slot">
                   {summary?.stats.winRate != null && (
-                    <progress className="dashboard-win-meter" max={100} value={summary.stats.winRate} aria-label={`${difficulty} win rate`} />
+                    <progress
+                      className="dashboard-win-meter"
+                      max={100}
+                      value={summary.stats.winRate}
+                      aria-label={`${difficulty} win rate`}
+                    />
                   )}
                 </div>
               </div>

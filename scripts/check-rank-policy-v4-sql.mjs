@@ -1,14 +1,23 @@
 /** Emit rollback-only SQL parity checks from the TypeScript reference.
  * Pipe to local psql with ON_ERROR_STOP and shell pipefail. Never use on hosted data.
  */
-import { calculateRankPolicyV4, RANK_POLICY_V4 } from "../lib/leaderboard/rank-policy-v4.ts";
+import {
+  calculateRankPolicyV4,
+  RANK_POLICY_V4,
+} from "../lib/leaderboard/rank-policy-v4.ts";
 
-const ratings = [RANK_POLICY_V4.minimum, RANK_POLICY_V4.minimum + 1,
-  -1000000, ...Array.from({ length: 12001 }, (_, index) => index - 2000)];
-const tuples = ratings.flatMap(rating => ["won", "lost"].map(outcome => {
-  const expected = calculateRankPolicyV4(rating, outcome);
-  return `(${rating},'${outcome}',${expected.rating},${expected.delta},${expected.nominalDelta},${expected.demotionProtected})`;
-}));
+const ratings = [
+  RANK_POLICY_V4.minimum,
+  RANK_POLICY_V4.minimum + 1,
+  -1000000,
+  ...Array.from({ length: 12001 }, (_, index) => index - 2000),
+];
+const tuples = ratings.flatMap((rating) =>
+  ["won", "lost"].map((outcome) => {
+    const expected = calculateRankPolicyV4(rating, outcome);
+    return `(${rating},'${outcome}',${expected.rating},${expected.delta},${expected.nominalDelta},${expected.demotionProtected})`;
+  }),
+);
 console.log(`BEGIN;
 SET LOCAL statement_timeout = '30s';
 CREATE TEMP TABLE expected_v4 (
@@ -17,7 +26,9 @@ CREATE TEMP TABLE expected_v4 (
   PRIMARY KEY (rating_before, outcome)
 ) ON COMMIT DROP;`);
 for (let index = 0; index < tuples.length; index += 500) {
-  console.log(`INSERT INTO expected_v4 VALUES\n${tuples.slice(index,index+500).join(",\n")};`);
+  console.log(
+    `INSERT INTO expected_v4 VALUES\n${tuples.slice(index, index + 500).join(",\n")};`,
+  );
 }
 console.log(`DO $checks$
 DECLARE

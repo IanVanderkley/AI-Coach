@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { reviewOwnerTransition } from "@/lib/coach/review-owner";
+import { TrainingPanel, ReviewTrainingPanel } from "@/components/coach/training-panel";
 import {
   readCoachingSections,
   useCoachingSections,
@@ -92,7 +94,9 @@ export function CoachConsole() {
   const [showDevSamples, setShowDevSamples] = useState(false);
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      setShowDevSamples(new URLSearchParams(window.location.search).get("devSamples") === "1");
+      setShowDevSamples(
+        new URLSearchParams(window.location.search).get("devSamples") === "1",
+      );
     }
   }, []);
   useEffect(() => {
@@ -103,7 +107,9 @@ export function CoachConsole() {
   const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
   const [unavailableGrades, setUnavailableGrades] = useState<Record<string, boolean>>({});
   const [scores, setScores] = useState<Record<string, ReviewScore>>({});
-  const [rankedReviewedGrades, setRankedReviewedGrades] = useState<Record<string, ReviewScore>>({});
+  const [rankedReviewedGrades, setRankedReviewedGrades] = useState<
+    Record<string, ReviewScore>
+  >({});
   const [preferences, setPreferences] = useState<CoachPreferences | null>(null);
   const [status, setStatus] = useState<ProviderStatus | null>(null);
   const [replayFocus, setReplayFocus] = useState<{
@@ -112,6 +118,9 @@ export function CoachConsole() {
   } | null>(null);
   const [result, setResult] = useState<CoachResult | null>(null);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
+  const owner = useRef<string | null | undefined>(undefined);
+  const historyEpoch = useRef(0);
+  const [historyRevision, setHistoryRevision] = useState(0);
   const request = useRef(0);
   const demoRequest = useRef(0);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -250,7 +259,10 @@ export function CoachConsole() {
         const raw: unknown = await response.json();
         if (token !== request.current) return;
         const prepared = prepareRankedReviewResponse(raw, matchId);
-        setRankedReviewedGrades((previous) => ({ ...previous, [matchId]: prepared.review }));
+        setRankedReviewedGrades((previous) => ({
+          ...previous,
+          [matchId]: prepared.review,
+        }));
         setSelection({ mode: "ranked", id: `ranked-${matchId}`, ...prepared });
         setReplayExpanded(showReplay || readCoachingSections().replay);
         replayScrollRequested.current = showReplay;
@@ -275,7 +287,12 @@ export function CoachConsole() {
 
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams(window.location.search);
+    const isCurrent = () => active && historyEpoch.current === historyRevision;
+    if (!isCurrent()) return;
+    // Account changes refresh history, but must not reopen an old deep link.
+    const params = new URLSearchParams(
+      historyRevision === 0 ? window.location.search : "",
+    );
     const reviewId = params.get("reviewId");
     const gameId = params.get("gameId");
     if (params.get("source") === "ranked") {
@@ -304,7 +321,7 @@ export function CoachConsole() {
     void repository
       .listReviewSummaries()
       .then((recent) => {
-        if (!active) return;
+        if (!isCurrent()) return;
         setGames(recent);
         if (
           request.current === initialRequest &&
@@ -316,47 +333,65 @@ export function CoachConsole() {
           void openGame(recent[0].id);
       })
       .catch(() => {
-        if (active)
+        if (isCurrent())
           setHistoryError(
             "Could not load your recent Practice games. Refresh to try again.",
           );
       })
       .finally(() => {
-        if (active) setHistoryLoading(false);
+        if (isCurrent()) setHistoryLoading(false);
       });
     return () => {
       active = false;
       ++request.current;
       ++demoRequest.current;
     };
-  }, [repository, openGame, openRankedGame]);
+  }, [repository, openGame, openRankedGame, historyRevision]);
 
   useEffect(() => {
     let active = true;
+    const isCurrent = () => active && historyEpoch.current === historyRevision;
     void loadCoachPreferences(createSettingsRepository())
       .then((value) => {
-        if (active) setPreferences(value);
+        if (isCurrent()) setPreferences(value);
       })
       .catch(() => {});
     // Configuration status is not a coaching request; GET does not invoke a provider.
     void fetch("/api/coach")
       .then((response) => (response.ok ? response.json() : null))
       .then((value: ProviderStatus | null) => {
-        if (active) setStatus(value);
+        if (isCurrent()) setStatus(value);
       })
       .catch(() => {});
     return () => {
       active = false;
     };
-  }, []);
+  }, [historyRevision]);
 
   useEffect(() => {
     const client = getSupabaseBrowserClient();
     if (!client) return;
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_OUT") return;
+    } = client.auth.onAuthStateChange((event, session) => {
+      const transition = reviewOwnerTransition(
+        owner.current,
+        event,
+        session?.user.id ?? null,
+      );
+      owner.current = transition.owner;
+      if (!transition.reset) return;
+      // Invalidate promises synchronously before React schedules a new render.
+      const revision = ++historyEpoch.current;
+      setGames([]);
+      setHistoryLoading(true);
+      setHistoryError("");
+      setPreferences(null);
+      setScores({});
+      setReviewed({});
+      setUnavailableGrades({});
+      scoreSnapshot.current = {};
+      unavailableSnapshot.current = {};
       setRankedReviewedGrades({});
       ++request.current;
       ++demoRequest.current;
@@ -369,6 +404,7 @@ export function CoachConsole() {
       setResult(null);
       setLoadingKey(null);
       setError("");
+      setHistoryRevision(revision);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -386,19 +422,20 @@ export function CoachConsole() {
   useEffect(() => {
     if (!gradesReady || !autoGrades || reviewing || historyLoading) return;
     let cancelled = false;
+    const isCurrent = () => !cancelled && historyEpoch.current === historyRevision;
     async function populateGrades() {
       for (const item of games) {
-        if (cancelled) return;
+        if (!isCurrent()) return;
         if (scoreSnapshot.current[item.id] || unavailableSnapshot.current[item.id])
           continue;
         try {
           const recording = await repository.loadReview(item.id);
-          if (cancelled) return;
+          if (!isCurrent()) return;
           if (!recording) throw new Error("Missing recording");
           const score = scorePracticeReview(recording);
-          if (!cancelled) setScores((previous) => ({ ...previous, [item.id]: score }));
+          if (isCurrent()) setScores((previous) => ({ ...previous, [item.id]: score }));
         } catch {
-          if (!cancelled)
+          if (isCurrent())
             setUnavailableGrades((previous) => ({ ...previous, [item.id]: true }));
         }
         await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
@@ -408,7 +445,15 @@ export function CoachConsole() {
     return () => {
       cancelled = true;
     };
-  }, [gradesReady, autoGrades, reviewing, historyLoading, games, repository]);
+  }, [
+    gradesReady,
+    autoGrades,
+    reviewing,
+    historyLoading,
+    games,
+    repository,
+    historyRevision,
+  ]);
   const selectedReplay = selection?.game ?? null;
   const suggestedLesson = selection
     ? prioritizeMoments(selection.analysis.report, preferences)[0]
@@ -467,6 +512,13 @@ export function CoachConsole() {
     <div className="coach-visual-layout coach-full-page">
       {!reviewing ? (
         <section className="coach-history-screen" aria-labelledby="coach-history-title">
+          <PersonalizedCoaching
+            onReview={(mode, gameRef, move) => {
+              if (mode === "ranked") void openRankedGame(gameRef, move, true);
+              else void openGame(gameRef, undefined, move, true);
+            }}
+          />
+          <TrainingPanel />
           <div className="coach-practice-card">
             <div className="coach-history-heading">
               <div>
@@ -592,15 +644,13 @@ export function CoachConsole() {
               )}
             </div>
           </div>
-          <div className="coach-ranked-history">
-            <RankedHistory onReviewMatch={openRankedGame} gradeEnabled={gradesReady && autoGrades} manualGrades={rankedReviewedGrades} />
+          <div className="coach-ranked-history" key={historyRevision}>
+            <RankedHistory
+              onReviewMatch={openRankedGame}
+              gradeEnabled={gradesReady && autoGrades}
+              manualGrades={rankedReviewedGrades}
+            />
           </div>
-          <PersonalizedCoaching
-            onReview={(mode, gameRef, move) => {
-              if (mode === "ranked") void openRankedGame(gameRef, move, true);
-              else void openGame(gameRef, undefined, move, true);
-            }}
-          />
           {showDevSamples && (
             <details className="coach-demo-tests" open={sections.samples}>
               <summary>More tools and sample reports</summary>
@@ -618,7 +668,8 @@ export function CoachConsole() {
                     else setError("No classic recording is available.");
                   }}
                 >
-                  <History size={15} aria-hidden="true" /> Run classic report (experimental)
+                  <History size={15} aria-hidden="true" /> Run classic report
+                  (experimental)
                 </button>
                 {SAMPLES.map(({ key, label, session }) => (
                   <button
@@ -722,6 +773,7 @@ export function CoachConsole() {
                   onAskCoach={() => setReviewTab("coach")}
                   onReviewMove={chooseReplayMove}
                 />
+                <ReviewTrainingPanel analysis={selection.analysis} />
                 <section className="coach-review-disclosure">
                   <button
                     type="button"
@@ -770,8 +822,8 @@ export function CoachConsole() {
               <div className="coach-conversation-card" hidden={reviewTab !== "coach"}>
                 <h2>Ask your coach</h2>
                 <p className="verified-note">
-                  Ask for an explanation of a verified move in this completed game.
-                  Answers use board logic; external AI chat is not enabled.
+                  Ask about this completed game or explore a verified move. Answers use
+                  board logic; external AI chat is not enabled.
                 </p>
                 <ReviewConversation
                   game={selectedReplay}

@@ -1,6 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { admitPublicRead } from "@/lib/http/public-read-limit";
-import { projectPublicStandings, PUBLIC_RATING_SYSTEM_V4 } from "@/lib/leaderboard/public-standings";
+import {
+  projectPublicStandings,
+  PUBLIC_RATING_SYSTEM_V4,
+} from "@/lib/leaderboard/public-standings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,10 +38,13 @@ export async function GET() {
       console.error("Ranked leaderboard database view unavailable.");
       throw new Error("Leaderboard is unavailable.");
     }
-    return Response.json(projectPublicStandings(elo.data, speed.data, PUBLIC_RATING_SYSTEM_V4), {
-      status: 200,
-      headers,
-    });
+    return Response.json(
+      projectPublicStandings(elo.data, speed.data, PUBLIC_RATING_SYSTEM_V4),
+      {
+        status: 200,
+        headers,
+      },
+    );
   } catch {
     return Response.json({ error: "Leaderboard unavailable." }, { status: 503, headers });
   }

@@ -22,14 +22,23 @@ test("global footer is shared and links to implemented FAQ sections", () => {
 test("FAQ preserves coaching explanations and current policy boundaries", () => {
   const faq = read("app/faq/page.tsx");
   const note = read("docs/FAQ-COACHING-CONTENT.md");
-  for (const paragraph of note.split(/\r?\n\r?\n/).filter(p => p.startsWith("60%") || p.startsWith("Move 0"))) assert.ok(faq.includes(paragraph.trim()));
+  for (const paragraph of note
+    .split(/\r?\n\r?\n/)
+    .filter((p) => p.startsWith("60%") || p.startsWith("Move 0")))
+    assert.ok(faq.replace(/\s+/g, " ").includes(paragraph.trim().replace(/\s+/g, " ")));
   assert.match(faq, /RANK_TIERS_V4\.map/);
   assert.match(faq, /XP_PER_LEVEL\.toLocaleString/);
-  assert.match(faq, /500 per UTC day/);
-  assert.match(faq, /<td>350<\/td><td>50<\/td>/);
-  assert.match(faq, /exactly one safe square remaining and exactly two equally possible candidates/);
-  assert.match(faq, /appear publicly by default/);
-  assert.match(faq, /Previously deleted or trimmed games cannot be recovered/);
+  assert.match(faq, /500\s+per\s+UTC\s+day/);
+  assert.match(faq, /<td>350<\/td>\s*<td>50<\/td>/);
+  assert.match(
+    faq,
+    /exactly\s+one\s+safe\s+square\s+remaining\s+and\s+exactly\s+two\s+equally\s+possible\s+candidates/,
+  );
+  assert.match(faq, /appear\s+publicly\s+by\s+default/);
+  assert.match(
+    faq,
+    /Previously\s+deleted\s+or\s+trimmed\s+games\s+cannot\s+be\s+recovered/,
+  );
   assert.match(faq, /<details className="faq-question">/);
   assert.doesNotMatch(faq, /fetch\(|getSupabase|dangerouslySetInnerHTML/);
   const css = read("styles/site-help.css");

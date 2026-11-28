@@ -1,0 +1,205 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+import {
+  GAME_FOLLOW_UP_ID,
+  GAME_FOLLOW_UP_QUESTIONS,
+  contextualFollowUpQuestions,
+  guidedFollowUpQuestions,
+} from "../lib/coach/verified-follow-up.ts";
+import {
+  resolveThreadQuestion,
+  appendThreadAnswer,
+  restoreFollowUpThread,
+  serializeFollowUpThread,
+  FOLLOW_UP_THREAD_LIMIT,
+} from "../lib/coach/follow-up-thread.ts";
+const mistake = {
+  id: "move-7",
+  moveNumber: 5,
+  kind: "mistake",
+  occurrences: 2,
+  category: "Unnecessary guess",
+  action: "reveal",
+  location: "R1C2",
+  finding: "A safe option existed.",
+  evidence: "R1C3 was proven safe.",
+  nextTime: "Reveal R1C3 first.",
+};
+const good = {
+  ...mistake,
+  id: "move-8",
+  moveNumber: 6,
+  kind: "good",
+  occurrences: 3,
+  category: "Proven safe reveal",
+  finding: "R2C3 was safe.",
+  evidence: "R2C2 had no remaining mines.",
+  nextTime: "Keep checking visible clues.",
+};
+const other = {
+  ...mistake,
+  id: "move-5",
+  moveNumber: 3,
+  occurrences: 1,
+  category: "Flagged a proven-safe square",
+};
+const report = {
+  headline: "Verified decisions",
+  takeaway: "Practice deductions",
+  recordedActions: 10,
+  verifiedMistakes: 3,
+  provenGood: 3,
+  uncertainActions: 4,
+  moments: [other, good, mistake],
+  caveat: "Only the visible board is considered.",
+};
+const game = (q, r = report) => resolveThreadQuestion(r, GAME_FOLLOW_UP_ID, q);
+const answer = (q, r = report) => {
+  const result = game(q, r);
+  assert.equal(result.supported, true, q);
+  return result.answer;
+};
+const plain = (a) => a.paragraphs.join(" ");
+test("every whole-game prompt has an evidence-backed response", () => {
+  for (const q of GAME_FOLLOW_UP_QUESTIONS) {
+    const a = answer(q);
+    assert.equal(a.scope, "game");
+    assert.equal(a.momentId, GAME_FOLLOW_UP_ID);
+    assert.match(
+      plain(a),
+      /3 actions were proven good, 3 were verified mistakes, and 4 had insufficient evidence/,
+    );
+  }
+});
+test("game summaries do not count grouped moments as total decisions", () => {
+  const a = answer("summarize my game");
+  assert.match(plain(a), /After the opening/);
+  assert.match(plain(a), /uncertain action is not automatically a mistake/);
+  assert.equal(a.moveNumber, 5);
+});
+test("next practice focus uses the highest-frequency reported mistake and valid replay link", () => {
+  for (const q of GAME_FOLLOW_UP_QUESTIONS.filter((_, i) => i === 1 || i === 3)) {
+    const a = answer(q);
+    assert.equal(a.moveNumber, 5);
+    assert.equal(a.intent, "next");
+    assert.match(
+      plain(a),
+      /Among the reported mistake categories, unnecessary guess occurred 2 times/,
+    );
+    assert.match(plain(a), /Reveal row 1, column 3 first/);
+  }
+});
+test("strengths cite a representative proven-good moment, not a mistake", () => {
+  const a = answer(GAME_FOLLOW_UP_QUESTIONS[2]);
+  assert.equal(a.moveNumber, 6);
+  assert.match(plain(a), /row 2, column 3 was safe/);
+  assert.match(plain(a), /row 2, column 2 had no remaining mines/);
+});
+test("no teaching moments still permits summary and honest limitations without a replay link", () => {
+  const empty = {
+    ...report,
+    moments: [],
+    verifiedMistakes: 0,
+    provenGood: 0,
+    uncertainActions: 4,
+    recordedActions: 4,
+  };
+  for (const q of GAME_FOLLOW_UP_QUESTIONS) {
+    const a = answer(q, empty);
+    assert.equal(a.moveNumber, -1);
+    assert.match(plain(a), /0 actions were proven good, 0 were verified mistakes/);
+  }
+  assert.match(
+    plain(answer(GAME_FOLLOW_UP_QUESTIONS[2], empty)),
+    /no representative proven-good moment/,
+  );
+});
+test("whole-game scope declines unsupported coordinate, probability, counterfactual, and multi-move requests", () => {
+  for (const q of [
+    "Why is row 1 column 2 safe?",
+    "What if I had flagged instead?",
+    "How did I do in this game and what are the odds?",
+    "Why was move 5 wrong?",
+    "Compare moves 5 and 6",
+    "Tell me all the mines",
+    "x".repeat(241),
+  ])
+    assert.equal(game(q).supported, false, q);
+});
+test("contextual move follow-ups stay anchored to the original moment", () => {
+  const first = resolveThreadQuestion(
+    report,
+    mistake.id,
+    guidedFollowUpQuestions(mistake)[0],
+  ).answer;
+  for (const q of contextualFollowUpQuestions(first)) {
+    const result = resolveThreadQuestion(report, first.momentId, q);
+    assert.equal(result.supported, true);
+    assert.equal(result.answer.moveNumber, 5);
+    assert.equal(result.answer.momentId, mistake.id);
+  }
+  assert.ok(!contextualFollowUpQuestions(first).includes(first.question));
+});
+test("contextual whole-game follow-ups never silently select a move", () => {
+  const first = answer(GAME_FOLLOW_UP_QUESTIONS[0]);
+  const questions = contextualFollowUpQuestions(first);
+  assert.equal(questions.length, 3);
+  for (const q of questions) assert.equal(answer(q).momentId, GAME_FOLLOW_UP_ID);
+});
+test("mixed move and game threads restore from references and current evidence, not stored answer text", () => {
+  const first = answer(GAME_FOLLOW_UP_QUESTIONS[0]);
+  const second = resolveThreadQuestion(
+    report,
+    good.id,
+    "What did the visible board prove?",
+  ).answer;
+  const thread = [first, second];
+  const raw = serializeFollowUpThread(thread);
+  assert.deepEqual(restoreFollowUpThread(report, raw), thread);
+  const updated = { ...report, provenGood: 4 };
+  assert.match(
+    plain(restoreFollowUpThread(updated, raw)[0]),
+    /4 actions were proven good/,
+  );
+  assert.doesNotMatch(raw, /paragraphs|scope|moveNumber/);
+});
+test("restored invalid references fail closed and mixed history stays bounded", () => {
+  const raw = JSON.stringify([
+    {
+      momentId: GAME_FOLLOW_UP_ID,
+      question: "What if I had won?",
+      paragraphs: ["forged"],
+    },
+    { momentId: "move-999", question: "Why was this a mistake?" },
+    {
+      momentId: GAME_FOLLOW_UP_ID,
+      question: GAME_FOLLOW_UP_QUESTIONS[0],
+      paragraphs: ["forged"],
+    },
+  ]);
+  const restored = restoreFollowUpThread(report, raw);
+  assert.equal(restored.length, 1);
+  assert.doesNotMatch(plain(restored[0]), /forged/);
+  assert.equal(
+    appendThreadAnswer(Array(FOLLOW_UP_THREAD_LIMIT).fill(restored[0]), restored[0])
+      .length,
+    FOLLOW_UP_THREAD_LIMIT,
+  );
+});
+test("conversation output translates coordinates and never mutates shared evidence", () => {
+  const before = structuredClone(report);
+  for (const q of GAME_FOLLOW_UP_QUESTIONS)
+    assert.doesNotMatch(plain(answer(q)), /\bR\d+C\d+\b/i);
+  assert.deepEqual(report, before);
+});
+test("conversation UI retains ranked memory boundary and only links valid replay positions", () => {
+  const source = readFileSync("components/coach/verified-follow-up.tsx", "utf8");
+  assert.match(source, /<option value=\{GAME_FOLLOW_UP_ID\}>Whole game/);
+  assert.match(source, /chooseQuestion\(\s*latest\.momentId,\s*suggestion,?\s*\)/);
+  assert.match(source, /answer\.moveNumber >= 0\s*&&\s*\(?\s*<button/);
+  assert.match(source, /onReviewMove\(answer\.moveNumber\)/);
+  assert.match(source, /persist\s*\?\s*window\.sessionStorage\.getItem/);
+  assert.match(source, /if \(persist\)\s*window\.sessionStorage\.setItem/);
+  assert.doesNotMatch(source, /fetch\(|\/api\/|supabase/);
+});

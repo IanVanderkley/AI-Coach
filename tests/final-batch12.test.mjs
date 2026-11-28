@@ -115,10 +115,10 @@ test("both boards contain player names and rank numbers plus cosmetic milestones
   assert.match(board, /Elo-style rating/);
   assert.match(board, /Fastest Wins/);
   assert.match(board, /entry\.username/);
-  assert.match(board, /<CompetitiveRankCell rating=\{entry\.rating\}/);
+  assert.match(board, /<CompetitiveRankCell\s+rating=\{entry\.rating\}/);
   assert.match(board, /#\{entry\.rank\}/);
   assert.match(board, /<Medal/);
-  assert.match(page, /appear\s*publicly by default/);
+  assert.match(page, /appear\s+publicly\s+by\s+default/);
 });
 
 test("new accounts default public in SQL but existing saved privacy is untouched", () => {

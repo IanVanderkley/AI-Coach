@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-const read = p => readFileSync(p, "utf8");
+const read = (p) => readFileSync(p, "utf8");
 
 test("game station stylesheet is loaded after the verified 27B surfaces", () => {
   const layout = read("app/layout.tsx");
@@ -15,19 +15,32 @@ test("game station stylesheet is loaded after the verified 27B surfaces", () => 
 });
 test("station styling preserves individual cells, board dimensions and scroll behavior", () => {
   const css = read("styles/game-station-polish.css");
-  assert.doesNotMatch(css, /\.cell\b|pointer-events\s*:|\boverflow\s*:|(?<![-\w])position\s*:|--board-columns\s*:|--board-rows\s*:/);
-  const frame = css.match(/\.practice-page \.play-layout \.minesweeper-board,\s*\.ranked-gameplay-page \.ranked-server-board\s*\{([^}]+)\}/)[1];
-  assert.doesNotMatch(frame, /\b(?:width|height|padding|gap|display|grid-template-columns)\s*:/);
+  assert.doesNotMatch(
+    css,
+    /\.cell\b|pointer-events\s*:|\boverflow\s*:|(?<![-\w])position\s*:|--board-columns\s*:|--board-rows\s*:/,
+  );
+  const frame = css.match(
+    /\.practice-page \.play-layout \.minesweeper-board,\s*\.ranked-gameplay-page \.ranked-server-board\s*\{([^}]+)\}/,
+  )[1];
+  assert.doesNotMatch(
+    frame,
+    /\b(?:width|height|padding|gap|display|grid-template-columns)\s*:/,
+  );
   assert.match(css, /@media \(max-width: 600px\)[\s\S]*?background-image: none/);
 });
 test("both HUDs use neutral surfaces and retain small-screen and Expert layout guards", () => {
   const css = read("styles/game-station-polish.css");
   const ranked = read("app/ranked/ranked-layout.module.css");
-  const polish = ranked.split("/* Batch 27C:")[1]?.split(/\/\* Batch \d+[A-Z](?:\.\d+)?:/)[0];
+  const polish = ranked
+    .split("/* Batch 27C:")[1]
+    ?.split(/\/\* Batch \d+[A-Z](?:\.\d+)?:/)[0];
   assert.ok(polish);
   assert.match(polish, /\.gameplayPage \.stats > div/);
   assert.match(polish, /@media \(min-width: 901px\)/);
-  assert.doesNotMatch(polish, /\.lobbyPage|\.queuedCell|\.ranked-server-board|animation\s*:/);
+  assert.doesNotMatch(
+    polish,
+    /\.lobbyPage|\.queuedCell|\.ranked-server-board|animation\s*:/,
+  );
   assert.match(css, /@media \(min-width: 601px\)/);
   assert.doesNotMatch(css, /animation\s*:/);
   assert.match(ranked, /minmax\(32px, 1fr\)/);
