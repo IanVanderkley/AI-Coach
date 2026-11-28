@@ -9,8 +9,17 @@ test("learning meters use only available real metrics and preserve missing evide
   assert.match(ui,/learning\.metrics\.score !== null &&/);
   assert.match(ui,/value=\{learning\.metrics\.score\}/);
   assert.match(ui,/learning\.selected\.length < 10/);
-  assert.match(ui,/learning\.accuracyChange === null/);
-  assert.match(ui,/summarizeLearning\(reports, mode, actualDifficulty, windowSize\)/);
+  // 28E.5a uses the stricter trend comparison on the validated review cohort.
+  assert.match(ui,/const accuracyChange = trends\.comparison\.accuracyChange;/);
+  assert.match(ui,/data-direction=\{accuracyChange === null \? "unknown"/);
+  assert.match(ui,/\{formatLearningChange\(accuracyChange\)\}/);
+  assert.match(ui,/buildLearningDashboard\(reports, mode, actualDifficulty, windowSize\)/);
+  assert.match(ui,/trendAvailability\(trends\.comparison\)/);
+  const dashboard=read("lib/coach/learning-dashboard.ts");
+  assert.match(dashboard,/analyzeLearningReviews\(reports, mode, difficulty, windowSize\)/);
+  assert.match(dashboard,/buildLearningTrends\(learning\.selected, mode, difficulty, windowSize\)/);
+  assert.match(dashboard,/if \(value === null\) return "Not enough data";/);
+  assert.match(dashboard,/accuracy: learning\.evidence\.decisionAccuracy\.percent/);
 });
 test("saved report grades and learning styling use existing data and responsive layout", () => {
   const ui=read("components/coach/personalized-coaching.tsx");

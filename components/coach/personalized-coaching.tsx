@@ -1,7 +1,7 @@
 "use client";
 
 import { useCoachingSections } from "@/lib/settings/coaching-sections";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bookmark,
   BookmarkCheck,
@@ -13,10 +13,12 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   LESSONS,
   REVIEW_WINDOWS,
-  summarizeLearning,
   type ReviewMode,
   type SavedReview,
 } from "@/lib/coach/personalized-review";
+
+import { buildLearningDashboard, formatLearningPercent, formatLearningChange, trendAvailability } from "@/lib/coach/learning-dashboard";
+import { LearningDashboardDetail } from "./learning-dashboard-detail";
 
 import {
   DEFAULT_LEARNING_VIEW,
@@ -275,9 +277,12 @@ export function PersonalizedCoaching({
     };
   }, [revision]);
   const actualDifficulty = mode === "ranked" ? "Intermediate" : difficulty;
-  const learning = summarizeLearning(reports, mode, actualDifficulty, windowSize);
-  const lead = learning.patterns.find((pattern) => pattern.games > 0);
+  const dashboard = useMemo(() => buildLearningDashboard(reports, mode, actualDifficulty, windowSize), [reports, mode, actualDifficulty, windowSize]);
+  const { learning, trends, recommendation } = dashboard;
+  const lead = recommendation.focus;
+  const accuracyChange = trends.comparison.accuracyChange;
   const lesson = LESSONS[lead?.key ?? "unnecessary-guess"];
+  useEffect(() => { setAnswer(null); }, [mode, actualDifficulty, windowSize, lead?.key, revision, status]);
   function switchMode(value: ReviewMode) {
     setView((old) => ({ ...old, mode: value }));
     setAnswer(null);
@@ -382,7 +387,7 @@ export function PersonalizedCoaching({
             </p>
             {!learning.selected.length ? (
               <p>
-                No saved reviews for this mode and difficulty yet. Open a completed game
+                No eligible saved reviews for this mode and difficulty yet. Open a completed game
                 and select Save coaching report.
               </p>
             ) : (
@@ -391,9 +396,7 @@ export function PersonalizedCoaching({
                   <div>
                     <span>Proven decision accuracy</span>
                     <strong>
-                      {learning.metrics.accuracy === null
-                        ? "—"
-                        : `${learning.metrics.accuracy}%`}
+                      {formatLearningPercent(learning.evidence.decisionAccuracy.percent)}
                     </strong>
                     {learning.metrics.accuracy !== null && (
                       <progress className="coach-learning-metric-bar" aria-label="Proven decision accuracy" max={100} value={learning.metrics.accuracy} />
@@ -414,14 +417,15 @@ export function PersonalizedCoaching({
                   </div>
                   <div>
                     <span>Accuracy change</span>
-                    <strong className="coach-learning-change" data-direction={learning.accuracyChange === null ? "unknown" : learning.accuracyChange > 0 ? "up" : learning.accuracyChange < 0 ? "down" : "flat"}>
-                      {learning.accuracyChange === null
-                        ? "—"
-                        : `${learning.accuracyChange > 0 ? "+" : ""}${learning.accuracyChange} pp`}
+                    <strong className="coach-learning-change" data-direction={accuracyChange === null ? "unknown" : accuracyChange > 0 ? "up" : accuracyChange < 0 ? "down" : "flat"}>
+                      {formatLearningChange(accuracyChange)}
                     </strong>
-                    <small>{learning.accuracyChange === null ? (learning.selected.length < 10 ? "Needs at least 10 reviews" : "Not enough assessed decisions") : "Recent vs. earlier reviews"}</small>
+                    <small>{learning.selected.length < 10
+                      ? "Needs at least 10 reviews of this mode and difficulty."
+                      : trendAvailability(trends.comparison)}</small>
                   </div>
                 </div>
+                <LearningDashboardDetail dashboard={dashboard} />
                 <details
                   className="coach-learning-disclosure coach-learning-method"
                   open={sections.method}
@@ -435,7 +439,7 @@ export function PersonalizedCoaching({
                   <p>
                     Practice evidence is player-recorded; Ranked recordings are
                     server-verified. Accuracy change compares equal halves of the
-                    available window, with at least five games per half.{" "}
+                    available window, with at least five assessed games and 20 assessed decisions per half.{" "}
                     {learning.metrics.graded} games have a learning score.
                   </p>
                 </details>
@@ -450,10 +454,12 @@ export function PersonalizedCoaching({
                         ? lead.games >= 2
                           ? "Your current focus"
                           : "Suggested focus (one game)"
-                        : "Starter practice focus"}
+                        : recommendation.kind === "reinforce" ? "Reinforce supported decisions" : "Starter practice focus"}
                     </p>
-                    <h3>{lesson.title}</h3>
-                    <p>{lesson.goal}</p>
+                    <h3>{recommendation.title}</h3>
+                    <p>{recommendation.goal}</p>
+                    <p className="verified-note">{recommendation.reason}</p>
+                    {recommendation.history && <p className="verified-note">Earlier {recommendation.history.older.games} games: {recommendation.history.older.occurrences} verified instances. Recent {recommendation.history.recent.games} games: {recommendation.history.recent.occurrences} verified instances.</p>}
                     <p className="verified-note">
                       {lead
                         ? lead.games >= 2
@@ -499,7 +505,7 @@ export function PersonalizedCoaching({
                     open={sections.drill}
                   >
                     <summary>
-                      Quick drill <span>1 question</span>
+                      Quick drill <span>{lead ? "1 question" : "General practice · 1 question"}</span>
                     </summary>
                     <div className="coach-learning-detail">
                       <p>{lesson.question}</p>
@@ -536,11 +542,11 @@ export function PersonalizedCoaching({
                     </summary>
                     <div className="coach-learning-detail">
                       <ol className="coach-training-steps">
-                        <li>Play three Practice games.</li>
+                        <li>Play {recommendation.objective.practiceGames} {actualDifficulty} Practice games.</li>
                         <li>
-                          {lesson.practice.replace(/^Play three Practice games\. /, "")}
+                          {recommendation.objective.habit}
                         </li>
-                        <li>Save each review and compare proven mistakes.</li>
+                        <li>{recommendation.objective.evaluation}</li>
                       </ol>
                       {mode === "ranked" && (
                         <p className="verified-note">
@@ -596,7 +602,7 @@ export function PersonalizedCoaching({
                     ) : (
                       <p>
                         No proven mistakes in these reviews. Uncertain decisions are not
-                        assumed safe.
+                        assumed safe, and zero mistakes does not establish mastery.
                       </p>
                     )}
                   </div>
