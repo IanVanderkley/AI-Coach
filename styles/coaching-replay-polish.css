@@ -240,3 +240,34 @@
 #coach-replay-workspace .coach-square-answer h5 { margin: 0 0 6px; font-size: 15px; }
 #coach-replay-workspace .coach-square-answer p { margin: 0 0 10px; line-height: 1.65; }
 #coach-replay-workspace .coach-recorded-lesson-heading { padding-top: 16px; border-top: 1px solid var(--line); }
+
+/* Batch 28C: progressive evidence overlays. The underlying replay glyph is unchanged. */
+#coach-replay-workspace .coach-square-local-grid [data-lesson-role="clue-a"],
+#coach-replay-workspace .coach-square-local-grid [data-lesson-role="group-a"] { box-shadow: inset 0 0 0 2px #93c5fd; background: #233c59; }
+#coach-replay-workspace .coach-square-local-grid [data-lesson-role="clue-b"],
+#coach-replay-workspace .coach-square-local-grid [data-lesson-role="extra"] { box-shadow: inset 0 0 0 2px #d8b4fe; background: #49345e; }
+#coach-replay-workspace .coach-square-local-grid [data-lesson-role="known-mine"],
+#coach-replay-workspace .coach-square-local-grid [data-lesson-role="mine"] { box-shadow: inset 0 0 0 2px #ffb36b; background: #513723; }
+#coach-replay-workspace .coach-square-local-grid [data-lesson-role="known-safe"],
+#coach-replay-workspace .coach-square-local-grid [data-lesson-role="safe"] { box-shadow: inset 0 0 0 2px #86efac; background: #204532; }
+#coach-replay-workspace .coach-square-local-grid .coach-square-local-selected { outline: 2px solid #38bdf8; outline-offset: -5px; }
+#coach-replay-workspace .coach-visual-marker { position: absolute; right: 3px; bottom: 2px; font: 700 10px/1 sans-serif; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; }
+#coach-replay-workspace .coach-visual-key { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; margin-top: 8px; }
+#coach-replay-workspace .coach-visual-key b { display: inline-grid; place-items: center; min-width: 18px; padding: 2px; border: 1px solid currentColor; border-radius: 3px; }
+#coach-replay-workspace .coach-visual-key [data-lesson-key="clue-a"],
+#coach-replay-workspace .coach-visual-key [data-lesson-key="group-a"] { color: #93c5fd; }
+#coach-replay-workspace .coach-visual-key [data-lesson-key="clue-b"],
+#coach-replay-workspace .coach-visual-key [data-lesson-key="extra"] { color: #d8b4fe; }
+#coach-replay-workspace .coach-visual-key [data-lesson-key="mine"],
+#coach-replay-workspace .coach-visual-key [data-lesson-key="known-mine"] { color: #ffb36b; }
+#coach-replay-workspace .coach-visual-key [data-lesson-key="safe"],
+#coach-replay-workspace .coach-visual-key [data-lesson-key="known-safe"] { color: #86efac; }
+#coach-replay-workspace .coach-visual-step { border: 1px solid #444; border-radius: 8px; padding: 12px; background: #171717; }
+#coach-replay-workspace .coach-visual-progress { color: var(--text-secondary); font-size: 12px; }
+#coach-replay-workspace .coach-visual-equation { font-weight: 650; }
+#coach-replay-workspace .coach-visual-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+#coach-replay-workspace .coach-visual-controls button { border: 1px solid #555; border-radius: 6px; padding: 8px 12px; min-height: 40px; background: #252525; color: #eee; }
+#coach-replay-workspace .coach-visual-controls button:disabled { opacity: .45; cursor: default; }
+#coach-replay-workspace .coach-visual-controls button:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+#coach-replay-workspace .coach-visual-deduction .coach-square-local-scroll { max-height: 430px; min-width: 0; max-width: 100%; }
+#coach-replay-workspace .coach-visual-deduction .coach-square-local-grid { margin-inline: 0; }
