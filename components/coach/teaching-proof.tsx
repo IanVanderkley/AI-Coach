@@ -36,7 +36,7 @@ function ProofBoard({
         className="coach-proof-grid"
         style={{ gridTemplateColumns: `24px repeat(${right - left + 1}, 36px)` }}
         role="img"
-        aria-label="Cropped board before the move. A and B are numbered clues; question marks are shared unresolved squares; check marks are proven safe; M is a proven mine."
+        aria-label="Cropped evidence board. A and B are numbered clues; question marks are shared unresolved squares; check marks are proven safe; M is a proven mine."
       >
         <span aria-hidden="true" />
         {Array.from({ length: right - left + 1 }, (_, c) => (

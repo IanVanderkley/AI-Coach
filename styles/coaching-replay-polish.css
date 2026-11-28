@@ -203,3 +203,40 @@
 }
 #coach-replay-workspace .coach-replay-legend [data-symbol="inspected"] { border: 2px solid #38bdf8; }
 #coach-replay-workspace .coach-replay-legend [data-symbol="nearby"] { border: 1px dotted #d8b4fe; }
+
+/* Batch 28B: square-specific evidence, separate from the recorded move. */
+#coach-replay-workspace .coach-square-analysis {
+  min-width: 0;
+  background: #1c1c1c;
+  border: 1px solid #3c3c3c;
+  border-radius: 10px;
+  padding: clamp(12px, 2vw, 18px);
+  margin: 0 0 16px;
+  overflow-wrap: anywhere;
+}
+#coach-replay-workspace .coach-square-analysis h4 { margin: 0 0 5px; font-size: 17px; }
+#coach-replay-workspace .coach-square-scope { margin: 0 0 12px; color: var(--text-secondary); font-size: 12px; }
+#coach-replay-workspace .coach-square-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#coach-replay-workspace .coach-square-heading > p { flex-basis: 100%; margin: 0; line-height: 1.6; }
+#coach-replay-workspace .coach-square-classification { border: 1px solid #777; border-radius: 5px; padding: 4px 8px; font-size: 12px; font-weight: 700; color: #ddd; }
+#coach-replay-workspace .coach-square-classification[data-classification="proven-safe"] { border-color: #80d7a5; color: #9ee5b0; background: #203c2d; }
+#coach-replay-workspace .coach-square-classification[data-classification="proven-mine"] { border-color: #ffb36b; color: #ffb36b; background: #422a1e; }
+#coach-replay-workspace .coach-square-evidence { margin: 12px 0; line-height: 1.6; }
+#coach-replay-workspace .coach-square-analysis .coach-proof-steps { margin-top: 10px; }
+#coach-replay-workspace .coach-square-analysis-disabled { color: var(--text-secondary); font-size: 13px; }
+#coach-replay-workspace .coach-recorded-lesson-heading { font-size: 15px; margin: 16px 0 8px; }
+
+/* Batch 28B.1: real local replay crop and plain-English final deduction. */
+#coach-replay-workspace .coach-square-local { margin: 16px 0; min-width: 0; }
+#coach-replay-workspace .coach-square-local figcaption { margin: 0 0 8px; font-size: 13px; font-weight: 650; }
+#coach-replay-workspace .coach-square-local-scroll { overflow: auto; padding: 10px; border: 1px solid #303030; border-radius: 8px; background: #111; }
+#coach-replay-workspace .coach-square-local-grid { display: grid; grid-template-rows: 20px; grid-auto-rows: 36px; gap: 2px; width: max-content; margin-inline: auto; }
+#coach-replay-workspace .coach-square-local-grid .verified-cell { width: 36px; height: 36px; box-sizing: border-box; font-size: 15px; position: relative; }
+#coach-replay-workspace .coach-square-local-grid .coach-board-coordinate { display: grid; place-items: center; font-size: 11px; }
+#coach-replay-workspace .coach-square-local-grid .coach-square-local-selected { outline: 2px solid #38bdf8; outline-offset: -3px; }
+#coach-replay-workspace .coach-square-local-grid .coach-square-local-clue { outline: 2px solid #d8b4fe; outline-offset: -3px; }
+#coach-replay-workspace .coach-square-local-key { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--text-secondary); margin: 8px 0 0; }
+#coach-replay-workspace .coach-square-local-note { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+#coach-replay-workspace .coach-square-answer h5 { margin: 0 0 6px; font-size: 15px; }
+#coach-replay-workspace .coach-square-answer p { margin: 0 0 10px; line-height: 1.65; }
+#coach-replay-workspace .coach-recorded-lesson-heading { padding-top: 16px; border-top: 1px solid var(--line); }

@@ -21,6 +21,8 @@ import { reviewProofOptions } from "@/lib/coach/review-presentation";
 import type { PracticeAnalysis } from "@/lib/coach/practice-analysis";
 import { explainMove, timelineMove, cellLabel } from "@/lib/coach/teaching-review";
 import { TeachingProof } from "@/components/coach/teaching-proof";
+import { SquareAnalysisPanel } from "@/components/coach/square-analysis-panel";
+import { explainSquare, prepareSquareAnalysis } from "@/lib/coach/square-analysis";
 import { describeReplayRows, nearbyReplayClues, replayKeyboardIndex } from "@/lib/coach/replay-accessibility";
 import { useReplayTooltips } from "@/lib/settings/replay-tooltips";
 import { useReplayView, type ReplayView } from "@/lib/settings/replay-view";
@@ -306,6 +308,12 @@ export function VerifiedReplayPanel({
         : undefined,
     [current, selectedIndex, game.rows, game.columns, game.mineCount],
   );
+  const squareContext = useMemo(
+    () => current && showProofs
+      ? prepareSquareAnalysis(selectedIndex === 0 ? current.after : current.before, game.rows, game.columns, game.mineCount)
+      : null,
+    [current, selectedIndex, showProofs, game.rows, game.columns, game.mineCount],
+  );
   const detail = preferences?.explanationDetail ?? "standard";
   const proofOptions = reviewProofOptions(detail);
   function goTo(index: number) {
@@ -325,6 +333,7 @@ export function VerifiedReplayPanel({
   const inspected = inspection?.game === game && inspection.index >= 0 && inspection.index < current.after.length
     ? inspection.index
     : chosen;
+  const squareAnalysis = squareContext ? explainSquare(squareContext, inspected) : null;
   const boardCellCount = current.after.length;
   function inspectSquare(index: number) {
     if (!Number.isInteger(index) || index < 0 || index >= boardCellCount) return;
@@ -606,6 +615,18 @@ export function VerifiedReplayPanel({
           </ul>
         </div>
         <div className="coach-review-insight-pane">
+          {showProofs && squareAnalysis && (
+            <SquareAnalysisPanel
+              key={`square-${current.actionNumber}-${inspected}`}
+              analysis={squareAnalysis}
+              index={inspected}
+              columns={game.columns}
+              opening={opening}
+              technical={proofOptions.technical}
+            />
+          )}
+          {!showProofs && <p className="coach-square-analysis-disabled">Turn on Show deductions to inspect the logic for this square.</p>}
+          {!opening && <h4 className="coach-recorded-lesson-heading">Recorded move lesson</h4>}
           {showProofs && mode !== "after" && recommendation !== null && (
             <p className="verified-note">
               Recommended safe reveal: {cellLabel(recommendation, game.columns)}. The
